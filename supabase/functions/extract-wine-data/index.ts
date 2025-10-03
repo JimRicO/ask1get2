@@ -11,15 +11,21 @@ serve(async (req) => {
   }
 
   try {
-    const { image } = await req.json();
+    const { images } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Phase 1: Extract text from wine label
-    const extractionPrompt = `Analyze this wine label image and extract the following information in a structured format:
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      throw new Error('No images provided');
+    }
+
+    // Build prompt based on available images
+    const imageDescriptions = images.map(img => `${img.type} view`).join(', ');
+    
+    const extractionPrompt = `Analyze these wine bottle images (${imageDescriptions}) and extract the following information:
 - Wine name
 - Producer/Winery name
 - Vintage year (if visible)
@@ -29,10 +35,22 @@ serve(async (req) => {
 - Alcohol content (ABV %)
 - Grape varietals (if mentioned)
 
+Combine information from all images to give the most complete data possible.
 Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year, wine_type, country, region, alcohol_content, grape_varietals.
 If any information is not visible or unclear, use null for that field.`;
 
-    const imageBase64 = image.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+    // Prepare content array with all images
+    const content: any[] = [{ type: 'text', text: extractionPrompt }];
+    
+    for (const img of images) {
+      const imageBase64 = img.data.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+      content.push({
+        type: 'image_url',
+        image_url: {
+          url: `data:image/jpeg;base64,${imageBase64}`
+        }
+      });
+    }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -45,15 +63,7 @@ If any information is not visible or unclear, use null for that field.`;
         messages: [
           {
             role: 'user',
-            content: [
-              { type: 'text', text: extractionPrompt },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`
-                }
-              }
-            ]
+            content
           }
         ],
       }),
@@ -91,6 +101,7 @@ If any information is not visible or unclear, use null for that field.`;
         country: null,
         region: null,
         alcohol_content: null,
+        grape_varietals: null,
       };
     }
 

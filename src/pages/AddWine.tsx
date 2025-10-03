@@ -87,34 +87,50 @@ const AddWine = () => {
   };
 
   const processImageWithAI = async () => {
-    const frontImage = images.front;
-    if (!frontImage || !session) return;
+    if (!session) return;
+
+    // Collect all available images
+    const availableImages = Object.entries(images)
+      .filter(([_, file]) => file !== null)
+      .map(([type, file]) => ({ type, file: file! }));
+
+    if (availableImages.length === 0) return;
 
     setAiProcessing(true);
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(frontImage);
-      
-      reader.onloadend = async () => {
-        const base64Image = reader.result as string;
-        
-        const { data, error } = await supabase.functions.invoke("extract-wine-data", {
-          body: { image: base64Image },
+      const imagePromises = availableImages.map(({ type, file }) => {
+        return new Promise<{ type: string; base64: string }>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            resolve({ type, base64: reader.result as string });
+          };
+          reader.readAsDataURL(file);
         });
+      });
 
-        if (error) throw error;
+      const processedImages = await Promise.all(imagePromises);
+      
+      const { data, error } = await supabase.functions.invoke("extract-wine-data", {
+        body: { 
+          images: processedImages.map(img => ({
+            type: img.type,
+            data: img.base64
+          }))
+        },
+      });
 
-        if (data?.extracted) {
-          setFormData(prev => ({
-            ...prev,
-            ...data.extracted,
-          }));
-          toast.success("Wine label scanned successfully!");
-        }
-      };
+      if (error) throw error;
+
+      if (data?.extracted) {
+        setFormData(prev => ({
+          ...prev,
+          ...data.extracted,
+        }));
+        toast.success("Wine labels scanned successfully!");
+      }
     } catch (error: any) {
       console.error("AI processing error:", error);
-      toast.error("Failed to process image. You can still add wine manually.");
+      toast.error("Failed to process images. You can still add wine manually.");
     } finally {
       setAiProcessing(false);
     }
@@ -244,7 +260,7 @@ const AddWine = () => {
               ))}
             </div>
 
-            {imagePreviews.front && (
+            {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && (
               <Button
                 type="button"
                 variant="outline"
@@ -255,12 +271,12 @@ const AddWine = () => {
                 {aiProcessing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Scanning Label...
+                    Scanning Photos...
                   </>
                 ) : (
                   <>
                     <Camera className="mr-2 h-4 w-4" />
-                    Scan Front Label with AI
+                    Scan All Photos with AI
                   </>
                 )}
               </Button>
