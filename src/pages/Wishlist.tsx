@@ -188,9 +188,9 @@ const Wishlist = () => {
               </p>
             </div> : <div className="space-y-4">
               {wishlistItems.map(item => <div key={item.id} className="bg-[#211111] rounded-2xl p-6 flex items-start gap-6">
-                  {/* Wine bottle image - smaller */}
-                  <div className="bg-[#d4c4a8] rounded-xl w-16 h-24 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {item.image_url ? <img src={item.image_url} alt={item.wine_name} className="w-full h-full object-cover" /> : <Heart className="h-8 w-8 text-[#1a1410]" />}
+                  {/* Wine bottle image */}
+                  <div className="bg-[#d4c4a8] rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {item.image_url ? <img src={item.image_url} alt={item.wine_name} className="w-full h-full object-cover" /> : <Heart className="h-7 w-7 text-[#1a1410]" />}
                   </div>
                   
                   {/* Wine details - stacked vertically */}
