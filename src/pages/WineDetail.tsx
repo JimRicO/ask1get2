@@ -422,22 +422,6 @@ const WineDetail = () => {
             )}
           </div>
 
-          {/* Description */}
-          {wine.description && (
-            <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
-              <h3 className="text-white font-semibold mb-2">Description</h3>
-              <p className="text-gray-300 text-sm">{wine.description}</p>
-            </div>
-          )}
-
-          {/* Notes */}
-          {wine.notes && (
-            <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
-              <h3 className="text-white font-semibold mb-2">Notes</h3>
-              <p className="text-gray-300 text-sm">{wine.notes}</p>
-            </div>
-          )}
-
           {/* Wine Information Section */}
           <div className="mt-6 bg-[#2a2420] rounded-xl p-4 space-y-3">
             <h3 className="text-white font-semibold mb-3">Wine Information</h3>
@@ -507,6 +491,22 @@ const WineDetail = () => {
               </div>
             )}
           </div>
+
+          {/* Description */}
+          {wine.description && (
+            <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
+              <h3 className="text-white font-semibold mb-2">Description</h3>
+              <p className="text-gray-300 text-sm">{wine.description}</p>
+            </div>
+          )}
+
+          {/* Notes */}
+          {wine.notes && (
+            <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
+              <h3 className="text-white font-semibold mb-2">Notes</h3>
+              <p className="text-gray-300 text-sm">{wine.notes}</p>
+            </div>
+          )}
 
           {/* AI Insights */}
           {(wine.ai_tasting_notes || (wine.ai_food_pairings && wine.ai_food_pairings.length > 0)) && (
