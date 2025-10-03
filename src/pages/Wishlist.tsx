@@ -196,18 +196,18 @@ const Wishlist = () => {
                   {/* Wine details - stacked vertically */}
                   <div className="flex-1 space-y-1">
                     {/* Line 1: Wine name */}
-                    <h3 className="text-xl font-semibold text-white">
+                    <h3 className="font-semibold text-white text-base">
                       {item.wine_name}
                     </h3>
                     
                     {/* Line 2: Wine type + Grape variety */}
-                    <div className="flex items-center gap-3 text-white">
+                    <div className="flex items-center gap-3 text-sm text-white">
                       {item.wine_type && <span className="capitalize font-medium">{item.wine_type}</span>}
                       {item.grape_varietals && <span className="font-medium">{item.grape_varietals}</span>}
                     </div>
                     
                     {/* Line 3: Vintage year + Region */}
-                    <div className="flex items-center gap-3 text-white/80">
+                    <div className="flex items-center gap-3 text-sm text-white/80">
                       {item.vintage_year && <span>{item.vintage_year}</span>}
                       {item.region && <span>{item.region}</span>}
                     </div>
