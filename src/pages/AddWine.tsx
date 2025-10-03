@@ -153,25 +153,6 @@ const AddWine = () => {
           ...data.extracted,
         }));
         toast.success("Wine labels scanned successfully!");
-
-        // Check for duplicates immediately after AI scan
-        if (data.extracted.wine_name) {
-          const normalizedSearchName = data.extracted.wine_name.toLowerCase().trim();
-          
-          const { data: allWines } = await supabase
-            .from("wines")
-            .select("*")
-            .eq("user_id", session.user.id);
-
-          const duplicateData = allWines?.find(wine => 
-            wine.wine_name.toLowerCase().trim() === normalizedSearchName
-          );
-
-          if (duplicateData) {
-            setExistingWine(duplicateData);
-            setShowDuplicateDialog(true);
-          }
-        }
       }
     } catch (error: any) {
       console.error("AI processing error:", error);
