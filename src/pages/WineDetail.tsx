@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -660,55 +661,57 @@ const WineDetail = () => {
 
           {/* Edit Wine Dialog */}
           <Dialog open={editWineDialogOpen} onOpenChange={setEditWineDialogOpen}>
-            <DialogContent className="bg-[#1a1410] text-white border-gray-700">
+            <DialogContent className="bg-[#1a1410] text-white border-gray-700 max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle className="text-white">Edit Wine Details</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label className="text-white">Price ($)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={editForm.price_per_bottle}
-                    onChange={(e) => setEditForm({...editForm, price_per_bottle: e.target.value})}
-                    placeholder="50.00"
-                    className="bg-[#2a2420] border-gray-700 text-white"
-                  />
+              <ScrollArea className="max-h-[60vh] pr-4">
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label className="text-white">Price ($)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={editForm.price_per_bottle}
+                      onChange={(e) => setEditForm({...editForm, price_per_bottle: e.target.value})}
+                      placeholder="50.00"
+                      className="bg-[#2a2420] border-gray-700 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white">Storage Location</Label>
+                    <Input
+                      value={editForm.storage_location}
+                      onChange={(e) => setEditForm({...editForm, storage_location: e.target.value})}
+                      placeholder="e.g., Rack A3, Wine Cellar"
+                      className="bg-[#2a2420] border-gray-700 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white">Grape Varietals</Label>
+                    <Input
+                      value={editForm.grape_varietals}
+                      onChange={(e) => setEditForm({...editForm, grape_varietals: e.target.value})}
+                      placeholder="e.g., Cabernet Sauvignon, Merlot"
+                      className="bg-[#2a2420] border-gray-700 text-white"
+                    />
+                    <p className="text-xs text-gray-400">Separate multiple grapes with commas</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white">Notes</Label>
+                    <Textarea
+                      value={editForm.notes}
+                      onChange={(e) => setEditForm({...editForm, notes: e.target.value})}
+                      placeholder="Add personal notes about this wine..."
+                      className="bg-[#2a2420] border-gray-700 text-white"
+                      rows={4}
+                    />
+                  </div>
+                  <Button onClick={handleUpdateWine} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
+                    Save Changes
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-white">Storage Location</Label>
-                  <Input
-                    value={editForm.storage_location}
-                    onChange={(e) => setEditForm({...editForm, storage_location: e.target.value})}
-                    placeholder="e.g., Rack A3, Wine Cellar"
-                    className="bg-[#2a2420] border-gray-700 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-white">Grape Varietals</Label>
-                  <Input
-                    value={editForm.grape_varietals}
-                    onChange={(e) => setEditForm({...editForm, grape_varietals: e.target.value})}
-                    placeholder="e.g., Cabernet Sauvignon, Merlot"
-                    className="bg-[#2a2420] border-gray-700 text-white"
-                  />
-                  <p className="text-xs text-gray-400">Separate multiple grapes with commas</p>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-white">Notes</Label>
-                  <Textarea
-                    value={editForm.notes}
-                    onChange={(e) => setEditForm({...editForm, notes: e.target.value})}
-                    placeholder="Add personal notes about this wine..."
-                    className="bg-[#2a2420] border-gray-700 text-white"
-                    rows={4}
-                  />
-                </div>
-                <Button onClick={handleUpdateWine} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
-                  Save Changes
-                </Button>
-              </div>
+              </ScrollArea>
             </DialogContent>
           </Dialog>
         </div>
