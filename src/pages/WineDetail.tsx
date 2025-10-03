@@ -369,7 +369,7 @@ const WineDetail = () => {
 
         <div className="px-4 pb-20">
           {/* Wine Bottle Image Carousel */}
-          <div className="bg-[#d4c4a8] rounded-3xl overflow-hidden mt-4" style={{ minHeight: '280px' }}>
+          <div className="rounded-3xl overflow-hidden mt-4" style={{ minHeight: '280px' }}>
             {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 0 ? (
               <div className="embla" ref={emblaRef}>
                 <div className="embla__container flex">
