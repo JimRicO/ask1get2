@@ -16,8 +16,28 @@ const AddWine = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [images, setImages] = useState<{
+    front: File | null;
+    back: File | null;
+    neck: File | null;
+    overall: File | null;
+  }>({
+    front: null,
+    back: null,
+    neck: null,
+    overall: null,
+  });
+  const [imagePreviews, setImagePreviews] = useState<{
+    front: string | null;
+    back: string | null;
+    neck: string | null;
+    overall: string | null;
+  }>({
+    front: null,
+    back: null,
+    neck: null,
+    overall: null,
+  });
 
   const [formData, setFormData] = useState({
     wine_name: "",
@@ -54,31 +74,30 @@ const AddWine = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'neck' | 'overall') => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
+      setImages(prev => ({ ...prev, [type]: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreviews(prev => ({ ...prev, [type]: reader.result as string }));
       };
       reader.readAsDataURL(file);
     }
   };
 
   const processImageWithAI = async () => {
-    if (!imageFile || !session) return;
+    const frontImage = images.front;
+    if (!frontImage || !session) return;
 
     setAiProcessing(true);
     try {
-      // Convert image to base64
       const reader = new FileReader();
-      reader.readAsDataURL(imageFile);
+      reader.readAsDataURL(frontImage);
       
       reader.onloadend = async () => {
         const base64Image = reader.result as string;
         
-        // Call edge function for AI processing
         const { data, error } = await supabase.functions.invoke("extract-wine-data", {
           body: { image: base64Image },
         });
@@ -86,7 +105,6 @@ const AddWine = () => {
         if (error) throw error;
 
         if (data?.extracted) {
-          // Update form with extracted data
           setFormData(prev => ({
             ...prev,
             ...data.extracted,
@@ -108,27 +126,28 @@ const AddWine = () => {
 
     setLoading(true);
     try {
-      let imageUrl = null;
+      const imageUrls: any = {};
 
-      // Upload image if present
-      if (imageFile) {
-        const fileExt = imageFile.name.split(".").pop();
-        const fileName = `${session.user.id}/${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from("wine-images")
-          .upload(fileName, imageFile);
+      // Upload all images
+      for (const [type, file] of Object.entries(images)) {
+        if (file) {
+          const fileExt = file.name.split(".").pop();
+          const fileName = `${session.user.id}/${type}_${Date.now()}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from("wine-images")
+            .upload(fileName, file);
 
-        if (uploadError) throw uploadError;
+          if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("wine-images")
-          .getPublicUrl(fileName);
+          const { data: { publicUrl } } = supabase.storage
+            .from("wine-images")
+            .getPublicUrl(fileName);
 
-        imageUrl = publicUrl;
+          imageUrls[type] = publicUrl;
+        }
       }
 
-      // Insert wine record
       const allGrapes = [
         formData.grape_varietals,
         ...(formData.custom_grape_varietals 
@@ -149,7 +168,7 @@ const AddWine = () => {
         price_per_bottle: formData.price_per_bottle ? parseFloat(formData.price_per_bottle) : null,
         storage_location: formData.storage_location || null,
         grape_varietals: allGrapes.length > 0 ? allGrapes : null,
-        images: imageUrl ? { primary: imageUrl } : null,
+        images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
       };
 
       const { error } = await supabase.from("wines").insert(wineData);
@@ -176,49 +195,69 @@ const AddWine = () => {
         <div className="px-4 mt-6">
           {/* Image Upload */}
           <div className="bg-card rounded-2xl p-6 shadow-elegant mb-6">
-            <Label className="text-base font-semibold mb-3 block">Wine Photo</Label>
+            <Label className="text-base font-semibold mb-3 block">Wine Photos</Label>
             
-            {imagePreview ? (
-              <div className="relative">
-                <img
-                  src={imagePreview}
-                  alt="Wine preview"
-                  className="w-full h-64 object-cover rounded-xl mb-4"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={processImageWithAI}
-                  disabled={aiProcessing}
-                  className="w-full"
-                >
-                  {aiProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Scanning Label...
-                    </>
+            <div className="grid grid-cols-2 gap-4">
+              {(['front', 'back', 'neck', 'overall'] as const).map((type) => (
+                <div key={type}>
+                  <Label className="text-sm mb-2 block capitalize">{type} View</Label>
+                  {imagePreviews[type] ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreviews[type]!}
+                        alt={`${type} view`}
+                        className="w-full h-32 object-cover rounded-lg mb-2"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setImages(prev => ({ ...prev, [type]: null }));
+                          setImagePreviews(prev => ({ ...prev, [type]: null }));
+                        }}
+                        className="absolute top-1 right-1 h-6 w-6 p-0"
+                      >
+                        ✕
+                      </Button>
+                    </div>
                   ) : (
-                    <>
-                      <Camera className="mr-2 h-4 w-4" />
-                      Scan Wine Label with AI
-                    </>
+                    <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                      <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                      <span className="text-xs text-muted-foreground">Upload</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => handleImageChange(e, type)}
+                        className="hidden"
+                      />
+                    </label>
                   )}
-                </Button>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/50 transition-colors">
-                <Upload className="h-12 w-12 text-muted-foreground mb-2" />
-                <span className="text-sm text-muted-foreground">
-                  Tap to upload wine photo
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-              </label>
+                </div>
+              ))}
+            </div>
+
+            {imagePreviews.front && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={processImageWithAI}
+                disabled={aiProcessing}
+                className="w-full mt-4"
+              >
+                {aiProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Scanning Label...
+                  </>
+                ) : (
+                  <>
+                    <Camera className="mr-2 h-4 w-4" />
+                    Scan Front Label with AI
+                  </>
+                )}
+              </Button>
             )}
           </div>
 
