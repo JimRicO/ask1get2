@@ -34,9 +34,10 @@ serve(async (req) => {
 - Region/Appellation
 - Alcohol content (ABV %)
 - Grape varietals (if mentioned)
+- A detailed description (2-3 sentences) of the wine based on visible information about its style, characteristics, and origin
 
 Combine information from all images to give the most complete data possible.
-Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year, wine_type, country, region, alcohol_content, grape_varietals.
+Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year, wine_type, country, region, alcohol_content, grape_varietals, description.
 If any information is not visible or unclear, use null for that field.`;
 
     // Prepare content array with all images

@@ -52,6 +52,7 @@ const AddWine = () => {
     storage_location: "",
     grape_varietals: "",
     custom_grape_varietals: "",
+    description: "",
   });
 
   useEffect(() => {
@@ -400,6 +401,17 @@ const AddWine = () => {
                   placeholder="e.g., Petit Verdot, Mourvèdre"
                 />
                 <p className="text-xs text-muted-foreground">Separate multiple grapes with commas</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Wine description (auto-filled by AI scan)"
+                  rows={3}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
