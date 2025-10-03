@@ -329,14 +329,90 @@ const WineDetail = () => {
             )}
           </div>
 
+          {/* Wine Information Section */}
+          <div className="mt-6 bg-[#2a2420] rounded-xl p-4 space-y-3">
+            <h3 className="text-white font-semibold mb-3">Wine Information</h3>
+            
+            {wine.producer && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Producer</span>
+                <span className="text-white">{wine.producer}</span>
+              </div>
+            )}
+            
+            {wine.wine_type && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Type</span>
+                <span className="text-white">{wine.wine_type}</span>
+              </div>
+            )}
+            
+            {wine.grape_varietals && Array.isArray(wine.grape_varietals) && wine.grape_varietals.length > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Grape Varietals</span>
+                <span className="text-white">
+                  {wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean).join(', ')}
+                </span>
+              </div>
+            )}
+            
+            {wine.appellation && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Appellation</span>
+                <span className="text-white">{wine.appellation}</span>
+              </div>
+            )}
+            
+            {wine.alcohol_content && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Alcohol Content</span>
+                <span className="text-white">{wine.alcohol_content}%</span>
+              </div>
+            )}
+            
+            {wine.optimal_drinking_window && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Optimal Drinking Window</span>
+                <span className="text-white">{wine.optimal_drinking_window}</span>
+              </div>
+            )}
+          </div>
+
+          {/* AI Insights */}
+          {(wine.ai_tasting_notes || (wine.ai_food_pairings && wine.ai_food_pairings.length > 0)) && (
+            <div className="mt-6 bg-[#2a2420] rounded-xl p-4 space-y-3">
+              <h3 className="text-white font-semibold mb-3">AI Insights</h3>
+              
+              {wine.ai_tasting_notes && (
+                <div>
+                  <p className="text-gray-400 text-xs mb-1">Tasting Notes</p>
+                  <p className="text-white text-sm">{wine.ai_tasting_notes}</p>
+                </div>
+              )}
+              
+              {wine.ai_food_pairings && wine.ai_food_pairings.length > 0 && (
+                <div>
+                  <p className="text-gray-400 text-xs mb-1">Food Pairings</p>
+                  <div className="flex flex-wrap gap-2">
+                    {wine.ai_food_pairings.map((pairing, index) => (
+                      <span key={index} className="bg-[#3a3430] text-white text-xs px-2 py-1 rounded">
+                        {pairing}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Tasting Notes */}
           {tastingNotes.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-white font-semibold mb-2">Tasting Notes</h3>
-              <div className="space-y-3">
+            <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
+              <h3 className="text-white font-semibold mb-3">My Tasting Notes</h3>
+              <div className="space-y-4">
                 {tastingNotes.map((note) => (
-                  <div key={note.id} className="text-gray-300 text-sm">
-                    <div className="flex items-center justify-between mb-1">
+                  <div key={note.id} className="border-b border-gray-700 pb-3 last:border-0 last:pb-0">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-gray-500">
                         {new Date(note.tasting_date).toLocaleDateString()}
                       </span>
@@ -344,9 +420,9 @@ const WineDetail = () => {
                         {"★".repeat(note.rating)}{"☆".repeat(5 - note.rating)}
                       </div>
                     </div>
-                    {note.notes && <p>{note.notes}</p>}
-                    {note.occasion && <p className="text-xs text-gray-500 mt-1">Occasion: {note.occasion}</p>}
-                    {note.food_pairing && <p className="text-xs text-gray-500">Paired with: {note.food_pairing}</p>}
+                    {note.notes && <p className="text-white text-sm mb-2">{note.notes}</p>}
+                    {note.occasion && <p className="text-xs text-gray-400">Occasion: {note.occasion}</p>}
+                    {note.food_pairing && <p className="text-xs text-gray-400">Paired with: {note.food_pairing}</p>}
                   </div>
                 ))}
               </div>
@@ -354,7 +430,7 @@ const WineDetail = () => {
           )}
 
           {/* Purchase Details */}
-          <div className="mt-6">
+          <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
             <h3 className="text-white font-semibold mb-3">Purchase Details</h3>
             <div className="space-y-2.5">
               <div className="flex justify-between text-sm">
@@ -386,7 +462,7 @@ const WineDetail = () => {
               </div>
               {wine.storage_location && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Location</span>
+                  <span className="text-gray-400">Storage Location</span>
                   <span className="text-white">{wine.storage_location}</span>
                 </div>
               )}
