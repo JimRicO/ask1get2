@@ -378,7 +378,7 @@ const WineDetail = () => {
                       <img
                         src={url}
                         alt={`${type} view`}
-                        className="h-64 w-auto object-contain"
+                        className="h-72 w-auto object-contain"
                       />
                     </div>
                   ))}
