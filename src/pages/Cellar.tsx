@@ -128,24 +128,24 @@ const Cellar = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[hsl(350,60%,35%)]">
+      <div className="min-h-screen bg-black">
         {/* Header */}
-        <div className="bg-primary text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
+        <div className="bg-black text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">My Cellar</h1>
           <p className="text-primary-foreground/80">Your personal wine collection</p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 px-4 -mt-4">
-          <div className="bg-card rounded-xl p-4 shadow-elegant">
+          <div className="bg-black rounded-xl p-4 shadow-elegant">
             <div className="text-2xl font-bold text-primary">{totalBottles}</div>
             <div className="text-xs text-muted-foreground">Bottles</div>
           </div>
-          <div className="bg-card rounded-xl p-4 shadow-elegant">
+          <div className="bg-black rounded-xl p-4 shadow-elegant">
             <div className="text-2xl font-bold text-primary">{totalValue}</div>
             <div className="text-xs text-muted-foreground">Wines</div>
           </div>
-          <div className="bg-card rounded-xl p-4 shadow-elegant">
+          <div className="bg-black rounded-xl p-4 shadow-elegant">
             <div className="text-2xl font-bold text-primary">
               {new Set(wines.map(w => w.wine_type)).size}
             </div>
@@ -244,7 +244,7 @@ const Cellar = () => {
                 <div
                   key={wine.id}
                   onClick={() => navigate(`/wine/${wine.id}`)}
-                  className="bg-[hsl(350,60%,35%)] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[hsl(350,60%,40%)] transition-colors"
+                  className="bg-black rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#1a1a1a] transition-colors"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     {/* Wine bottle image */}
