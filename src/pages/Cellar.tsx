@@ -239,32 +239,37 @@ const Cellar = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
               {filteredWines.map((wine) => (
                 <div
                   key={wine.id}
                   onClick={() => navigate(`/wine/${wine.id}`)}
-                  className="bg-card rounded-xl overflow-hidden shadow-elegant hover:shadow-wine transition-shadow cursor-pointer"
+                  className="bg-[#1a1410] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#2a2420] transition-colors"
                 >
-                  <div className="aspect-[3/4] bg-gradient-to-br from-wine-cream to-muted flex items-center justify-center">
-                    <Wine className="h-16 w-16 text-primary/20" />
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-serif font-semibold text-sm line-clamp-1">
-                      {wine.wine_name}
-                    </h3>
-                    {wine.producer && (
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {wine.producer}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs font-medium text-primary">
+                  <div className="flex items-center gap-4 flex-1">
+                    {/* Wine bottle icon */}
+                    <div className="bg-[#d4c4a8] rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0">
+                      <Wine className="h-7 w-7 text-[#1a1410]" />
+                    </div>
+                    
+                    {/* Wine info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white text-base line-clamp-1">
+                        {wine.wine_name}
+                      </h3>
+                      <p className="text-sm text-gray-400">
                         {wine.vintage_year || "N/A"}
-                      </span>
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                        {wine.current_stock} btl
-                      </span>
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Stock count */}
+                  <div className="text-right flex-shrink-0 ml-4">
+                    <div className="text-2xl font-bold text-white">
+                      {wine.current_stock}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {wine.current_stock === 1 ? "bottle" : "bottles"}
                     </div>
                   </div>
                 </div>
