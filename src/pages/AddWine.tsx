@@ -324,7 +324,7 @@ const AddWine = () => {
 
         <div className="px-4 mt-6">
           {/* Image Upload */}
-          <div className="bg-card rounded-2xl p-6 shadow-elegant mb-6">
+          <div className="bg-[#211111] rounded-2xl p-6 shadow-elegant mb-6">
             <Label className="text-base font-semibold mb-4 block">Wine Photos</Label>
             
             <div className="grid grid-cols-2 gap-4">
