@@ -152,6 +152,21 @@ const AddWine = () => {
           ...data.extracted,
         }));
         toast.success("Wine labels scanned successfully!");
+
+        // Check for duplicates immediately after AI scan
+        if (data.extracted.wine_name) {
+          const { data: duplicateData } = await supabase
+            .from("wines")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .eq("wine_name", data.extracted.wine_name)
+            .maybeSingle();
+
+          if (duplicateData) {
+            setExistingWine(duplicateData);
+            setShowDuplicateDialog(true);
+          }
+        }
       }
     } catch (error: any) {
       console.error("AI processing error:", error);
@@ -178,12 +193,14 @@ const AddWine = () => {
     e.preventDefault();
     if (!session) return;
 
-    // Check for duplicates first
-    const duplicate = await checkForDuplicates();
-    if (duplicate) {
-      setExistingWine(duplicate);
-      setShowDuplicateDialog(true);
-      return;
+    // Check for duplicates if wine name was entered manually (not from AI scan)
+    if (!showDuplicateDialog) {
+      const duplicate = await checkForDuplicates();
+      if (duplicate) {
+        setExistingWine(duplicate);
+        setShowDuplicateDialog(true);
+        return;
+      }
     }
 
     await submitWine();
