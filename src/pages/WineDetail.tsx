@@ -357,14 +357,6 @@ const WineDetail = () => {
             </Button>
             <h1 className="text-lg font-semibold ml-4">Wine Details</h1>
           </div>
-          <Button 
-            onClick={() => setEditWineDialogOpen(true)} 
-            variant="ghost" 
-            size="sm"
-            className="text-white hover:bg-white/10"
-          >
-            <Edit className="h-5 w-5" />
-          </Button>
         </div>
 
         <div className="px-4 pb-20">
@@ -660,6 +652,14 @@ const WineDetail = () => {
                 </div>
               </DialogContent>
             </Dialog>
+
+            <Button 
+              onClick={() => setEditWineDialogOpen(true)}
+              className="bg-[#5c2e2e] hover:bg-[#4a2424] text-white border-0 rounded-lg py-6"
+            >
+              <Edit className="h-5 w-5 mr-2" />
+              Edit Wine
+            </Button>
 
             <Button 
               variant="destructive" 
