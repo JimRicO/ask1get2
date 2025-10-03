@@ -164,7 +164,7 @@ const Wishlist = () => {
 
         <div className="mt-6 pb-20">
           {/* Camera Button */}
-          <div className="mb-6">
+          <div className="mb-6 flex justify-center px-4">
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageCapture} className="hidden" />
             <Button onClick={() => fileInputRef.current?.click()} disabled={processing} className="mx-auto bg-primary hover:bg-primary/90">
               {processing ? <>
