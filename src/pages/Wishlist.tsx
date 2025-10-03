@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
-import { Heart, Camera, Trash2, Loader2 } from "lucide-react";
+import { Heart, Camera, Trash2, Loader2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
@@ -241,31 +241,35 @@ const Wishlist = () => {
                         <div className="flex items-center gap-2 flex-wrap">
                           {item.vintage_year && <span>{item.vintage_year}</span>}
                           {item.wine_type && <span className="capitalize">• {item.wine_type}</span>}
+                          {item.grape_varietals && <span className="text-xs">• {item.grape_varietals}</span>}
                         </div>
                         {(item.region || item.country) && (
                           <p className="line-clamp-1">
                             {[item.region, item.country].filter(Boolean).join(", ")}
                           </p>
                         )}
-                        {item.grape_varietals && (
-                          <p className="line-clamp-1 text-xs text-white/60">{item.grape_varietals}</p>
-                        )}
-                        <p className="text-xs text-white/60 mt-1">
-                          Added {new Date(item.created_at).toLocaleDateString()}
-                        </p>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Delete button */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(item.id)}
-                    className="flex-shrink-0 ml-4 text-white hover:text-red-400"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </Button>
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:text-blue-400"
+                    >
+                      <Edit className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(item.id)}
+                      className="text-white hover:text-red-400"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
