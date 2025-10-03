@@ -592,10 +592,10 @@ const WineDetail = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 mt-8">
+          <div className="space-y-3 mt-8">
             <Dialog open={consumeDialogOpen} onOpenChange={setConsumeDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-[#5c2e2e] hover:bg-[#4a2424] text-white border-0 rounded-lg py-6">
+                <Button className="w-full bg-[#5c2e2e] hover:bg-[#4a2424] text-white border-0 rounded-lg py-6">
                   Log Tasting
                 </Button>
               </DialogTrigger>
@@ -653,21 +653,23 @@ const WineDetail = () => {
               </DialogContent>
             </Dialog>
 
-            <Button 
-              onClick={() => setEditWineDialogOpen(true)}
-              className="bg-[#5c2e2e] hover:bg-[#4a2424] text-white border-0 rounded-lg py-6"
-            >
-              <Edit className="h-5 w-5 mr-2" />
-              Edit Wine
-            </Button>
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                onClick={() => setEditWineDialogOpen(true)}
+                className="bg-[#5c2e2e] hover:bg-[#4a2424] text-white border-0 rounded-lg py-6"
+              >
+                <Edit className="h-5 w-5 mr-2" />
+                Edit Wine
+              </Button>
 
-            <Button 
-              variant="destructive" 
-              onClick={handleDelete}
-              className="bg-[#dc2626] hover:bg-[#b91c1c] text-white border-0 rounded-lg py-6"
-            >
-              Delete
-            </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDelete}
+                className="bg-[#dc2626] hover:bg-[#b91c1c] text-white border-0 rounded-lg py-6"
+              >
+                Delete
+              </Button>
+            </div>
           </div>
 
           {/* Stock Edit Dialog */}
