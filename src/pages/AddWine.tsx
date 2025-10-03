@@ -310,7 +310,7 @@ const AddWine = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select grape varietal" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background">
+                  <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
                     <SelectItem value="Cabernet Sauvignon">Cabernet Sauvignon</SelectItem>
                     <SelectItem value="Merlot">Merlot</SelectItem>
                     <SelectItem value="Pinot Noir">Pinot Noir</SelectItem>
