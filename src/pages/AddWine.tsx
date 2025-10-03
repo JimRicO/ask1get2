@@ -218,7 +218,7 @@ const AddWine = () => {
                         <X className="h-4 w-4" />
                       </button>
                       <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-medium capitalize">
-                        {type} bottle
+                        {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                       </div>
                     </div>
                   ) : (
@@ -229,7 +229,7 @@ const AddWine = () => {
                         <WineIcon className="h-10 w-10 text-primary/60 mb-2" />
                       )}
                       <span className="text-sm font-medium capitalize text-foreground/80">
-                        {type} bottle
+                        {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                       </span>
                       <input
                         type="file"
