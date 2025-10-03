@@ -57,6 +57,7 @@ const AddWine = () => {
     grape_varietals: "",
     custom_grape_varietals: "",
     description: "",
+    notes: "",
   });
 
   useEffect(() => {
@@ -264,6 +265,8 @@ const AddWine = () => {
         storage_location: formData.storage_location || null,
         grape_varietals: allGrapes.length > 0 ? allGrapes : null,
         images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
+        description: formData.description || null,
+        notes: formData.notes || null,
       };
 
       if (updateExisting && existingWine) {
@@ -539,6 +542,17 @@ const AddWine = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Wine description (auto-filled by AI scan)"
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Add personal notes about this wine..."
                   rows={3}
                 />
               </div>

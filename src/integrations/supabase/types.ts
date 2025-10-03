@@ -95,6 +95,7 @@ export type Database = {
           grape_varietals: Json | null
           id: string
           images: Json | null
+          notes: string | null
           optimal_drinking_window: string | null
           price_per_bottle: number | null
           producer: string | null
@@ -118,6 +119,7 @@ export type Database = {
           grape_varietals?: Json | null
           id?: string
           images?: Json | null
+          notes?: string | null
           optimal_drinking_window?: string | null
           price_per_bottle?: number | null
           producer?: string | null
@@ -141,6 +143,7 @@ export type Database = {
           grape_varietals?: Json | null
           id?: string
           images?: Json | null
+          notes?: string | null
           optimal_drinking_window?: string | null
           price_per_bottle?: number | null
           producer?: string | null
