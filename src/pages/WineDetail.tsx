@@ -46,6 +46,8 @@ const WineDetail = () => {
   const [tastingNotes, setTastingNotes] = useState<TastingNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [consumeDialogOpen, setConsumeDialogOpen] = useState(false);
+  const [editStockDialogOpen, setEditStockDialogOpen] = useState(false);
+  const [newStock, setNewStock] = useState(0);
   const [rating, setRating] = useState(5);
   const [notes, setNotes] = useState("");
   const [occasion, setOccasion] = useState("");
@@ -139,6 +141,25 @@ const WineDetail = () => {
       navigate("/cellar");
     } catch (error: any) {
       toast.error("Failed to delete wine");
+    }
+  };
+
+  const handleUpdateStock = async () => {
+    if (!wine) return;
+
+    try {
+      const { error } = await supabase
+        .from("wines")
+        .update({ current_stock: newStock })
+        .eq("id", wine.id);
+
+      if (error) throw error;
+
+      toast.success("Stock updated!");
+      setEditStockDialogOpen(false);
+      fetchWine();
+    } catch (error: any) {
+      toast.error("Failed to update stock");
     }
   };
 
@@ -296,7 +317,19 @@ const WineDetail = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="text-sm text-muted-foreground">Current Stock</div>
-                <div className="text-2xl font-bold text-primary">{wine.current_stock} bottles</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-2xl font-bold text-primary">{wine.current_stock} bottles</div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setNewStock(wine.current_stock);
+                      setEditStockDialogOpen(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               {wine.price_per_bottle && (
                 <div className="text-right">
@@ -362,6 +395,28 @@ const WineDetail = () => {
                     </div>
                     <Button onClick={handleConsume} className="w-full">
                       Save Tasting Note
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={editStockDialogOpen} onOpenChange={setEditStockDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Update Stock</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label>Number of Bottles</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={newStock}
+                        onChange={(e) => setNewStock(parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                    <Button onClick={handleUpdateStock} className="w-full">
+                      Update Stock
                     </Button>
                   </div>
                 </DialogContent>
