@@ -191,11 +191,28 @@ const WineDetail = () => {
           {wine.producer && <p className="text-primary-foreground/80 mt-1">{wine.producer}</p>}
         </div>
 
-        {/* Image */}
+        {/* Images */}
         <div className="px-4 -mt-8">
-          <div className="bg-gradient-to-br from-wine-cream to-muted rounded-2xl h-64 flex items-center justify-center shadow-elegant">
-            <Wine className="h-32 w-32 text-primary/20" />
-          </div>
+          {wine.images && (typeof wine.images === 'object') && Object.keys(wine.images).length > 0 ? (
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(wine.images).map(([type, url]: [string, any]) => (
+                <div key={type} className="relative">
+                  <img
+                    src={url}
+                    alt={`${type} view`}
+                    className="w-full h-48 object-cover rounded-xl shadow-elegant"
+                  />
+                  <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-medium capitalize">
+                    {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-wine-cream to-muted rounded-2xl h-64 flex items-center justify-center shadow-elegant">
+              <Wine className="h-32 w-32 text-primary/20" />
+            </div>
+          )}
         </div>
 
         {/* Details */}
