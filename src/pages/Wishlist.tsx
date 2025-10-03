@@ -211,14 +211,14 @@ const Wishlist = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {wishlistItems.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-[#211111] rounded-2xl p-6 flex items-start gap-6"
+                  className="bg-[#2a1f1f] rounded-lg p-3 flex items-center gap-3"
                 >
-                  {/* Wine bottle image - larger */}
-                  <div className="bg-[#d4c4a8] rounded-xl w-24 h-32 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {/* Wine bottle image */}
+                  <div className="bg-[#d4c4a8] rounded-lg w-16 h-20 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {item.image_url ? (
                       <img 
                         src={item.image_url} 
@@ -226,69 +226,59 @@ const Wishlist = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Heart className="h-12 w-12 text-[#1a1410]" />
+                      <Heart className="h-8 w-8 text-[#1a1410]" />
                     )}
                   </div>
                   
-                  {/* Wine details - stacked vertically */}
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2">
-                      {item.wine_name}
-                    </h3>
+                  {/* Wine details - horizontal layout */}
+                  <div className="flex-1 flex items-center gap-3 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-semibold text-white truncate">
+                        {item.wine_name}
+                      </h3>
+                    </div>
                     
-                    {item.producer && (
-                      <p className="text-lg text-white/90 mb-3">
-                        {item.producer}
-                      </p>
+                    {item.wine_type && (
+                      <div className="text-sm text-white/90 capitalize flex-shrink-0">
+                        {item.wine_type}
+                      </div>
                     )}
                     
-                    <div className="space-y-1 text-white/80">
-                      {item.wine_type && (
-                        <p className="flex items-center gap-2">
-                          <span className="text-white">•</span>
-                          <span className="capitalize">{item.wine_type}</span>
-                        </p>
-                      )}
-                      
-                      {item.grape_varietals && (
-                        <p className="flex items-center gap-2">
-                          <span className="text-white">•</span>
-                          <span>{item.grape_varietals}</span>
-                        </p>
-                      )}
-                      
-                      {(item.region || item.country) && (
-                        <p className="flex items-center gap-2">
-                          <span className="text-white">•</span>
-                          <span>{[item.region, item.country].filter(Boolean).join(", ")}</span>
-                        </p>
-                      )}
-                      
-                      {item.vintage_year && (
-                        <p className="flex items-center gap-2">
-                          <span className="text-white">•</span>
-                          <span>{item.vintage_year}</span>
-                        </p>
-                      )}
-                    </div>
+                    {item.grape_varietals && (
+                      <div className="text-sm text-white/90 flex-shrink-0">
+                        {item.grape_varietals}
+                      </div>
+                    )}
+                    
+                    {item.vintage_year && (
+                      <div className="text-sm text-white/90 flex-shrink-0">
+                        {item.vintage_year}
+                      </div>
+                    )}
+                    
+                    {(item.region || item.country) && (
+                      <div className="text-sm text-white/80 flex-shrink-0">
+                        {item.region || item.country}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Action buttons */}
-                  <div className="flex flex-col gap-3 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-white hover:text-blue-400 bg-white/10 hover:bg-white/20"
+                      className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
                     >
-                      <Edit className="h-5 w-5" />
+                      <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(item.id)}
-                      className="text-white hover:text-red-400 bg-white/10 hover:bg-white/20"
+                      className="h-8 w-8 text-white/70 hover:text-red-400 hover:bg-white/10"
                     >
-                      <Trash2 className="h-5 w-5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
