@@ -52,12 +52,21 @@ const WineDetail = () => {
   const [loading, setLoading] = useState(true);
   const [consumeDialogOpen, setConsumeDialogOpen] = useState(false);
   const [editStockDialogOpen, setEditStockDialogOpen] = useState(false);
+  const [editWineDialogOpen, setEditWineDialogOpen] = useState(false);
   const [newStock, setNewStock] = useState(0);
   const [rating, setRating] = useState(5);
   const [notes, setNotes] = useState("");
   const [occasion, setOccasion] = useState("");
   const [foodPairing, setFoodPairing] = useState("");
   const [processingBackground, setProcessingBackground] = useState(false);
+  
+  // Edit wine form state
+  const [editForm, setEditForm] = useState({
+    price_per_bottle: "",
+    storage_location: "",
+    notes: "",
+    grape_varietals: "",
+  });
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
     Autoplay({ delay: 3000, stopOnInteraction: false })
@@ -80,6 +89,14 @@ const WineDetail = () => {
 
       if (error) throw error;
       setWine(data);
+      
+      // Initialize edit form with current values
+      setEditForm({
+        price_per_bottle: data.price_per_bottle?.toString() || "",
+        storage_location: data.storage_location || "",
+        notes: data.notes || "",
+        grape_varietals: Array.isArray(data.grape_varietals) ? data.grape_varietals.join(', ') : "",
+      });
     } catch (error: any) {
       toast.error("Failed to load wine details");
       navigate("/cellar");
@@ -170,6 +187,34 @@ const WineDetail = () => {
       fetchWine();
     } catch (error: any) {
       toast.error("Failed to update stock");
+    }
+  };
+
+  const handleUpdateWine = async () => {
+    if (!wine) return;
+
+    try {
+      const grapeArray = editForm.grape_varietals 
+        ? editForm.grape_varietals.split(',').map(g => g.trim()).filter(Boolean)
+        : null;
+
+      const { error } = await supabase
+        .from("wines")
+        .update({
+          price_per_bottle: editForm.price_per_bottle ? parseFloat(editForm.price_per_bottle) : null,
+          storage_location: editForm.storage_location || null,
+          notes: editForm.notes || null,
+          grape_varietals: grapeArray,
+        })
+        .eq("id", wine.id);
+
+      if (error) throw error;
+
+      toast.success("Wine updated!");
+      setEditWineDialogOpen(false);
+      fetchWine();
+    } catch (error: any) {
+      toast.error("Failed to update wine");
     }
   };
 
@@ -264,16 +309,26 @@ const WineDetail = () => {
     <Layout>
       <div className="min-h-screen bg-[#1a1410]">
         {/* Header */}
-        <div className="bg-[#1a1410] text-white px-4 py-4 flex items-center">
-          <Button
-            variant="ghost"
+        <div className="bg-[#1a1410] text-white px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/cellar")}
+              className="text-white hover:text-white/80 p-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-lg font-semibold ml-4">Wine Details</h1>
+          </div>
+          <Button 
+            onClick={() => setEditWineDialogOpen(true)} 
+            variant="ghost" 
             size="sm"
-            onClick={() => navigate("/cellar")}
-            className="text-white hover:text-white/80 p-2"
+            className="text-white hover:bg-white/10"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <Edit className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold ml-4">Wine Details</h1>
         </div>
 
         <div className="px-4 pb-20">
@@ -598,6 +653,60 @@ const WineDetail = () => {
                 </div>
                 <Button onClick={handleUpdateStock} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
                   Update Stock
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Wine Dialog */}
+          <Dialog open={editWineDialogOpen} onOpenChange={setEditWineDialogOpen}>
+            <DialogContent className="bg-[#1a1410] text-white border-gray-700">
+              <DialogHeader>
+                <DialogTitle className="text-white">Edit Wine Details</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label className="text-white">Price ($)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editForm.price_per_bottle}
+                    onChange={(e) => setEditForm({...editForm, price_per_bottle: e.target.value})}
+                    placeholder="50.00"
+                    className="bg-[#2a2420] border-gray-700 text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Storage Location</Label>
+                  <Input
+                    value={editForm.storage_location}
+                    onChange={(e) => setEditForm({...editForm, storage_location: e.target.value})}
+                    placeholder="e.g., Rack A3, Wine Cellar"
+                    className="bg-[#2a2420] border-gray-700 text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Grape Varietals</Label>
+                  <Input
+                    value={editForm.grape_varietals}
+                    onChange={(e) => setEditForm({...editForm, grape_varietals: e.target.value})}
+                    placeholder="e.g., Cabernet Sauvignon, Merlot"
+                    className="bg-[#2a2420] border-gray-700 text-white"
+                  />
+                  <p className="text-xs text-gray-400">Separate multiple grapes with commas</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Notes</Label>
+                  <Textarea
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm({...editForm, notes: e.target.value})}
+                    placeholder="Add personal notes about this wine..."
+                    className="bg-[#2a2420] border-gray-700 text-white"
+                    rows={4}
+                  />
+                </div>
+                <Button onClick={handleUpdateWine} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
+                  Save Changes
                 </Button>
               </div>
             </DialogContent>
