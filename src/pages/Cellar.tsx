@@ -247,9 +247,17 @@ const Cellar = () => {
                   className="bg-[#1a1410] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#2a2420] transition-colors"
                 >
                   <div className="flex items-center gap-4 flex-1">
-                    {/* Wine bottle icon */}
-                    <div className="bg-[#d4c4a8] rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0">
-                      <Wine className="h-7 w-7 text-[#1a1410]" />
+                    {/* Wine bottle image */}
+                    <div className="bg-[#d4c4a8] rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {wine.images?.front ? (
+                        <img 
+                          src={wine.images.front} 
+                          alt={wine.wine_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Wine className="h-7 w-7 text-[#1a1410]" />
+                      )}
                     </div>
                     
                     {/* Wine info */}
