@@ -209,7 +209,7 @@ const Wishlist = () => {
                   </div>
                   
                   {/* Action buttons */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10">
                       <Edit className="h-4 w-4" />
                     </Button>
