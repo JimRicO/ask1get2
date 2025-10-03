@@ -1,7 +1,144 @@
+import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
-import { Heart } from "lucide-react";
+import { Heart, Camera, Trash2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Session } from "@supabase/supabase-js";
+
+interface WishlistItem {
+  id: string;
+  wine_name: string;
+  image_url: string | null;
+  created_at: string;
+}
 
 const Wishlist = () => {
+  const navigate = useNavigate();
+  const [session, setSession] = useState<Session | null>(null);
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        if (!session) {
+          navigate("/auth");
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (session) {
+      fetchWishlist();
+    }
+  }, [session]);
+
+  const fetchWishlist = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("wishlist")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setWishlistItems(data || []);
+    } catch (error: any) {
+      toast.error("Failed to load wishlist");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !session) return;
+
+    setProcessing(true);
+    try {
+      // Convert image to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Image = reader.result as string;
+
+        // Upload image to storage
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${session.user.id}/wishlist_${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("wine-images")
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("wine-images")
+          .getPublicUrl(fileName);
+
+        // Extract wine name using AI
+        const { data: aiData, error: aiError } = await supabase.functions.invoke(
+          "extract-wine-name",
+          { body: { image: base64Image } }
+        );
+
+        if (aiError) throw aiError;
+
+        const wineName = aiData?.wineName || "Unknown Wine";
+
+        // Add to wishlist
+        const { error: insertError } = await supabase
+          .from("wishlist")
+          .insert({
+            user_id: session.user.id,
+            wine_name: wineName,
+            image_url: publicUrl,
+          });
+
+        if (insertError) throw insertError;
+
+        toast.success(`Added "${wineName}" to wishlist!`);
+        fetchWishlist();
+      };
+
+      reader.readAsDataURL(file);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to process image");
+      console.error(error);
+    } finally {
+      setProcessing(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from("wishlist").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Removed from wishlist");
+      fetchWishlist();
+    } catch (error: any) {
+      toast.error("Failed to delete item");
+      console.error(error);
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-[#211111]">
@@ -10,14 +147,94 @@ const Wishlist = () => {
           <p className="text-primary-foreground/80">Wines you want to try</p>
         </div>
 
-        <div className="flex items-center justify-center min-h-[60vh] px-4">
-          <div className="text-center">
-            <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Coming Soon</h2>
-            <p className="text-muted-foreground">
-              Save wines you'd like to add to your cellar
-            </p>
+        <div className="px-4 mt-6 pb-20">
+          {/* Camera Button */}
+          <div className="mb-6">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleImageCapture}
+              className="hidden"
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={processing}
+              className="w-full bg-primary hover:bg-primary/90"
+            >
+              {processing ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Camera className="h-5 w-5 mr-2" />
+                  Take Photo of Wine Label
+                </>
+              )}
+            </Button>
           </div>
+
+          {/* Wishlist Items */}
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+            </div>
+          ) : wishlistItems.length === 0 ? (
+            <div className="text-center py-12">
+              <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-white">No wines yet</h3>
+              <p className="text-muted-foreground">
+                Take a photo of a wine label to add it to your wishlist
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {wishlistItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-[#211111] rounded-2xl p-4 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    {/* Wine image */}
+                    <div className="bg-[#d4c4a8] rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {item.image_url ? (
+                        <img 
+                          src={item.image_url} 
+                          alt={item.wine_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Heart className="h-7 w-7 text-[#1a1410]" />
+                      )}
+                    </div>
+                    
+                    {/* Wine info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white text-base line-clamp-1">
+                        {item.wine_name}
+                      </h3>
+                      <p className="text-sm text-white">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Delete button */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(item.id)}
+                    className="flex-shrink-0 ml-4 text-white hover:text-red-400"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </Layout>

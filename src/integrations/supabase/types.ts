@@ -160,6 +160,30 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlist: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          user_id: string
+          wine_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          user_id: string
+          wine_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          user_id?: string
+          wine_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
