@@ -31,6 +31,7 @@ const AddWine = () => {
     price_per_bottle: "",
     storage_location: "",
     grape_varietals: "",
+    custom_grape_varietals: "",
   });
 
   useEffect(() => {
@@ -128,6 +129,13 @@ const AddWine = () => {
       }
 
       // Insert wine record
+      const allGrapes = [
+        formData.grape_varietals,
+        ...(formData.custom_grape_varietals 
+          ? formData.custom_grape_varietals.split(',').map(g => g.trim()) 
+          : [])
+      ].filter(g => g);
+
       const wineData: any = {
         user_id: session.user.id,
         wine_name: formData.wine_name,
@@ -140,9 +148,7 @@ const AddWine = () => {
         current_stock: parseInt(formData.current_stock),
         price_per_bottle: formData.price_per_bottle ? parseFloat(formData.price_per_bottle) : null,
         storage_location: formData.storage_location || null,
-        grape_varietals: formData.grape_varietals 
-          ? formData.grape_varietals.split(',').map(g => g.trim()).filter(g => g) 
-          : null,
+        grape_varietals: allGrapes.length > 0 ? allGrapes : null,
         images: imageUrl ? { primary: imageUrl } : null,
       };
 
@@ -296,12 +302,41 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="grape_varietals">Grape Varietals</Label>
-                <Input
-                  id="grape_varietals"
+                <Label htmlFor="grape_varietals">Main Grape Varietal</Label>
+                <Select
                   value={formData.grape_varietals}
-                  onChange={(e) => setFormData({ ...formData, grape_varietals: e.target.value })}
-                  placeholder="Cabernet Sauvignon, Merlot, Cabernet Franc"
+                  onValueChange={(value) => setFormData({ ...formData, grape_varietals: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select grape varietal" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background">
+                    <SelectItem value="Cabernet Sauvignon">Cabernet Sauvignon</SelectItem>
+                    <SelectItem value="Merlot">Merlot</SelectItem>
+                    <SelectItem value="Pinot Noir">Pinot Noir</SelectItem>
+                    <SelectItem value="Syrah/Shiraz">Syrah/Shiraz</SelectItem>
+                    <SelectItem value="Chardonnay">Chardonnay</SelectItem>
+                    <SelectItem value="Sauvignon Blanc">Sauvignon Blanc</SelectItem>
+                    <SelectItem value="Riesling">Riesling</SelectItem>
+                    <SelectItem value="Pinot Grigio/Gris">Pinot Grigio/Gris</SelectItem>
+                    <SelectItem value="Malbec">Malbec</SelectItem>
+                    <SelectItem value="Zinfandel">Zinfandel</SelectItem>
+                    <SelectItem value="Tempranillo">Tempranillo</SelectItem>
+                    <SelectItem value="Sangiovese">Sangiovese</SelectItem>
+                    <SelectItem value="Nebbiolo">Nebbiolo</SelectItem>
+                    <SelectItem value="Grenache">Grenache</SelectItem>
+                    <SelectItem value="Cabernet Franc">Cabernet Franc</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="custom_grape_varietals">Additional Grapes (Optional)</Label>
+                <Input
+                  id="custom_grape_varietals"
+                  value={formData.custom_grape_varietals}
+                  onChange={(e) => setFormData({ ...formData, custom_grape_varietals: e.target.value })}
+                  placeholder="e.g., Petit Verdot, Mourvèdre"
                 />
                 <p className="text-xs text-muted-foreground">Separate multiple grapes with commas</p>
               </div>
