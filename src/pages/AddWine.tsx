@@ -30,6 +30,7 @@ const AddWine = () => {
     current_stock: "1",
     price_per_bottle: "",
     storage_location: "",
+    grape_varietals: "",
   });
 
   useEffect(() => {
@@ -139,6 +140,9 @@ const AddWine = () => {
         current_stock: parseInt(formData.current_stock),
         price_per_bottle: formData.price_per_bottle ? parseFloat(formData.price_per_bottle) : null,
         storage_location: formData.storage_location || null,
+        grape_varietals: formData.grape_varietals 
+          ? formData.grape_varietals.split(',').map(g => g.trim()).filter(g => g) 
+          : null,
         images: imageUrl ? { primary: imageUrl } : null,
       };
 
@@ -289,6 +293,17 @@ const AddWine = () => {
                     placeholder="Bordeaux"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="grape_varietals">Grape Varietals</Label>
+                <Input
+                  id="grape_varietals"
+                  value={formData.grape_varietals}
+                  onChange={(e) => setFormData({ ...formData, grape_varietals: e.target.value })}
+                  placeholder="Cabernet Sauvignon, Merlot, Cabernet Franc"
+                />
+                <p className="text-xs text-muted-foreground">Separate multiple grapes with commas</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
