@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Trash2, Plus } from "lucide-react";
+import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Trash2, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -55,6 +55,7 @@ const WineDetail = () => {
   const [notes, setNotes] = useState("");
   const [occasion, setOccasion] = useState("");
   const [foodPairing, setFoodPairing] = useState("");
+  const [processingBackground, setProcessingBackground] = useState(false);
   
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
     Autoplay({ delay: 3000, stopOnInteraction: false })
@@ -170,6 +171,83 @@ const WineDetail = () => {
     }
   };
 
+  const handleRemoveBackground = async () => {
+    if (!wine || !wine.images) return;
+
+    setProcessingBackground(true);
+    const session = await supabase.auth.getSession();
+    
+    try {
+      const processedImages: any = {};
+      const imageEntries = Object.entries(wine.images);
+      
+      toast.info(`Processing ${imageEntries.length} image(s)...`);
+
+      for (const [type, url] of imageEntries) {
+        console.log(`Processing ${type} image...`);
+        
+        // Call edge function to process image
+        const { data, error } = await supabase.functions.invoke('remove-wine-background', {
+          body: { imageUrl: url }
+        });
+
+        if (error) {
+          console.error(`Error processing ${type}:`, error);
+          toast.error(`Failed to process ${type} image`);
+          continue;
+        }
+
+        if (!data.processedImage) {
+          console.error(`No processed image for ${type}`);
+          continue;
+        }
+
+        // Convert base64 to blob
+        const base64Data = data.processedImage.split(',')[1];
+        const blob = await fetch(`data:image/png;base64,${base64Data}`).then(r => r.blob());
+
+        // Upload to storage
+        const fileName = `${session.data.session?.user.id}/${type}_cleaned_${Date.now()}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from('wine-images')
+          .upload(fileName, blob);
+
+        if (uploadError) {
+          console.error(`Upload error for ${type}:`, uploadError);
+          toast.error(`Failed to upload ${type} image`);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('wine-images')
+          .getPublicUrl(fileName);
+
+        processedImages[type] = publicUrl;
+        toast.success(`${type} image cleaned!`);
+      }
+
+      // Update wine record with new images
+      if (Object.keys(processedImages).length > 0) {
+        const { error: updateError } = await supabase
+          .from('wines')
+          .update({ images: processedImages })
+          .eq('id', wine.id);
+
+        if (updateError) throw updateError;
+
+        toast.success('All images updated with clean backgrounds!');
+        fetchWine();
+      } else {
+        toast.error('No images were successfully processed');
+      }
+    } catch (error: any) {
+      console.error('Background removal error:', error);
+      toast.error(error.message || 'Failed to clean backgrounds');
+    } finally {
+      setProcessingBackground(false);
+    }
+  };
+
   if (loading || !wine) {
     return (
       <Layout>
@@ -219,6 +297,27 @@ const WineDetail = () => {
               </div>
             )}
           </div>
+
+          {/* Clean Background Button */}
+          {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 0 && (
+            <Button
+              onClick={handleRemoveBackground}
+              disabled={processingBackground}
+              className="w-full mt-4 bg-primary hover:bg-primary/90"
+            >
+              {processingBackground ? (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4 animate-pulse" />
+                  Processing Images...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Clean Background with AI
+                </>
+              )}
+            </Button>
+          )}
 
           {/* Wine Name */}
           <div className="mt-6">
