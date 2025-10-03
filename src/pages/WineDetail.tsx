@@ -354,21 +354,42 @@ const WineDetail = () => {
             {wine.producer && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Producer</span>
-                <span className="text-white">{wine.producer}</span>
+                <span className="text-white text-right">{wine.producer}</span>
+              </div>
+            )}
+
+            {wine.vintage_year && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Vintage Year</span>
+                <span className="text-white">{wine.vintage_year}</span>
               </div>
             )}
             
             {wine.wine_type && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Type</span>
-                <span className="text-white">{wine.wine_type}</span>
+                <span className="text-white capitalize">{wine.wine_type}</span>
+              </div>
+            )}
+
+            {wine.country && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Country</span>
+                <span className="text-white text-right">{wine.country}</span>
+              </div>
+            )}
+
+            {wine.region && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Region</span>
+                <span className="text-white text-right">{wine.region}</span>
               </div>
             )}
             
             {wine.grape_varietals && Array.isArray(wine.grape_varietals) && wine.grape_varietals.length > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Grape Varietals</span>
-                <span className="text-white">
+                <span className="text-white text-right">
                   {wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean).join(', ')}
                 </span>
               </div>
@@ -377,13 +398,13 @@ const WineDetail = () => {
             {wine.appellation && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Appellation</span>
-                <span className="text-white">{wine.appellation}</span>
+                <span className="text-white text-right">{wine.appellation}</span>
               </div>
             )}
             
             {wine.alcohol_content && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Alcohol Content</span>
+                <span className="text-gray-400">Alcohol Content (ABV)</span>
                 <span className="text-white">{wine.alcohol_content}%</span>
               </div>
             )}
@@ -391,7 +412,7 @@ const WineDetail = () => {
             {wine.optimal_drinking_window && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Optimal Drinking Window</span>
-                <span className="text-white">{wine.optimal_drinking_window}</span>
+                <span className="text-white text-right">{wine.optimal_drinking_window}</span>
               </div>
             )}
           </div>
