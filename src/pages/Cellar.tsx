@@ -268,9 +268,6 @@ const Cellar = () => {
                     <div className="text-2xl font-bold text-white">
                       {wine.current_stock}
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {wine.current_stock === 1 ? "bottle" : "bottles"}
-                    </div>
                   </div>
                 </div>
               ))}
