@@ -194,35 +194,22 @@ const Wishlist = () => {
                   </div>
                   
                   {/* Wine details - stacked vertically */}
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2">
+                  <div className="flex-1 space-y-1">
+                    {/* Line 1: Wine name */}
+                    <h3 className="text-xl font-semibold text-white">
                       {item.wine_name}
                     </h3>
                     
-                    {item.producer && <p className="text-lg text-white/90 mb-3">
-                        {item.producer}
-                      </p>}
+                    {/* Line 2: Wine type + Grape variety */}
+                    <div className="flex items-center gap-3 text-white">
+                      {item.wine_type && <span className="capitalize font-medium">{item.wine_type}</span>}
+                      {item.grape_varietals && <span className="font-medium">{item.grape_varietals}</span>}
+                    </div>
                     
-                    <div className="space-y-1 text-white/80">
-                      {item.wine_type && <p className="flex items-center gap-2">
-                          <span className="text-white">•</span>
-                          <span className="capitalize">{item.wine_type}</span>
-                        </p>}
-                      
-                      {item.grape_varietals && <p className="flex items-center gap-2">
-                          <span className="text-white">•</span>
-                          <span>{item.grape_varietals}</span>
-                        </p>}
-                      
-                      {(item.region || item.country) && <p className="flex items-center gap-2">
-                          <span className="text-white">•</span>
-                          <span>{[item.region, item.country].filter(Boolean).join(", ")}</span>
-                        </p>}
-                      
-                      {item.vintage_year && <p className="flex items-center gap-2">
-                          <span className="text-white">•</span>
-                          <span>{item.vintage_year}</span>
-                        </p>}
+                    {/* Line 3: Vintage year + Region */}
+                    <div className="flex items-center gap-3 text-white/80">
+                      {item.vintage_year && <span>{item.vintage_year}</span>}
+                      {item.region && <span>{item.region}</span>}
                     </div>
                   </div>
                   
