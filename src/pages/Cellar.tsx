@@ -128,7 +128,7 @@ const Cellar = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-background to-wine-cream">
+      <div className="min-h-screen bg-[hsl(350,60%,35%)]">
         {/* Header */}
         <div className="bg-primary text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">My Cellar</h1>
