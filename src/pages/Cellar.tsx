@@ -244,7 +244,7 @@ const Cellar = () => {
                 <div
                   key={wine.id}
                   onClick={() => navigate(`/wine/${wine.id}`)}
-                  className="bg-[#1a1410] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#2a2420] transition-colors"
+                  className="bg-[hsl(350,60%,35%)] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[hsl(350,60%,40%)] transition-colors"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     {/* Wine bottle image */}
@@ -265,7 +265,7 @@ const Cellar = () => {
                       <h3 className="font-semibold text-white text-base line-clamp-1">
                         {wine.wine_name}
                       </h3>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-white">
                         {wine.vintage_year || "N/A"}
                       </p>
                     </div>
