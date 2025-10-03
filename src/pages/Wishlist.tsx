@@ -162,7 +162,7 @@ const Wishlist = () => {
           <p className="text-primary-foreground/80">Wines you want to try, to remember, to buy</p>
         </div>
 
-        <div className="px-4 mt-6 pb-20">
+        <div className="mt-6 pb-20">
           {/* Camera Button */}
           <div className="mb-6">
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageCapture} className="hidden" />
