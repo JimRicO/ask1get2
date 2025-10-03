@@ -4,8 +4,8 @@ import { Heart } from "lucide-react";
 const Wishlist = () => {
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-background to-wine-cream">
-        <div className="bg-primary text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
+      <div className="min-h-screen bg-black">
+        <div className="bg-black text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">Wishlist</h1>
           <p className="text-primary-foreground/80">Wines you want to try</p>
         </div>
