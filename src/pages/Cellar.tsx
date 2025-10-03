@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { Wine, Plus, Search } from "lucide-react";
+import { Wine, Plus, Search, Filter, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 
@@ -24,6 +25,9 @@ const Cellar = () => {
   const [wines, setWines] = useState<WineData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("recent");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -68,10 +72,37 @@ const Cellar = () => {
     }
   };
 
-  const filteredWines = wines.filter(wine =>
-    wine.wine_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    wine.producer?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredWines = wines
+    .filter(wine => {
+      // Search filter
+      const matchesSearch = wine.wine_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        wine.producer?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Type filter
+      const matchesType = filterType === "all" || wine.wine_type === filterType;
+      
+      // Year filter
+      const matchesYear = filterYear === "all" || wine.vintage_year?.toString() === filterYear;
+      
+      return matchesSearch && matchesType && matchesYear;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.wine_name.localeCompare(b.wine_name);
+        case "year-new":
+          return (b.vintage_year || 0) - (a.vintage_year || 0);
+        case "year-old":
+          return (a.vintage_year || 0) - (b.vintage_year || 0);
+        case "stock":
+          return b.current_stock - a.current_stock;
+        default: // "recent"
+          return 0; // Keep original order (by created_at DESC)
+      }
+    });
+
+  const uniqueTypes = Array.from(new Set(wines.map(w => w.wine_type).filter(Boolean)));
+  const uniqueYears = Array.from(new Set(wines.map(w => w.vintage_year).filter(Boolean))).sort((a, b) => b - a);
 
   const totalBottles = wines.reduce((sum, wine) => sum + wine.current_stock, 0);
   const totalValue = wines.length;
@@ -103,8 +134,8 @@ const Cellar = () => {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="px-4 mt-6">
+        {/* Search & Filters */}
+        <div className="px-4 mt-6 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
@@ -113,6 +144,45 @@ const Cellar = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="text-xs">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {uniqueTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterYear} onValueChange={setFilterYear}>
+              <SelectTrigger className="text-xs">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {uniqueYears.map(year => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="text-xs">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Recent</SelectItem>
+                <SelectItem value="name">Name A-Z</SelectItem>
+                <SelectItem value="year-new">Newest Year</SelectItem>
+                <SelectItem value="year-old">Oldest Year</SelectItem>
+                <SelectItem value="stock">Stock</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
