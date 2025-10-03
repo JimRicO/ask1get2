@@ -216,10 +216,10 @@ const Wishlist = () => {
                   {/* Action buttons */}
                   <div className="flex flex-col gap-3 flex-shrink-0">
                     <Button variant="ghost" size="icon" className="text-white hover:text-blue-400 bg-white/10 hover:bg-white/20">
-                      <Edit className="h-5 w-5" />
+                      <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-white hover:text-red-400 bg-white/10 hover:bg-white/20">
-                      <Trash2 className="h-5 w-5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>)}
