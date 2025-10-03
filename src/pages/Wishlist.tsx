@@ -6,7 +6,6 @@ import { Heart, Camera, Trash2, Loader2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
-
 interface WishlistItem {
   id: string;
   wine_name: string;
@@ -19,7 +18,6 @@ interface WishlistItem {
   image_url: string | null;
   created_at: string;
 }
-
 const Wishlist = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
@@ -27,40 +25,42 @@ const Wishlist = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       setSession(session);
       if (!session) {
         navigate("/auth");
       }
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        if (!session) {
-          navigate("/auth");
-        }
+    const {
+      data: {
+        subscription
       }
-    );
-
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (!session) {
+        navigate("/auth");
+      }
+    });
     return () => subscription.unsubscribe();
   }, [navigate]);
-
   useEffect(() => {
     if (session) {
       fetchWishlist();
     }
   }, [session]);
-
   const fetchWishlist = async () => {
     try {
-      const { data, error } = await supabase
-        .from("wishlist")
-        .select("*")
-        .order("created_at", { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("wishlist").select("*").order("created_at", {
+        ascending: false
+      });
       if (error) throw error;
       setWishlistItems(data || []);
     } catch (error: any) {
@@ -70,11 +70,9 @@ const Wishlist = () => {
       setLoading(false);
     }
   };
-
   const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !session) return;
-
     setProcessing(true);
     try {
       // Convert image to base64
@@ -85,25 +83,26 @@ const Wishlist = () => {
         // Upload image to storage
         const fileExt = file.name.split(".").pop();
         const fileName = `${session.user.id}/wishlist_${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from("wine-images")
-          .upload(fileName, file);
-
+        const {
+          error: uploadError
+        } = await supabase.storage.from("wine-images").upload(fileName, file);
         if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("wine-images")
-          .getPublicUrl(fileName);
+        const {
+          data: {
+            publicUrl
+          }
+        } = supabase.storage.from("wine-images").getPublicUrl(fileName);
 
         // Extract wine data using AI
-        const { data: aiData, error: aiError } = await supabase.functions.invoke(
-          "extract-wine-name",
-          { body: { image: base64Image } }
-        );
-
+        const {
+          data: aiData,
+          error: aiError
+        } = await supabase.functions.invoke("extract-wine-name", {
+          body: {
+            image: base64Image
+          }
+        });
         if (aiError) throw aiError;
-
         const wineData = aiData?.wineData || {
           wine_name: "Unknown Wine",
           producer: null,
@@ -115,26 +114,23 @@ const Wishlist = () => {
         };
 
         // Add to wishlist
-        const { error: insertError } = await supabase
-          .from("wishlist")
-          .insert({
-            user_id: session.user.id,
-            wine_name: wineData.wine_name,
-            producer: wineData.producer,
-            vintage_year: wineData.vintage_year,
-            wine_type: wineData.wine_type,
-            region: wineData.region,
-            country: wineData.country,
-            grape_varietals: wineData.grape_varietals,
-            image_url: publicUrl,
-          });
-
+        const {
+          error: insertError
+        } = await supabase.from("wishlist").insert({
+          user_id: session.user.id,
+          wine_name: wineData.wine_name,
+          producer: wineData.producer,
+          vintage_year: wineData.vintage_year,
+          wine_type: wineData.wine_type,
+          region: wineData.region,
+          country: wineData.country,
+          grape_varietals: wineData.grape_varietals,
+          image_url: publicUrl
+        });
         if (insertError) throw insertError;
-
         toast.success(`Added "${wineData.wine_name}" to wishlist!`);
         fetchWishlist();
       };
-
       reader.readAsDataURL(file);
     } catch (error: any) {
       toast.error(error.message || "Failed to process image");
@@ -146,10 +142,11 @@ const Wishlist = () => {
       }
     }
   };
-
   const handleDelete = async (id: string) => {
     try {
-      const { error } = await supabase.from("wishlist").delete().eq("id", id);
+      const {
+        error
+      } = await supabase.from("wishlist").delete().eq("id", id);
       if (error) throw error;
       toast.success("Removed from wishlist");
       fetchWishlist();
@@ -158,138 +155,90 @@ const Wishlist = () => {
       console.error(error);
     }
   };
-
-  return (
-    <Layout>
+  return <Layout>
       <div className="min-h-screen bg-[#211111]">
         <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">Wishlist</h1>
-          <p className="text-primary-foreground/80">Wines you want to try</p>
+          <p className="text-primary-foreground/80">Wines you want to try, to remember, to buy</p>
         </div>
 
         <div className="px-4 mt-6 pb-20">
           {/* Camera Button */}
           <div className="mb-6">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleImageCapture}
-              className="hidden"
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={processing}
-              className="w-full bg-primary hover:bg-primary/90"
-            >
-              {processing ? (
-                <>
+            <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageCapture} className="hidden" />
+            <Button onClick={() => fileInputRef.current?.click()} disabled={processing} className="w-full bg-primary hover:bg-primary/90">
+              {processing ? <>
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   Processing...
-                </>
-              ) : (
-                <>
+                </> : <>
                   <Camera className="h-5 w-5 mr-2" />
                   Take Photo of Wine Label
-                </>
-              )}
+                </>}
             </Button>
           </div>
 
           {/* Wishlist Items */}
-          {loading ? (
-            <div className="text-center py-12">
+          {loading ? <div className="text-center py-12">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-            </div>
-          ) : wishlistItems.length === 0 ? (
-            <div className="text-center py-12">
+            </div> : wishlistItems.length === 0 ? <div className="text-center py-12">
               <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2 text-white">No wines yet</h3>
               <p className="text-muted-foreground">
                 Take a photo of a wine label to add it to your wishlist
               </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {wishlistItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-[#2a1f1f] rounded-lg p-3 flex items-center gap-4"
-                >
-                  {/* Wine bottle image */}
-                  <div className="bg-[#d4c4a8] rounded-lg w-16 h-20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {item.image_url ? (
-                      <img 
-                        src={item.image_url} 
-                        alt={item.wine_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Heart className="h-8 w-8 text-[#1a1410]" />
-                    )}
+            </div> : <div className="space-y-4">
+              {wishlistItems.map(item => <div key={item.id} className="bg-[#211111] rounded-2xl p-6 flex items-start gap-6">
+                  {/* Wine bottle image - larger */}
+                  <div className="bg-[#d4c4a8] rounded-xl w-24 h-32 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {item.image_url ? <img src={item.image_url} alt={item.wine_name} className="w-full h-full object-cover" /> : <Heart className="h-12 w-12 text-[#1a1410]" />}
                   </div>
                   
-                  {/* Wine details - 3 line vertical layout */}
-                  <div className="flex-1 min-w-0">
-                    {/* Line 1: Wine name */}
-                    <h3 className="text-base font-semibold text-white mb-1">
+                  {/* Wine details - stacked vertically */}
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-white mb-2">
                       {item.wine_name}
                     </h3>
                     
-                    {/* Line 2: Type + Grape varietals */}
-                    <div className="text-sm text-white/90 mb-1">
-                      {item.wine_type && (
-                        <span className="capitalize">{item.wine_type}</span>
-                      )}
-                      {item.wine_type && item.grape_varietals && (
-                        <span className="mx-2">•</span>
-                      )}
-                      {item.grape_varietals && (
-                        <span>{item.grape_varietals}</span>
-                      )}
-                    </div>
+                    {item.producer && <p className="text-lg text-white/90 mb-3">
+                        {item.producer}
+                      </p>}
                     
-                    {/* Line 3: Vintage year + Region/Country */}
-                    <div className="text-sm text-white/80">
-                      {item.vintage_year && (
-                        <span>{item.vintage_year}</span>
-                      )}
-                      {item.vintage_year && (item.region || item.country) && (
-                        <span className="mx-2">•</span>
-                      )}
-                      {(item.region || item.country) && (
-                        <span>{item.region || item.country}</span>
-                      )}
+                    <div className="space-y-1 text-white/80">
+                      {item.wine_type && <p className="flex items-center gap-2">
+                          <span className="text-white">•</span>
+                          <span className="capitalize">{item.wine_type}</span>
+                        </p>}
+                      
+                      {item.grape_varietals && <p className="flex items-center gap-2">
+                          <span className="text-white">•</span>
+                          <span>{item.grape_varietals}</span>
+                        </p>}
+                      
+                      {(item.region || item.country) && <p className="flex items-center gap-2">
+                          <span className="text-white">•</span>
+                          <span>{[item.region, item.country].filter(Boolean).join(", ")}</span>
+                        </p>}
+                      
+                      {item.vintage_year && <p className="flex items-center gap-2">
+                          <span className="text-white">•</span>
+                          <span>{item.vintage_year}</span>
+                        </p>}
                     </div>
                   </div>
                   
                   {/* Action buttons */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
-                    >
-                      <Edit className="h-4 w-4" />
+                  <div className="flex flex-col gap-3 flex-shrink-0">
+                    <Button variant="ghost" size="icon" className="text-white hover:text-blue-400 bg-white/10 hover:bg-white/20">
+                      <Edit className="h-5 w-5" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(item.id)}
-                      className="h-8 w-8 text-white/70 hover:text-red-400 hover:bg-white/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-white hover:text-red-400 bg-white/10 hover:bg-white/20">
+                      <Trash2 className="h-5 w-5" />
                     </Button>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                </div>)}
+            </div>}
         </div>
       </div>
-    </Layout>
-  );
+    </Layout>;
 };
-
 export default Wishlist;
