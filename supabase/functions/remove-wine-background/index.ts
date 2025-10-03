@@ -42,7 +42,7 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: "Remove the background from this wine bottle image and replace it with a clean, professional white background. Keep the wine bottle perfectly in focus and maintain all label details."
+                text: "Remove the background from this wine bottle image and replace it with a clean, professional monochrome cream background. Do not modify the wine bottle, and maintain all label details."
               },
               {
                 type: "image_url",
