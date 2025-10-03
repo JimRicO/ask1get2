@@ -39,11 +39,11 @@ serve(async (req) => {
         messages: [
           {
             role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Remove the background from this wine bottle image and replace it with a clean, professional monochrome cream background. Do not modify the wine bottle, and maintain all label details."
-              },
+        content: [
+          {
+            type: "text",
+            text: "Remove all background from this wine bottle image, making it completely transparent. Keep only the wine bottle itself with all label details intact. The output should be a PNG with transparent background."
+          },
               {
                 type: "image_url",
                 image_url: {
