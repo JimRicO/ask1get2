@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 
 interface WineData {
   id: string;
@@ -53,6 +55,10 @@ const WineDetail = () => {
   const [notes, setNotes] = useState("");
   const [occasion, setOccasion] = useState("");
   const [foodPairing, setFoodPairing] = useState("");
+  
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  ]);
 
   useEffect(() => {
     if (id) {
@@ -191,16 +197,26 @@ const WineDetail = () => {
         </div>
 
         <div className="px-4 pb-20">
-          {/* Wine Bottle Image Card */}
-          <div className="bg-[#d4c4a8] rounded-3xl p-8 mt-4 flex items-center justify-center" style={{ minHeight: '280px' }}>
-            {wine.images && typeof wine.images === 'object' && Object.values(wine.images)[0] ? (
-              <img
-                src={Object.values(wine.images)[0] as string}
-                alt={wine.wine_name}
-                className="h-64 w-auto object-contain"
-              />
+          {/* Wine Bottle Image Carousel */}
+          <div className="bg-[#d4c4a8] rounded-3xl overflow-hidden mt-4" style={{ minHeight: '280px' }}>
+            {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 0 ? (
+              <div className="embla" ref={emblaRef}>
+                <div className="embla__container flex">
+                  {Object.entries(wine.images).map(([type, url]: [string, any]) => (
+                    <div key={type} className="embla__slide flex-[0_0_100%] min-w-0 flex items-center justify-center p-8">
+                      <img
+                        src={url}
+                        alt={`${type} view`}
+                        className="h-64 w-auto object-contain"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
-              <Wine className="h-32 w-32 text-black/20" />
+              <div className="flex items-center justify-center h-full p-8">
+                <Wine className="h-32 w-32 text-black/20" />
+              </div>
             )}
           </div>
 
