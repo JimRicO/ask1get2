@@ -18,6 +18,7 @@ interface WineData {
   wine_type: string | null;
   country: string | null;
   region: string | null;
+  appellation: string | null;
   alcohol_content: number | null;
   current_stock: number;
   price_per_bottle: number | null;
@@ -25,6 +26,7 @@ interface WineData {
   ai_tasting_notes: string | null;
   ai_food_pairings: string[] | null;
   optimal_drinking_window: string | null;
+  grape_varietals: any;
   images: any;
 }
 
@@ -207,6 +209,24 @@ const WineDetail = () => {
                   </div>
                 </div>
               )}
+              {wine.region && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <div className="text-xs text-muted-foreground">Region</div>
+                    <div className="font-medium">{wine.region}</div>
+                  </div>
+                </div>
+              )}
+              {wine.appellation && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <div className="text-xs text-muted-foreground">Appellation</div>
+                    <div className="font-medium">{wine.appellation}</div>
+                  </div>
+                </div>
+              )}
               {wine.alcohol_content && (
                 <div className="flex items-center gap-2">
                   <Percent className="h-4 w-4 text-muted-foreground" />
@@ -216,8 +236,60 @@ const WineDetail = () => {
                   </div>
                 </div>
               )}
+              {wine.storage_location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <div className="text-xs text-muted-foreground">Location</div>
+                    <div className="font-medium">{wine.storage_location}</div>
+                  </div>
+                </div>
+              )}
+              {wine.optimal_drinking_window && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <div className="text-xs text-muted-foreground">Optimal Drinking</div>
+                    <div className="font-medium">{wine.optimal_drinking_window}</div>
+                  </div>
+                </div>
+              )}
             </div>
+            
+            {wine.grape_varietals && (
+              <div className="mt-4 pt-4 border-t">
+                <div className="text-xs text-muted-foreground mb-1">Grape Varietals</div>
+                <div className="font-medium">
+                  {Array.isArray(wine.grape_varietals) 
+                    ? wine.grape_varietals.join(", ") 
+                    : JSON.stringify(wine.grape_varietals)}
+                </div>
+              </div>
+            )}
           </div>
+
+          {wine.ai_tasting_notes && (
+            <div className="bg-card rounded-2xl p-6 shadow-elegant">
+              <h2 className="font-semibold text-lg mb-2">AI Tasting Notes</h2>
+              <p className="text-sm text-muted-foreground">{wine.ai_tasting_notes}</p>
+            </div>
+          )}
+
+          {wine.ai_food_pairings && wine.ai_food_pairings.length > 0 && (
+            <div className="bg-card rounded-2xl p-6 shadow-elegant">
+              <h2 className="font-semibold text-lg mb-2">Recommended Food Pairings</h2>
+              <div className="flex flex-wrap gap-2">
+                {wine.ai_food_pairings.map((pairing, index) => (
+                  <span 
+                    key={index} 
+                    className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                  >
+                    {pairing}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Stock & Actions */}
           <div className="bg-card rounded-2xl p-6 shadow-elegant">
