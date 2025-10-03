@@ -162,25 +162,43 @@ export type Database = {
       }
       wishlist: {
         Row: {
+          country: string | null
           created_at: string
+          grape_varietals: string | null
           id: string
           image_url: string | null
+          producer: string | null
+          region: string | null
           user_id: string
+          vintage_year: number | null
           wine_name: string
+          wine_type: string | null
         }
         Insert: {
+          country?: string | null
           created_at?: string
+          grape_varietals?: string | null
           id?: string
           image_url?: string | null
+          producer?: string | null
+          region?: string | null
           user_id: string
+          vintage_year?: number | null
           wine_name: string
+          wine_type?: string | null
         }
         Update: {
+          country?: string | null
           created_at?: string
+          grape_varietals?: string | null
           id?: string
           image_url?: string | null
+          producer?: string | null
+          region?: string | null
           user_id?: string
+          vintage_year?: number | null
           wine_name?: string
+          wine_type?: string | null
         }
         Relationships: []
       }

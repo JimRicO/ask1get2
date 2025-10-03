@@ -10,6 +10,12 @@ import { Session } from "@supabase/supabase-js";
 interface WishlistItem {
   id: string;
   wine_name: string;
+  producer: string | null;
+  vintage_year: number | null;
+  wine_type: string | null;
+  region: string | null;
+  country: string | null;
+  grape_varietals: string | null;
   image_url: string | null;
   created_at: string;
 }
@@ -90,7 +96,7 @@ const Wishlist = () => {
           .from("wine-images")
           .getPublicUrl(fileName);
 
-        // Extract wine name using AI
+        // Extract wine data using AI
         const { data: aiData, error: aiError } = await supabase.functions.invoke(
           "extract-wine-name",
           { body: { image: base64Image } }
@@ -98,20 +104,34 @@ const Wishlist = () => {
 
         if (aiError) throw aiError;
 
-        const wineName = aiData?.wineName || "Unknown Wine";
+        const wineData = aiData?.wineData || {
+          wine_name: "Unknown Wine",
+          producer: null,
+          vintage_year: null,
+          wine_type: null,
+          region: null,
+          country: null,
+          grape_varietals: null
+        };
 
         // Add to wishlist
         const { error: insertError } = await supabase
           .from("wishlist")
           .insert({
             user_id: session.user.id,
-            wine_name: wineName,
+            wine_name: wineData.wine_name,
+            producer: wineData.producer,
+            vintage_year: wineData.vintage_year,
+            wine_type: wineData.wine_type,
+            region: wineData.region,
+            country: wineData.country,
+            grape_varietals: wineData.grape_varietals,
             image_url: publicUrl,
           });
 
         if (insertError) throw insertError;
 
-        toast.success(`Added "${wineName}" to wishlist!`);
+        toast.success(`Added "${wineData.wine_name}" to wishlist!`);
         fetchWishlist();
       };
 
@@ -216,9 +236,24 @@ const Wishlist = () => {
                       <h3 className="font-semibold text-white text-base line-clamp-1">
                         {item.wine_name}
                       </h3>
-                      <p className="text-sm text-white">
-                        {new Date(item.created_at).toLocaleDateString()}
-                      </p>
+                      <div className="text-sm text-white/80 space-y-0.5">
+                        {item.producer && <p className="line-clamp-1">{item.producer}</p>}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {item.vintage_year && <span>{item.vintage_year}</span>}
+                          {item.wine_type && <span className="capitalize">• {item.wine_type}</span>}
+                        </div>
+                        {(item.region || item.country) && (
+                          <p className="line-clamp-1">
+                            {[item.region, item.country].filter(Boolean).join(", ")}
+                          </p>
+                        )}
+                        {item.grape_varietals && (
+                          <p className="line-clamp-1 text-xs text-white/60">{item.grape_varietals}</p>
+                        )}
+                        <p className="text-xs text-white/60 mt-1">
+                          Added {new Date(item.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   

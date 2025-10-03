@@ -45,7 +45,18 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: "Please extract the wine name from this wine label image. Return ONLY the wine name, nothing else. If you cannot identify a wine name, return 'Unknown Wine'."
+                text: `Extract wine information from this label image. Return a JSON object with these exact fields (use null for any field you can't determine):
+{
+  "wine_name": "the wine name",
+  "producer": "the producer/winery name",
+  "vintage_year": year as integer or null,
+  "wine_type": "red/white/rose/sparkling/dessert/fortified or null",
+  "region": "the wine region",
+  "country": "the country",
+  "grape_varietals": "comma-separated grape varieties or null"
+}
+
+Return ONLY valid JSON, no other text.`
               },
               {
                 type: "image_url",
@@ -69,12 +80,49 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const wineName = data.choices?.[0]?.message?.content?.trim() || "Unknown Wine";
+    const content = data.choices?.[0]?.message?.content?.trim();
 
-    console.log("Extracted wine name:", wineName);
+    if (!content) {
+      return new Response(
+        JSON.stringify({ 
+          wineData: { 
+            wine_name: "Unknown Wine", 
+            producer: null, 
+            vintage_year: null, 
+            wine_type: null, 
+            region: null, 
+            country: null, 
+            grape_varietals: null 
+          } 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Parse JSON response
+    let wineData;
+    try {
+      // Remove markdown code blocks if present
+      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      wineData = JSON.parse(cleanContent);
+    } catch (parseError) {
+      console.error("Failed to parse AI response as JSON:", content);
+      // Fallback: use content as wine name
+      wineData = {
+        wine_name: content,
+        producer: null,
+        vintage_year: null,
+        wine_type: null,
+        region: null,
+        country: null,
+        grape_varietals: null
+      };
+    }
+
+    console.log("Extracted wine data:", wineData);
 
     return new Response(
-      JSON.stringify({ wineName }),
+      JSON.stringify({ wineData }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
