@@ -31,6 +31,7 @@ interface WineData {
   grape_varietals: any;
   images: any;
   created_at: string;
+  description?: string | null;
 }
 
 interface TastingNote {
@@ -328,6 +329,14 @@ const WineDetail = () => {
               </p>
             )}
           </div>
+
+          {/* Description */}
+          {wine.description && (
+            <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
+              <h3 className="text-white font-semibold mb-2">Description</h3>
+              <p className="text-gray-300 text-sm">{wine.description}</p>
+            </div>
+          )}
 
           {/* Wine Information Section */}
           <div className="mt-6 bg-[#2a2420] rounded-xl p-4 space-y-3">
