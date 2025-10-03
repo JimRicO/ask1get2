@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Camera, Upload, Loader2, Wine as WineIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const AddWine = () => {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ const AddWine = () => {
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [savedLocations, setSavedLocations] = useState<string[]>([]);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [existingWine, setExistingWine] = useState<any>(null);
   const [images, setImages] = useState<{
     front: File | null;
     back: File | null;
@@ -158,8 +161,35 @@ const AddWine = () => {
     }
   };
 
+  const checkForDuplicates = async () => {
+    if (!session) return null;
+
+    const { data } = await supabase
+      .from("wines")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .eq("wine_name", formData.wine_name)
+      .maybeSingle();
+
+    return data;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!session) return;
+
+    // Check for duplicates first
+    const duplicate = await checkForDuplicates();
+    if (duplicate) {
+      setExistingWine(duplicate);
+      setShowDuplicateDialog(true);
+      return;
+    }
+
+    await submitWine();
+  };
+
+  const submitWine = async (updateExisting = false) => {
     if (!session) return;
 
     setLoading(true);
@@ -209,11 +239,30 @@ const AddWine = () => {
         images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
       };
 
-      const { error } = await supabase.from("wines").insert(wineData);
+      if (updateExisting && existingWine) {
+        // Merge new images with existing ones
+        const mergedImages = {
+          ...(existingWine.images || {}),
+          ...imageUrls
+        };
+        
+        const { error } = await supabase
+          .from("wines")
+          .update({ 
+            images: mergedImages,
+            current_stock: existingWine.current_stock + parseInt(formData.current_stock)
+          })
+          .eq("id", existingWine.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Wine updated with new photos!");
+      } else {
+        const { error } = await supabase.from("wines").insert(wineData);
 
-      toast.success("Wine added to your cellar!");
+        if (error) throw error;
+        toast.success("Wine added to your cellar!");
+      }
+
       navigate("/cellar");
     } catch (error: any) {
       toast.error(error.message || "Failed to add wine");
@@ -224,6 +273,38 @@ const AddWine = () => {
 
   return (
     <Layout>
+      <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Wine Already Exists</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{formData.wine_name}" is already in your cellar. What would you like to do?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            <AlertDialogAction
+              onClick={() => {
+                setShowDuplicateDialog(false);
+                submitWine(false);
+              }}
+              className="w-full"
+            >
+              Create New Entry
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                setShowDuplicateDialog(false);
+                submitWine(true);
+              }}
+              className="w-full"
+            >
+              Add Photos to Existing
+            </AlertDialogAction>
+            <AlertDialogCancel className="w-full mt-0">Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="min-h-screen bg-gradient-to-b from-background to-wine-cream pb-8">
         <div className="bg-primary text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">Add Wine</h1>
