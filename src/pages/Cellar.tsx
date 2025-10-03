@@ -17,6 +17,7 @@ interface WineData {
   wine_type: string | null;
   current_stock: number;
   images: any;
+  grape_varietals: any;
 }
 
 const Cellar = () => {
@@ -27,6 +28,7 @@ const Cellar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterYear, setFilterYear] = useState<string>("all");
+  const [filterGrape, setFilterGrape] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
 
   useEffect(() => {
@@ -84,7 +86,13 @@ const Cellar = () => {
       // Year filter
       const matchesYear = filterYear === "all" || wine.vintage_year?.toString() === filterYear;
       
-      return matchesSearch && matchesType && matchesYear;
+      // Grape filter
+      const matchesGrape = filterGrape === "all" || 
+        (Array.isArray(wine.grape_varietals) && wine.grape_varietals.some((g: any) => 
+          typeof g === 'string' ? g === filterGrape : g?.name === filterGrape
+        ));
+      
+      return matchesSearch && matchesType && matchesYear && matchesGrape;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -103,6 +111,17 @@ const Cellar = () => {
 
   const uniqueTypes = Array.from(new Set(wines.map(w => w.wine_type).filter(Boolean)));
   const uniqueYears = Array.from(new Set(wines.map(w => w.vintage_year).filter(Boolean))).sort((a, b) => b - a);
+  
+  // Extract unique grape varietals from all wines
+  const uniqueGrapes = Array.from(
+    new Set(
+      wines.flatMap(wine => 
+        Array.isArray(wine.grape_varietals) 
+          ? wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean)
+          : []
+      )
+    )
+  ).sort();
 
   const totalBottles = wines.reduce((sum, wine) => sum + wine.current_stock, 0);
   const totalValue = wines.length;
@@ -146,7 +165,7 @@ const Cellar = () => {
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="text-xs">
                 <SelectValue placeholder="Type" />
@@ -167,6 +186,18 @@ const Cellar = () => {
                 <SelectItem value="all">All Years</SelectItem>
                 {uniqueYears.map(year => (
                   <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterGrape} onValueChange={setFilterGrape}>
+              <SelectTrigger className="text-xs">
+                <SelectValue placeholder="Grape" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Grapes</SelectItem>
+                {uniqueGrapes.map(grape => (
+                  <SelectItem key={grape} value={grape}>{grape}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
