@@ -92,6 +92,7 @@ export type Database = {
           created_at: string | null
           critic_scores: Json | null
           current_stock: number | null
+          description: string | null
           grape_varietals: Json | null
           id: string
           images: Json | null
@@ -116,6 +117,7 @@ export type Database = {
           created_at?: string | null
           critic_scores?: Json | null
           current_stock?: number | null
+          description?: string | null
           grape_varietals?: Json | null
           id?: string
           images?: Json | null
@@ -140,6 +142,7 @@ export type Database = {
           created_at?: string | null
           critic_scores?: Json | null
           current_stock?: number | null
+          description?: string | null
           grape_varietals?: Json | null
           id?: string
           images?: Json | null
