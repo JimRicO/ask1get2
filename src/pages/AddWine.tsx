@@ -16,6 +16,7 @@ const AddWine = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
+  const [savedLocations, setSavedLocations] = useState<string[]>([]);
   const [images, setImages] = useState<{
     front: File | null;
     back: File | null;
@@ -74,6 +75,26 @@ const AddWine = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Fetch saved locations
+  useEffect(() => {
+    const fetchLocations = async () => {
+      if (!session) return;
+      
+      const { data } = await supabase
+        .from("wines")
+        .select("storage_location")
+        .eq("user_id", session.user.id)
+        .not("storage_location", "is", null);
+      
+      if (data) {
+        const uniqueLocations = [...new Set(data.map(w => w.storage_location).filter(Boolean))] as string[];
+        setSavedLocations(uniqueLocations);
+      }
+    };
+    
+    fetchLocations();
+  }, [session]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'neck' | 'overall') => {
     const file = e.target.files?.[0];
@@ -455,12 +476,39 @@ const AddWine = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="storage_location">Location</Label>
-                  <Input
-                    id="storage_location"
-                    value={formData.storage_location}
-                    onChange={(e) => setFormData({ ...formData, storage_location: e.target.value })}
-                    placeholder="Rack A3"
-                  />
+                  {savedLocations.length > 0 ? (
+                    <Select
+                      value={formData.storage_location}
+                      onValueChange={(value) => {
+                        if (value === "custom") {
+                          setFormData({ ...formData, storage_location: "" });
+                        } else {
+                          setFormData({ ...formData, storage_location: value });
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select or enter location" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
+                        {savedLocations.map((location) => (
+                          <SelectItem key={location} value={location}>
+                            {location}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="custom">+ Add New Location</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : null}
+                  {(!formData.storage_location || !savedLocations.includes(formData.storage_location)) && (
+                    <Input
+                      id="storage_location"
+                      value={formData.storage_location}
+                      onChange={(e) => setFormData({ ...formData, storage_location: e.target.value })}
+                      placeholder="e.g., Rack A3, Wine Cellar"
+                      className={savedLocations.length > 0 ? "mt-2" : ""}
+                    />
+                  )}
                 </div>
               </div>
             </div>
