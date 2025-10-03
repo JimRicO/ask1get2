@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, Upload, Loader2 } from "lucide-react";
+import { Camera, Upload, Loader2, Wine as WineIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 
@@ -195,36 +195,42 @@ const AddWine = () => {
         <div className="px-4 mt-6">
           {/* Image Upload */}
           <div className="bg-card rounded-2xl p-6 shadow-elegant mb-6">
-            <Label className="text-base font-semibold mb-3 block">Wine Photos</Label>
+            <Label className="text-base font-semibold mb-4 block">Wine Photos</Label>
             
             <div className="grid grid-cols-2 gap-4">
-              {(['front', 'back', 'neck', 'overall'] as const).map((type) => (
+              {(['front', 'back', 'neck', 'overall'] as const).map((type, index) => (
                 <div key={type}>
-                  <Label className="text-sm mb-2 block capitalize">{type} View</Label>
                   {imagePreviews[type] ? (
-                    <div className="relative">
+                    <div className="relative group">
                       <img
                         src={imagePreviews[type]!}
                         alt={`${type} view`}
-                        className="w-full h-32 object-cover rounded-lg mb-2"
+                        className="w-full h-40 object-cover rounded-xl border-2 border-primary/20"
                       />
-                      <Button
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="sm"
                         onClick={() => {
                           setImages(prev => ({ ...prev, [type]: null }));
                           setImagePreviews(prev => ({ ...prev, [type]: null }));
                         }}
-                        className="absolute top-1 right-1 h-6 w-6 p-0"
+                        className="absolute top-2 right-2 bg-background/90 hover:bg-background rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        ✕
-                      </Button>
+                        <X className="h-4 w-4" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-medium capitalize">
+                        {type} bottle
+                      </div>
                     </div>
                   ) : (
-                    <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                      <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                      <span className="text-xs text-muted-foreground">Upload</span>
+                    <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+                      {type === 'overall' ? (
+                        <Camera className="h-10 w-10 text-primary/60 mb-2" />
+                      ) : (
+                        <WineIcon className="h-10 w-10 text-primary/60 mb-2" />
+                      )}
+                      <span className="text-sm font-medium capitalize text-foreground/80">
+                        {type} bottle
+                      </span>
                       <input
                         type="file"
                         accept="image/*"
