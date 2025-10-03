@@ -4,8 +4,8 @@ import { Compass } from "lucide-react";
 const Discover = () => {
   return (
     <Layout>
-      <div className="min-h-screen bg-black">
-        <div className="bg-black text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
+      <div className="min-h-screen bg-[#211111]">
+        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">Discover</h1>
           <p className="text-primary-foreground/80">Explore new wines</p>
         </div>
