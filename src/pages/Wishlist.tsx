@@ -187,26 +187,21 @@ const Wishlist = () => {
                 Take a photo of a wine label to add it to your wishlist
               </p>
             </div> : <div className="space-y-4">
-              {wishlistItems.map(item => <div key={item.id} className="bg-[#211111] rounded-2xl p-6 flex items-start gap-6">
+              {wishlistItems.map(item => <div key={item.id} className="bg-[#211111] rounded-2xl p-4 flex items-center gap-4">
                   {/* Wine bottle image */}
                   <div className="bg-[#d4c4a8] rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {item.image_url ? <img src={item.image_url} alt={item.wine_name} className="w-full h-full object-cover" /> : <Heart className="h-7 w-7 text-[#1a1410]" />}
                   </div>
                   
-                  {/* Wine details - stacked vertically */}
-                  <div className="flex-1 space-y-1">
-                    {/* Line 1: Wine name */}
-                    <h3 className="font-semibold text-white text-base">
+                  {/* Wine details - compact layout */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-white text-base mb-1">
                       {item.wine_name}
                     </h3>
-                    
-                    {/* Line 2: Wine type + Grape variety */}
-                    <div className="flex items-center gap-3 text-sm text-white">
-                      {item.wine_type && <span className="capitalize font-medium">{item.wine_type}</span>}
-                      {item.grape_varietals && <span className="font-medium">{item.grape_varietals}</span>}
+                    <div className="flex items-center gap-3 text-sm text-white mb-0.5">
+                      {item.wine_type && <span className="capitalize">{item.wine_type}</span>}
+                      {item.grape_varietals && <span>{item.grape_varietals}</span>}
                     </div>
-                    
-                    {/* Line 3: Vintage year + Region */}
                     <div className="flex items-center gap-3 text-sm text-white/80">
                       {item.vintage_year && <span>{item.vintage_year}</span>}
                       {item.region && <span>{item.region}</span>}
@@ -214,11 +209,11 @@ const Wishlist = () => {
                   </div>
                   
                   {/* Action buttons */}
-                  <div className="flex flex-col gap-3 flex-shrink-0">
-                    <Button variant="ghost" size="icon" className="text-white hover:text-blue-400 bg-white/10 hover:bg-white/20">
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-white hover:text-red-400 bg-white/10 hover:bg-white/20">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="h-8 w-8 text-white/60 hover:text-red-400 hover:bg-white/10">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
