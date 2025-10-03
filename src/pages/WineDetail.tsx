@@ -176,73 +176,62 @@ const WineDetail = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[#1a1410]">
         {/* Header */}
-        <div className="bg-primary text-primary-foreground px-4 py-6 shadow-wine">
+        <div className="bg-[#1a1410] text-white px-4 py-4 flex items-center">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/cellar")}
-            className="mb-2 -ml-2 text-primary-foreground hover:text-primary-foreground/80"
+            className="text-white hover:text-white/80 p-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-serif font-bold">Wine Details</h1>
+          <h1 className="text-lg font-semibold ml-4">Wine Details</h1>
         </div>
 
-        <div className="px-4 pb-8">
-          {/* Main Wine Image */}
-          <div className="bg-wine-cream rounded-2xl p-6 mt-6 shadow-elegant">
+        <div className="px-4 pb-20">
+          {/* Wine Bottle Image Card */}
+          <div className="bg-[#d4c4a8] rounded-3xl p-8 mt-4 flex items-center justify-center" style={{ minHeight: '280px' }}>
             {wine.images && typeof wine.images === 'object' && Object.values(wine.images)[0] ? (
               <img
                 src={Object.values(wine.images)[0] as string}
                 alt={wine.wine_name}
-                className="w-full h-80 object-contain"
+                className="h-64 w-auto object-contain"
               />
             ) : (
-              <div className="w-full h-80 flex items-center justify-center">
-                <Wine className="h-32 w-32 text-primary/20" />
-              </div>
+              <Wine className="h-32 w-32 text-black/20" />
             )}
           </div>
 
-          {/* Wine Name & Location */}
+          {/* Wine Name */}
           <div className="mt-6">
-            <h2 className="text-2xl font-serif font-bold">{wine.wine_name}</h2>
+            <h2 className="text-2xl font-bold text-white">{wine.wine_name} {wine.vintage_year || ''}</h2>
             {(wine.country || wine.region) && (
-              <p className="text-muted-foreground mt-1">
+              <p className="text-gray-400 mt-1 text-sm">
                 {wine.region && wine.country ? `${wine.region}, ${wine.country}` : wine.region || wine.country}
               </p>
             )}
           </div>
 
-          {/* Tasting Notes Section */}
+          {/* Tasting Notes */}
           {tastingNotes.length > 0 && (
-            <div className="bg-card rounded-2xl p-6 shadow-elegant mt-6">
-              <h3 className="font-semibold text-lg mb-3">Tasting Notes</h3>
+            <div className="mt-6">
+              <h3 className="text-white font-semibold mb-2">Tasting Notes</h3>
               <div className="space-y-3">
                 {tastingNotes.map((note) => (
-                  <div key={note.id} className="border-l-2 border-primary pl-4 py-2">
+                  <div key={note.id} className="text-gray-300 text-sm">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="text-sm text-muted-foreground">
+                      <span className="text-xs text-gray-500">
                         {new Date(note.tasting_date).toLocaleDateString()}
-                      </div>
-                      <div className="text-sm">
+                      </span>
+                      <div className="text-yellow-500">
                         {"★".repeat(note.rating)}{"☆".repeat(5 - note.rating)}
                       </div>
                     </div>
-                    {note.notes && <p className="text-sm">{note.notes}</p>}
-                    {note.occasion && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Occasion: {note.occasion}
-                      </p>
-                    )}
-                    {note.food_pairing && (
-                      <p className="text-xs text-muted-foreground">
-                        Paired with: {note.food_pairing}
-                      </p>
-                    )}
+                    {note.notes && <p>{note.notes}</p>}
+                    {note.occasion && <p className="text-xs text-gray-500 mt-1">Occasion: {note.occasion}</p>}
+                    {note.food_pairing && <p className="text-xs text-gray-500">Paired with: {note.food_pairing}</p>}
                   </div>
                 ))}
               </div>
@@ -250,23 +239,23 @@ const WineDetail = () => {
           )}
 
           {/* Purchase Details */}
-          <div className="bg-card rounded-2xl p-6 shadow-elegant mt-6">
-            <h3 className="font-semibold text-lg mb-4">Purchase Details</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Purchase Date</span>
-                <span className="font-medium">{new Date(wine.created_at).toLocaleDateString()}</span>
+          <div className="mt-6">
+            <h3 className="text-white font-semibold mb-3">Purchase Details</h3>
+            <div className="space-y-2.5">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Purchase Date</span>
+                <span className="text-white">{new Date(wine.created_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
               </div>
               {wine.price_per_bottle && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Price</span>
-                  <span className="font-medium">${wine.price_per_bottle.toFixed(2)}</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Price</span>
+                  <span className="text-white">${wine.price_per_bottle.toFixed(0)}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Quantity</span>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Quantity</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{wine.current_stock}</span>
+                  <span className="text-white">{wine.current_stock}</span>
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -274,107 +263,43 @@ const WineDetail = () => {
                       setNewStock(wine.current_stock);
                       setEditStockDialogOpen(true);
                     }}
-                    className="h-6 w-6 p-0"
+                    className="h-5 w-5 p-0 text-gray-400 hover:text-white"
                   >
                     <Edit className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
               {wine.storage_location && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Location</span>
-                  <span className="font-medium">{wine.storage_location}</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Location</span>
+                  <span className="text-white">{wine.storage_location}</span>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Wine Info Grid */}
-          <div className="bg-card rounded-2xl p-6 shadow-elegant mt-6">
-            <h3 className="font-semibold text-lg mb-4">Wine Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {wine.vintage_year && (
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Vintage</div>
-                  <div className="font-medium">{wine.vintage_year}</div>
-                </div>
-              )}
-              {wine.wine_type && (
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Type</div>
-                  <div className="font-medium capitalize">{wine.wine_type}</div>
-                </div>
-              )}
-              {wine.alcohol_content && (
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">ABV</div>
-                  <div className="font-medium">{wine.alcohol_content}%</div>
-                </div>
-              )}
-              {wine.appellation && (
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Appellation</div>
-                  <div className="font-medium">{wine.appellation}</div>
-                </div>
-              )}
-            </div>
-            
-            {wine.grape_varietals && (
-              <div className="mt-4 pt-4 border-t">
-                <div className="text-xs text-muted-foreground mb-1">Grape Varietals</div>
-                <div className="font-medium">
-                  {Array.isArray(wine.grape_varietals) 
-                    ? wine.grape_varietals.join(", ") 
-                    : JSON.stringify(wine.grape_varietals)}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* All Images */}
-          {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 1 && (
-            <div className="bg-card rounded-2xl p-6 shadow-elegant mt-6">
-              <h3 className="font-semibold text-lg mb-4">All Photos</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {Object.entries(wine.images).map(([type, url]: [string, any]) => (
-                  <div key={type} className="relative">
-                    <img
-                      src={url}
-                      alt={`${type} view`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                    <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-medium capitalize">
-                      {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 mt-6">
+          <div className="grid grid-cols-2 gap-3 mt-8">
             <Dialog open={consumeDialogOpen} onOpenChange={setConsumeDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90">
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button className="bg-[#5c2e2e] hover:bg-[#4a2424] text-white border-0 rounded-lg py-6">
                   Log Tasting
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="bg-[#1a1410] text-white border-gray-700">
                 <DialogHeader>
-                  <DialogTitle>Log Tasting</DialogTitle>
+                  <DialogTitle className="text-white">Log Tasting</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label>Rating</Label>
+                    <Label className="text-white">Rating</Label>
                     <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
                           type="button"
                           onClick={() => setRating(star)}
-                          className="text-2xl"
+                          className="text-2xl text-yellow-500"
                         >
                           {star <= rating ? "★" : "☆"}
                         </button>
@@ -382,59 +307,66 @@ const WineDetail = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Tasting Notes</Label>
+                    <Label className="text-white">Tasting Notes</Label>
                     <Textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Describe the flavors, aromas..."
+                      className="bg-[#2a2420] border-gray-700 text-white"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Occasion</Label>
+                    <Label className="text-white">Occasion</Label>
                     <Input
                       value={occasion}
                       onChange={(e) => setOccasion(e.target.value)}
                       placeholder="Dinner party, celebration..."
+                      className="bg-[#2a2420] border-gray-700 text-white"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Food Pairing</Label>
+                    <Label className="text-white">Food Pairing</Label>
                     <Input
                       value={foodPairing}
                       onChange={(e) => setFoodPairing(e.target.value)}
                       placeholder="What did you pair it with?"
+                      className="bg-[#2a2420] border-gray-700 text-white"
                     />
                   </div>
-                  <Button onClick={handleConsume} className="w-full">
+                  <Button onClick={handleConsume} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
                     Save Tasting Note
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
 
-            <Button variant="destructive" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4 mr-2" />
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              className="bg-[#dc2626] hover:bg-[#b91c1c] text-white border-0 rounded-lg py-6"
+            >
               Delete
             </Button>
           </div>
 
           {/* Stock Edit Dialog */}
           <Dialog open={editStockDialogOpen} onOpenChange={setEditStockDialogOpen}>
-            <DialogContent>
+            <DialogContent className="bg-[#1a1410] text-white border-gray-700">
               <DialogHeader>
-                <DialogTitle>Update Stock</DialogTitle>
+                <DialogTitle className="text-white">Update Stock</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label>Number of Bottles</Label>
+                  <Label className="text-white">Number of Bottles</Label>
                   <Input
                     type="number"
                     min="0"
                     value={newStock}
                     onChange={(e) => setNewStock(parseInt(e.target.value) || 0)}
+                    className="bg-[#2a2420] border-gray-700 text-white"
                   />
                 </div>
-                <Button onClick={handleUpdateStock} className="w-full">
+                <Button onClick={handleUpdateStock} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
                   Update Stock
                 </Button>
               </div>
