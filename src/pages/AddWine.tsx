@@ -155,12 +155,16 @@ const AddWine = () => {
 
         // Check for duplicates immediately after AI scan
         if (data.extracted.wine_name) {
-          const { data: duplicateData } = await supabase
+          const normalizedSearchName = data.extracted.wine_name.toLowerCase().trim();
+          
+          const { data: allWines } = await supabase
             .from("wines")
             .select("*")
-            .eq("user_id", session.user.id)
-            .eq("wine_name", data.extracted.wine_name)
-            .maybeSingle();
+            .eq("user_id", session.user.id);
+
+          const duplicateData = allWines?.find(wine => 
+            wine.wine_name.toLowerCase().trim() === normalizedSearchName
+          );
 
           if (duplicateData) {
             setExistingWine(duplicateData);
@@ -177,16 +181,22 @@ const AddWine = () => {
   };
 
   const checkForDuplicates = async () => {
-    if (!session) return null;
+    if (!session || !formData.wine_name) return null;
 
-    const { data } = await supabase
+    // Normalize the wine name for comparison (lowercase, trim whitespace)
+    const normalizedSearchName = formData.wine_name.toLowerCase().trim();
+
+    const { data: allWines } = await supabase
       .from("wines")
       .select("*")
-      .eq("user_id", session.user.id)
-      .eq("wine_name", formData.wine_name)
-      .maybeSingle();
+      .eq("user_id", session.user.id);
 
-    return data;
+    // Find wines with matching normalized names
+    const duplicate = allWines?.find(wine => 
+      wine.wine_name.toLowerCase().trim() === normalizedSearchName
+    );
+
+    return duplicate || null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
