@@ -380,7 +380,7 @@ const AddWine = () => {
                 variant="outline"
                 onClick={processImageWithAI}
                 disabled={aiProcessing}
-                className="w-full mt-4 bg-[#5c2e2e] hover:bg-[#4a2424] text-white border-[#5c2e2e]"
+                className="w-full mt-4 bg-white hover:bg-white/90 text-[#211111] border-white"
               >
                 {aiProcessing ? (
                   <>
