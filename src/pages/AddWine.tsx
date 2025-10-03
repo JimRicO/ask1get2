@@ -128,6 +128,7 @@ const AddWine = () => {
 
       // Insert wine record
       const wineData: any = {
+        user_id: session.user.id,
         wine_name: formData.wine_name,
         producer: formData.producer || null,
         vintage_year: formData.vintage_year ? parseInt(formData.vintage_year) : null,
