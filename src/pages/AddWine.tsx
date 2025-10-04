@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
@@ -13,6 +13,7 @@ import { Session } from "@supabase/supabase-js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const AddWine = () => {
+  const formRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
@@ -153,6 +154,11 @@ const AddWine = () => {
           ...data.extracted,
         }));
         toast.success("Wine labels scanned successfully!");
+        
+        // Scroll to the form
+        setTimeout(() => {
+          formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
       }
     } catch (error: any) {
       console.error("AI processing error:", error);
@@ -398,7 +404,7 @@ const AddWine = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="bg-card rounded-2xl p-6 shadow-elegant space-y-4">
+            <div ref={formRef} className="bg-card rounded-2xl p-6 shadow-elegant space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="wine_name">Wine Name *</Label>
                 <Input
