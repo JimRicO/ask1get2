@@ -211,7 +211,7 @@ const AddWine = () => {
     try {
       const imageUrls: any = {};
 
-      // Upload all images
+      // Upload all images immediately
       for (const [type, file] of Object.entries(images)) {
         if (file) {
           const fileExt = file.name.split(".").pop();
@@ -229,55 +229,72 @@ const AddWine = () => {
         }
       }
 
-      // Automatically remove backgrounds from uploaded images
-      const cleanedImageUrls: any = {};
-      for (const [type, imageUrl] of Object.entries(imageUrls)) {
-        try {
-          console.log(`Processing ${type} image for background removal...`);
-          const { data: bgRemovalData, error: bgRemovalError } = await supabase.functions.invoke("remove-wine-background", {
-            body: { imageUrl }
-          });
+      const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
+      const wineData: any = {
+        user_id: session.user.id,
+        wine_name: formData.wine_name,
+        producer: formData.producer || null,
+        vintage_year: formData.vintage_year ? parseInt(formData.vintage_year) : null,
+        wine_type: formData.wine_type || null,
+        country: formData.country || null,
+        region: formData.region || null,
+        alcohol_content: formData.alcohol_content ? parseFloat(formData.alcohol_content) : null,
+        current_stock: parseInt(formData.current_stock),
+        price_per_bottle: formData.price_per_bottle ? parseFloat(formData.price_per_bottle) : null,
+        storage_location: formData.storage_location || null,
+        grape_varietals: allGrapes.length > 0 ? allGrapes : null,
+        images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
+        description: formData.description || null,
+        notes: formData.notes || null
+      };
 
-          if (bgRemovalError) {
-            console.error(`Background removal failed for ${type}:`, bgRemovalError);
-            // If background removal fails, use original image
-            cleanedImageUrls[type] = imageUrl;
-          } else if (bgRemovalData?.processedImage) {
-            // Convert base64 to blob and upload the cleaned image
-            const base64Data = bgRemovalData.processedImage.split(',')[1];
-            const binaryData = atob(base64Data);
-            const arrayBuffer = new ArrayBuffer(binaryData.length);
-            const uint8Array = new Uint8Array(arrayBuffer);
-            for (let i = 0; i < binaryData.length; i++) {
-              uint8Array[i] = binaryData.charCodeAt(i);
-            }
-            const blob = new Blob([uint8Array], { type: 'image/png' });
-            
-            // Upload cleaned image
-            const cleanedFileName = `${session.user.id}/${type}_cleaned_${Date.now()}.png`;
-            const { error: cleanedUploadError } = await supabase.storage
-              .from("wine-images")
-              .upload(cleanedFileName, blob);
-            
-            if (cleanedUploadError) {
-              console.error(`Failed to upload cleaned ${type} image:`, cleanedUploadError);
-              cleanedImageUrls[type] = imageUrl;
-            } else {
-              const { data: { publicUrl: cleanedPublicUrl } } = supabase.storage
-                .from("wine-images")
-                .getPublicUrl(cleanedFileName);
-              cleanedImageUrls[type] = cleanedPublicUrl;
-              console.log(`Successfully cleaned ${type} image`);
-            }
-          } else {
-            cleanedImageUrls[type] = imageUrl;
-          }
-        } catch (error) {
-          console.error(`Error processing ${type} image:`, error);
-          // Fall back to original image on any error
-          cleanedImageUrls[type] = imageUrl;
-        }
+      let wineId: string | null = null;
+
+      if (updateExisting && existingWine) {
+        // Merge new images with existing ones
+        const mergedImages = {
+          ...(existingWine.images || {}),
+          ...imageUrls
+        };
+        const {
+          error
+        } = await supabase.from("wines").update({
+          images: mergedImages,
+          current_stock: existingWine.current_stock + parseInt(formData.current_stock)
+        }).eq("id", existingWine.id);
+        if (error) throw error;
+        wineId = existingWine.id;
+        toast.success("Wine updated with new photos!");
+      } else {
+        const {
+          data,
+          error
+        } = await supabase.from("wines").insert(wineData).select();
+        if (error) throw error;
+        wineId = data?.[0]?.id;
+        toast.success("Wine added to your cellar!");
       }
+
+      // Navigate immediately to cellar
+      navigate("/cellar");
+
+      // Start background image processing if we have images and a wine ID
+      if (wineId && Object.keys(imageUrls).length > 0) {
+        supabase.functions.invoke("process-wine-images", {
+          body: { 
+            wineId,
+            imageUrls 
+          }
+        }).catch(error => {
+          console.error("Background processing error:", error);
+        });
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add wine");
+    } finally {
+      setLoading(false);
+    }
+  };
       const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
       const wineData: any = {
         user_id: session.user.id,
