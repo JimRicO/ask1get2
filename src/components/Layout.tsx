@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Wine, Camera, Compass, Heart, User } from "lucide-react";
+import { Wine, Camera, Compass, Heart, User, Plus } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -35,13 +35,20 @@ const Layout = ({ children }: LayoutProps) => {
                   onClick={() => navigate(path)}
                   className={`flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] px-3 rounded-xl transition-all ${
                     isCenter
-                      ? "bg-primary text-primary-foreground scale-110 shadow-wine"
+                      ? "bg-primary text-primary-foreground scale-110 shadow-wine relative"
                       : isActive
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Icon className={isCenter ? "h-6 w-6" : "h-5 w-5"} />
+                  {isCenter ? (
+                    <div className="relative">
+                      <Icon className="h-6 w-6" />
+                      <Plus className="h-3 w-3 absolute -top-1 -right-1" />
+                    </div>
+                  ) : (
+                    <Icon className="h-5 w-5" />
+                  )}
                   <span className={`text-xs font-medium ${isCenter ? "hidden" : ""}`}>
                     {label}
                   </span>
