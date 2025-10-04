@@ -379,7 +379,7 @@ const AddWine = () => {
                 type="button"
                 onClick={processImageWithAI}
                 disabled={aiProcessing}
-                className="w-2/3 mx-auto mt-4 bg-primary hover:bg-primary/90 text-white block text-center"
+                className="w-2/3 mx-auto mt-4 bg-primary hover:bg-primary/90 text-white flex justify-center items-center"
               >
                 {aiProcessing ? (
                   <>
