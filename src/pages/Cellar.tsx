@@ -118,9 +118,11 @@ const Cellar = () => {
       
       console.log("Fetched wines count:", data?.length);
       console.log("Total count from DB:", count);
-      console.log("Fetched wines:", data);
       
       setWines(data || []);
+      
+      // Show debug toast
+      toast.info(`Loaded ${data?.length || 0} wines from database (Total: ${count})`);
     } catch (error: any) {
       toast.error("Failed to load wines");
       console.error("Fetch wines error:", error);
@@ -170,6 +172,13 @@ const Cellar = () => {
   console.log("Total wines in state:", wines.length);
   console.log("Filtered wines count:", filteredWines.length);
   console.log("Active filters:", { searchQuery, filterType, filterYear, filterGrape, filterCountry, sortBy });
+  
+  // Show visible notification of filter results
+  useEffect(() => {
+    if (wines.length > 0) {
+      toast.info(`Displaying ${filteredWines.length} of ${wines.length} wines`);
+    }
+  }, [filteredWines.length, wines.length]);
 
   const uniqueTypes = Array.from(new Set(wines.map(w => w.wine_type).filter(Boolean)));
   const uniqueYears = Array.from(new Set(wines.map(w => w.vintage_year).filter(Boolean))).sort((a, b) => b - a);
