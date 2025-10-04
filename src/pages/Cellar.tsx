@@ -19,6 +19,7 @@ interface WineData {
   images: any;
   grape_varietals: any;
   country: string | null;
+  storage_location: string | null;
 }
 
 const Cellar = () => {
@@ -31,6 +32,7 @@ const Cellar = () => {
   const [filterYear, setFilterYear] = useState<string>("all");
   const [filterGrape, setFilterGrape] = useState<string>("all");
   const [filterCountry, setFilterCountry] = useState<string>("all");
+  const [filterLocation, setFilterLocation] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [showArchive, setShowArchive] = useState<boolean>(false);
 
@@ -149,7 +151,10 @@ const Cellar = () => {
       // Country filter
       const matchesCountry = filterCountry === "all" || wine.country === filterCountry;
       
-      return matchesSearch && matchesType && matchesYear && matchesGrape && matchesCountry;
+      // Location filter
+      const matchesLocation = filterLocation === "all" || wine.storage_location === filterLocation;
+      
+      return matchesSearch && matchesType && matchesYear && matchesGrape && matchesCountry && matchesLocation;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -184,6 +189,7 @@ const Cellar = () => {
   ).sort();
 
   const uniqueCountries = Array.from(new Set(wines.map(w => w.country).filter(Boolean))).sort();
+  const uniqueLocations = Array.from(new Set(wines.map(w => w.storage_location).filter(Boolean))).sort();
 
   const totalBottles = activeWines.reduce((sum, wine) => sum + wine.current_stock, 0);
   const totalValue = activeWines.length;
@@ -283,6 +289,18 @@ const Cellar = () => {
                 <SelectItem value="all">All Countries</SelectItem>
                 {uniqueCountries.map(country => (
                   <SelectItem key={country} value={country}>{country}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterLocation} onValueChange={setFilterLocation}>
+              <SelectTrigger className="text-xs">
+                <SelectValue placeholder="Location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {uniqueLocations.map(location => (
+                  <SelectItem key={location} value={location}>{location}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
