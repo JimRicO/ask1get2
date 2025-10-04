@@ -177,23 +177,9 @@ const AddWine = () => {
           }
         }
 
-        // Normalize wine type to match database enum
-        const normalizeWineType = (type: string | undefined): string => {
-          if (!type) return "";
-          const lowerType = type.toLowerCase();
-          if (lowerType.includes("sparkling")) return "sparkling";
-          if (lowerType.includes("dessert") || lowerType.includes("sweet")) return "dessert";
-          if (lowerType.includes("fortified") || lowerType.includes("port") || lowerType.includes("sherry")) return "fortified";
-          if (lowerType.includes("rosé") || lowerType.includes("rose")) return "rose";
-          if (lowerType.includes("white")) return "white";
-          if (lowerType.includes("red")) return "red";
-          return "";
-        };
-
         setFormData(prev => ({
           ...prev,
           ...data.extracted,
-          wine_type: normalizeWineType(data.extracted.wine_type),
           grape_varietals: mainGrape,
           custom_grape_varietals: additionalGrapes
         }));
@@ -267,27 +253,12 @@ const AddWine = () => {
 
       const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
       
-      // CRITICAL: Normalize wine type to ensure it's a valid lowercase enum value
-      const validWineTypes = ["red", "white", "rose", "sparkling", "dessert", "fortified"];
-      let normalizedWineType: string | null = null;
-      
-      if (formData.wine_type) {
-        const lowerType = formData.wine_type.toLowerCase();
-        if (validWineTypes.includes(lowerType)) {
-          normalizedWineType = lowerType;
-        } else {
-          console.warn(`Invalid wine_type "${formData.wine_type}" - will be set to null`);
-        }
-      }
-      
-      console.log(`Submitting wine with wine_type: "${normalizedWineType}"`);
-      
       const wineData: any = {
         user_id: session.user.id,
         wine_name: formData.wine_name,
         producer: formData.producer || null,
         vintage_year: formData.vintage_year ? parseInt(formData.vintage_year) : null,
-        wine_type: normalizedWineType,
+        wine_type: formData.wine_type || null,
         country: formData.country || null,
         region: formData.region || null,
         alcohol_content: formData.alcohol_content ? parseFloat(formData.alcohol_content) : null,
