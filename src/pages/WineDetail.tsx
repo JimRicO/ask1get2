@@ -414,26 +414,6 @@ const WineDetail = () => {
             )}
           </div>
 
-          {/* Clean Background Button */}
-          {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 0 && (
-            <Button
-              onClick={handleRemoveBackground}
-              disabled={processingBackground}
-              className="w-full mt-4 bg-primary hover:bg-primary/90"
-            >
-              {processingBackground ? (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4 animate-pulse" />
-                  Processing Images...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Clean Background with AI
-                </>
-              )}
-            </Button>
-          )}
 
           {/* Wine Name */}
           <div className="mt-6">
