@@ -484,22 +484,22 @@ const AddWine = () => {
                     <SelectValue placeholder="Select grape varietal" />
                   </SelectTrigger>
                   <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
-                    <SelectItem value="Cabernet Sauvignon">Cabernet Sauvignon</SelectItem>
-                    <SelectItem value="Merlot">Merlot</SelectItem>
-                    <SelectItem value="Pinot Noir">Pinot Noir</SelectItem>
-                    <SelectItem value="Syrah/Shiraz">Syrah/Shiraz</SelectItem>
-                    <SelectItem value="Chardonnay">Chardonnay</SelectItem>
-                    <SelectItem value="Sauvignon Blanc">Sauvignon Blanc</SelectItem>
-                    <SelectItem value="Riesling">Riesling</SelectItem>
-                    <SelectItem value="Pinot Grigio/Gris">Pinot Grigio/Gris</SelectItem>
-                    <SelectItem value="Viognier">Viognier</SelectItem>
-                    <SelectItem value="Malbec">Malbec</SelectItem>
-                    <SelectItem value="Zinfandel">Zinfandel</SelectItem>
-                    <SelectItem value="Tempranillo">Tempranillo</SelectItem>
-                    <SelectItem value="Sangiovese">Sangiovese</SelectItem>
-                    <SelectItem value="Nebbiolo">Nebbiolo</SelectItem>
-                    <SelectItem value="Grenache">Grenache</SelectItem>
                     <SelectItem value="Cabernet Franc">Cabernet Franc</SelectItem>
+                    <SelectItem value="Cabernet Sauvignon">Cabernet Sauvignon</SelectItem>
+                    <SelectItem value="Chardonnay">Chardonnay</SelectItem>
+                    <SelectItem value="Grenache">Grenache</SelectItem>
+                    <SelectItem value="Malbec">Malbec</SelectItem>
+                    <SelectItem value="Merlot">Merlot</SelectItem>
+                    <SelectItem value="Nebbiolo">Nebbiolo</SelectItem>
+                    <SelectItem value="Pinot Grigio/Gris">Pinot Grigio/Gris</SelectItem>
+                    <SelectItem value="Pinot Noir">Pinot Noir</SelectItem>
+                    <SelectItem value="Riesling">Riesling</SelectItem>
+                    <SelectItem value="Sangiovese">Sangiovese</SelectItem>
+                    <SelectItem value="Sauvignon Blanc">Sauvignon Blanc</SelectItem>
+                    <SelectItem value="Syrah/Shiraz">Syrah/Shiraz</SelectItem>
+                    <SelectItem value="Tempranillo">Tempranillo</SelectItem>
+                    <SelectItem value="Viognier">Viognier</SelectItem>
+                    <SelectItem value="Zinfandel">Zinfandel</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
