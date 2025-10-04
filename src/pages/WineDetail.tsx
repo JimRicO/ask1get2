@@ -274,8 +274,6 @@ const WineDetail = () => {
       const imageEntries = Object.entries(wine.images);
       toast.info(`Processing ${imageEntries.length} image(s)...`);
       for (const [type, url] of imageEntries) {
-        console.log(`Processing ${type} image...`);
-
         // Call edge function to process image
         const {
           data,

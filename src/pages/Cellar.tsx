@@ -70,7 +70,6 @@ const Cellar = () => {
             filter: `user_id=eq.${session.user.id}`
           },
           (payload) => {
-            console.log('Wine updated:', payload);
             // Update the wine in the list
             setWines(currentWines => 
               currentWines.map(wine => 
@@ -89,7 +88,6 @@ const Cellar = () => {
             filter: `user_id=eq.${session.user.id}`
           },
           (payload) => {
-            console.log('Wine inserted:', payload);
             setWines(currentWines => [payload.new as WineData, ...currentWines]);
           }
         )
@@ -116,9 +114,6 @@ const Cellar = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      
-      console.log("Fetched wines count:", data?.length);
-      console.log("Total count from DB:", count);
       
       setWines(data || []);
       
@@ -175,10 +170,6 @@ const Cellar = () => {
           return 0; // Keep original order (by created_at DESC)
       }
     });
-
-  console.log("Total wines in state:", wines.length);
-  console.log("Filtered wines count:", filteredWines.length);
-  console.log("Active filters:", { searchQuery, filterType, filterYear, filterGrape, filterCountry, sortBy, showArchive });
 
   const activeWines = wines.filter(w => w.current_stock > 0);
   const archivedWines = wines.filter(w => w.current_stock === 0);
