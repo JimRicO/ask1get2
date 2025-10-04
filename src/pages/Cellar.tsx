@@ -115,10 +115,14 @@ const Cellar = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      
+      console.log("Fetched wines count:", data?.length);
+      console.log("Fetched wines:", data);
+      
       setWines(data || []);
     } catch (error: any) {
       toast.error("Failed to load wines");
-      console.error(error);
+      console.error("Fetch wines error:", error);
     } finally {
       setLoading(false);
     }
