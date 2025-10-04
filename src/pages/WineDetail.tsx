@@ -171,47 +171,6 @@ const WineDetail = () => {
       // Update stock
       const newStockCount = Math.max(0, wine.current_stock - 1);
       
-      // Check if stock reaches zero after consumption
-      if (newStockCount === 0) {
-        const userChoice = window.confirm(
-          "This was your last bottle! Would you like to:\n\n" +
-          "OK - Move this wine to your wishlist\n" +
-          "Cancel - Delete the wine entirely"
-        );
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (userChoice) {
-          // Move to wishlist
-          const { error: wishlistError } = await supabase.from("wishlist").insert({
-            user_id: user?.id,
-            wine_name: wine.wine_name,
-            producer: wine.producer,
-            vintage_year: wine.vintage_year,
-            wine_type: wine.wine_type,
-            country: wine.country,
-            region: wine.region,
-            grape_varietals: Array.isArray(wine.grape_varietals) 
-              ? wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean).join(', ')
-              : null,
-            image_url: wine.images?.front || null
-          });
-          
-          if (wishlistError) throw wishlistError;
-          toast.success("Last bottle consumed! Wine moved to wishlist.");
-        } else {
-          toast.success("Last bottle consumed! Wine deleted.");
-        }
-        
-        // Delete wine in either case
-        const { error: deleteError } = await supabase.from("wines").delete().eq("id", wine.id);
-        if (deleteError) throw deleteError;
-        
-        setConsumeDialogOpen(false);
-        navigate("/cellar");
-        return;
-      }
-      
       const {
         error: updateError
       } = await supabase.from("wines").update({
@@ -219,7 +178,12 @@ const WineDetail = () => {
       }).eq("id", wine.id);
       if (updateError) throw updateError;
       
-      toast.success("Tasting note added!");
+      if (newStockCount === 0) {
+        toast.success("Last bottle consumed! Wine moved to archive. You can view it in your cellar's archive.");
+      } else {
+        toast.success("Tasting note added!");
+      }
+      
       setConsumeDialogOpen(false);
       setRating(5);
       setNotes("");
@@ -247,50 +211,6 @@ const WineDetail = () => {
   const handleUpdateStock = async () => {
     if (!wine) return;
     
-    // Check if stock is being set to zero
-    if (newStock === 0) {
-      const userChoice = window.confirm(
-        "Stock is now zero. Would you like to:\n\n" +
-        "OK - Move this wine to your wishlist\n" +
-        "Cancel - Keep the wine reference with zero stock"
-      );
-      
-      if (userChoice) {
-        // Move to wishlist
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          
-          // Add to wishlist
-          const { error: wishlistError } = await supabase.from("wishlist").insert({
-            user_id: user?.id,
-            wine_name: wine.wine_name,
-            producer: wine.producer,
-            vintage_year: wine.vintage_year,
-            wine_type: wine.wine_type,
-            country: wine.country,
-            region: wine.region,
-            grape_varietals: Array.isArray(wine.grape_varietals) 
-              ? wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean).join(', ')
-              : null,
-            image_url: wine.images?.front || null
-          });
-          
-          if (wishlistError) throw wishlistError;
-          
-          // Delete wine
-          const { error: deleteError } = await supabase.from("wines").delete().eq("id", wine.id);
-          if (deleteError) throw deleteError;
-          
-          toast.success("Wine moved to wishlist!");
-          navigate("/wishlist");
-          return;
-        } catch (error: any) {
-          toast.error("Failed to move wine to wishlist");
-          return;
-        }
-      }
-    }
-    
     try {
       const {
         error
@@ -298,7 +218,13 @@ const WineDetail = () => {
         current_stock: newStock
       }).eq("id", wine.id);
       if (error) throw error;
-      toast.success("Stock updated!");
+      
+      if (newStock === 0) {
+        toast.success("Stock updated to zero! Wine moved to archive.");
+      } else {
+        toast.success("Stock updated!");
+      }
+      
       setEditStockDialogOpen(false);
       fetchWine();
     } catch (error: any) {

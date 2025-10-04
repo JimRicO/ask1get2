@@ -32,6 +32,7 @@ const Cellar = () => {
   const [filterGrape, setFilterGrape] = useState<string>("all");
   const [filterCountry, setFilterCountry] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
+  const [showArchive, setShowArchive] = useState<boolean>(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -122,7 +123,9 @@ const Cellar = () => {
       setWines(data || []);
       
       // Show debug toast
-      toast.info(`Loaded ${data?.length || 0} wines from database (Total: ${count})`);
+      const activeCount = (data || []).filter(w => w.current_stock > 0).length;
+      const archivedCount = (data || []).filter(w => w.current_stock === 0).length;
+      toast.info(`Loaded ${activeCount} active wines, ${archivedCount} archived`);
     } catch (error: any) {
       toast.error("Failed to load wines");
       console.error("Fetch wines error:", error);
@@ -133,6 +136,9 @@ const Cellar = () => {
 
   const filteredWines = wines
     .filter(wine => {
+      // Archive filter - hide zero-stock wines by default
+      if (!showArchive && wine.current_stock === 0) return false;
+      
       // Search filter
       const matchesSearch = wine.wine_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         wine.producer?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -171,14 +177,10 @@ const Cellar = () => {
 
   console.log("Total wines in state:", wines.length);
   console.log("Filtered wines count:", filteredWines.length);
-  console.log("Active filters:", { searchQuery, filterType, filterYear, filterGrape, filterCountry, sortBy });
-  
-  // Show visible notification of filter results
-  useEffect(() => {
-    if (wines.length > 0) {
-      toast.info(`Displaying ${filteredWines.length} of ${wines.length} wines`);
-    }
-  }, [filteredWines.length, wines.length]);
+  console.log("Active filters:", { searchQuery, filterType, filterYear, filterGrape, filterCountry, sortBy, showArchive });
+
+  const activeWines = wines.filter(w => w.current_stock > 0);
+  const archivedWines = wines.filter(w => w.current_stock === 0);
 
   const uniqueTypes = Array.from(new Set(wines.map(w => w.wine_type).filter(Boolean)));
   const uniqueYears = Array.from(new Set(wines.map(w => w.vintage_year).filter(Boolean))).sort((a, b) => b - a);
@@ -196,8 +198,8 @@ const Cellar = () => {
 
   const uniqueCountries = Array.from(new Set(wines.map(w => w.country).filter(Boolean))).sort();
 
-  const totalBottles = wines.reduce((sum, wine) => sum + wine.current_stock, 0);
-  const totalValue = wines.length;
+  const totalBottles = activeWines.reduce((sum, wine) => sum + wine.current_stock, 0);
+  const totalValue = activeWines.length;
 
   return (
     <Layout>
@@ -205,7 +207,9 @@ const Cellar = () => {
         {/* Header */}
         <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">My Cellar</h1>
-          <p className="text-primary-foreground/80">Your personal wine collection</p>
+          <p className="text-primary-foreground/80">
+            {showArchive ? "Archive - All wines including out of stock" : "Your active wine collection"}
+          </p>
         </div>
 
         {/* Stats */}
@@ -216,14 +220,23 @@ const Cellar = () => {
           </div>
           <div className="bg-[#211111] rounded-xl p-4 shadow-elegant">
             <div className="text-2xl font-bold text-primary">{totalValue}</div>
-            <div className="text-xs text-muted-foreground">Wines</div>
+            <div className="text-xs text-muted-foreground">Active Wines</div>
           </div>
           <div className="bg-[#211111] rounded-xl p-4 shadow-elegant">
-            <div className="text-2xl font-bold text-primary">
-              {new Set(wines.map(w => w.wine_type)).size}
-            </div>
-            <div className="text-xs text-muted-foreground">Types</div>
+            <div className="text-2xl font-bold text-primary">{archivedWines.length}</div>
+            <div className="text-xs text-muted-foreground">Archived</div>
           </div>
+        </div>
+
+        {/* Archive Toggle */}
+        <div className="px-4 mt-6">
+          <Button
+            onClick={() => setShowArchive(!showArchive)}
+            variant={showArchive ? "default" : "outline"}
+            className="w-full"
+          >
+            {showArchive ? "Hide Archive" : `View Archive (${archivedWines.length})`}
+          </Button>
         </div>
 
         {/* Search & Filters */}
@@ -353,6 +366,9 @@ const Cellar = () => {
                       <p className="text-sm text-white">
                         {wine.vintage_year || "N/A"}
                       </p>
+                      {wine.current_stock === 0 && (
+                        <span className="text-xs text-muted-foreground italic">Archived</span>
+                      )}
                     </div>
                   </div>
                   
