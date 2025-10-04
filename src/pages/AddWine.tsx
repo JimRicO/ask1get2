@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Camera, Upload, Loader2, Wine, X } from "lucide-react";
 import uploadButtonImg from "@/assets/upload-button.png";
 import bottleIcon from "@/assets/bottle-icon.png";
-import neckIcon from "@/assets/neck.png";
+import neckIcon from "@/assets/neck-icon.png";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
