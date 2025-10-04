@@ -377,10 +377,9 @@ const AddWine = () => {
             {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && (
               <Button
                 type="button"
-                variant="outline"
                 onClick={processImageWithAI}
                 disabled={aiProcessing}
-                className="w-full mt-4 bg-white hover:bg-white/90 text-[#211111] border-white"
+                className="w-2/3 mx-auto mt-4 bg-primary hover:bg-primary/90 text-white block"
               >
                 {aiProcessing ? (
                   <>
