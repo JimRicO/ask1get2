@@ -163,9 +163,25 @@ const AddWine = () => {
       });
       if (error) throw error;
       if (data?.extracted) {
+        // Parse grape varietals from AI response
+        let mainGrape = "";
+        let additionalGrapes = "";
+        
+        if (data.extracted.grape_varietals) {
+          const grapes = data.extracted.grape_varietals.split(',').map((g: string) => g.trim());
+          if (grapes.length > 0) {
+            mainGrape = grapes[0];
+            if (grapes.length > 1) {
+              additionalGrapes = grapes.slice(1).join(', ');
+            }
+          }
+        }
+
         setFormData(prev => ({
           ...prev,
-          ...data.extracted
+          ...data.extracted,
+          grape_varietals: mainGrape,
+          custom_grape_varietals: additionalGrapes
         }));
         setMagicScanCompleted(true);
 
