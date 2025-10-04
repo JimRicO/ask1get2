@@ -102,9 +102,16 @@ const Cellar = () => {
 
   const fetchWines = async () => {
     try {
+      if (!session?.user?.id) {
+        setWines([]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("wines")
         .select("*")
+        .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
