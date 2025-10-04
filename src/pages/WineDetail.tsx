@@ -320,9 +320,11 @@ const WineDetail = () => {
         optimal_drinking_window: editForm.optimal_drinking_window || null
       }).eq("id", wine.id);
       if (error) throw error;
-      toast.success("Wine updated!");
+      
+      // Close dialog and refresh data
       setEditWineDialogOpen(false);
-      fetchWine();
+      await fetchWine();
+      toast.success("Wine updated!");
     } catch (error: any) {
       toast.error("Failed to update wine");
     }
