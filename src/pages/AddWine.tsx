@@ -484,10 +484,19 @@ const AddWine = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="grape_varietals" className="text-white">Main Grape Varietal</Label>
-                <Select value={formData.grape_varietals} onValueChange={value => setFormData({
-                ...formData,
-                grape_varietals: value
-              })}>
+                <Select value={formData.grape_varietals} onValueChange={value => {
+                  if (value === "custom") {
+                    setFormData({
+                      ...formData,
+                      grape_varietals: ""
+                    });
+                  } else {
+                    setFormData({
+                      ...formData,
+                      grape_varietals: value
+                    });
+                  }
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select grape varietal" />
                   </SelectTrigger>
@@ -495,6 +504,7 @@ const AddWine = () => {
                     <SelectItem value="Cabernet Franc">Cabernet Franc</SelectItem>
                     <SelectItem value="Cabernet Sauvignon">Cabernet Sauvignon</SelectItem>
                     <SelectItem value="Chardonnay">Chardonnay</SelectItem>
+                    <SelectItem value="Chenin Blanc">Chenin Blanc</SelectItem>
                     <SelectItem value="Grenache">Grenache</SelectItem>
                     <SelectItem value="Malbec">Malbec</SelectItem>
                     <SelectItem value="Merlot">Merlot</SelectItem>
@@ -508,8 +518,21 @@ const AddWine = () => {
                     <SelectItem value="Tempranillo">Tempranillo</SelectItem>
                     <SelectItem value="Viognier">Viognier</SelectItem>
                     <SelectItem value="Zinfandel">Zinfandel</SelectItem>
+                    <SelectItem value="custom">+ Add Custom Varietal</SelectItem>
                   </SelectContent>
                 </Select>
+                {(!formData.grape_varietals || formData.grape_varietals === "") && (
+                  <Input 
+                    id="grape_varietals_custom" 
+                    value={formData.grape_varietals} 
+                    onChange={e => setFormData({
+                      ...formData,
+                      grape_varietals: e.target.value
+                    })} 
+                    placeholder="Enter custom grape varietal" 
+                    className="mt-2"
+                  />
+                )}
               </div>
 
               <div className="space-y-2">
