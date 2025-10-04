@@ -267,12 +267,20 @@ const AddWine = () => {
 
       const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
       
-      // Normalize wine type to ensure it's a valid enum value
+      // CRITICAL: Normalize wine type to ensure it's a valid lowercase enum value
       const validWineTypes = ["red", "white", "rose", "sparkling", "dessert", "fortified"];
-      let normalizedWineType = formData.wine_type?.toLowerCase() || null;
-      if (normalizedWineType && !validWineTypes.includes(normalizedWineType)) {
-        normalizedWineType = null;
+      let normalizedWineType: string | null = null;
+      
+      if (formData.wine_type) {
+        const lowerType = formData.wine_type.toLowerCase();
+        if (validWineTypes.includes(lowerType)) {
+          normalizedWineType = lowerType;
+        } else {
+          console.warn(`Invalid wine_type "${formData.wine_type}" - will be set to null`);
+        }
       }
+      
+      console.log(`Submitting wine with wine_type: "${normalizedWineType}"`);
       
       const wineData: any = {
         user_id: session.user.id,
