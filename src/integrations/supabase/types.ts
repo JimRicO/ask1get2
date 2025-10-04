@@ -88,6 +88,7 @@ export type Database = {
           ai_tasting_notes: string | null
           alcohol_content: number | null
           appellation: string | null
+          archived_at: string | null
           country: string | null
           created_at: string | null
           critic_scores: Json | null
@@ -113,6 +114,7 @@ export type Database = {
           ai_tasting_notes?: string | null
           alcohol_content?: number | null
           appellation?: string | null
+          archived_at?: string | null
           country?: string | null
           created_at?: string | null
           critic_scores?: Json | null
@@ -138,6 +140,7 @@ export type Database = {
           ai_tasting_notes?: string | null
           alcohol_content?: number | null
           appellation?: string | null
+          archived_at?: string | null
           country?: string | null
           created_at?: string | null
           critic_scores?: Json | null

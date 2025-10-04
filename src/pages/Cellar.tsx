@@ -136,8 +136,9 @@ const Cellar = () => {
 
   const filteredWines = wines
     .filter(wine => {
-      // Archive filter - hide zero-stock wines by default
-      if (!showArchive && wine.current_stock === 0) return false;
+      // Archive filter - use archived_at field if available, fallback to stock
+      const isArchived = wine.current_stock === 0;
+      if (!showArchive && isArchived) return false;
       
       // Search filter
       const matchesSearch = wine.wine_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
