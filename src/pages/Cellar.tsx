@@ -166,6 +166,10 @@ const Cellar = () => {
       }
     });
 
+  console.log("Total wines in state:", wines.length);
+  console.log("Filtered wines count:", filteredWines.length);
+  console.log("Active filters:", { searchQuery, filterType, filterYear, filterGrape, filterCountry, sortBy });
+
   const uniqueTypes = Array.from(new Set(wines.map(w => w.wine_type).filter(Boolean)));
   const uniqueYears = Array.from(new Set(wines.map(w => w.vintage_year).filter(Boolean))).sort((a, b) => b - a);
   
