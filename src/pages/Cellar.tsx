@@ -18,6 +18,7 @@ interface WineData {
   current_stock: number;
   images: any;
   grape_varietals: any;
+  country: string | null;
 }
 
 const Cellar = () => {
@@ -29,6 +30,7 @@ const Cellar = () => {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterYear, setFilterYear] = useState<string>("all");
   const [filterGrape, setFilterGrape] = useState<string>("all");
+  const [filterCountry, setFilterCountry] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
 
   useEffect(() => {
@@ -133,7 +135,10 @@ const Cellar = () => {
           typeof g === 'string' ? g === filterGrape : g?.name === filterGrape
         ));
       
-      return matchesSearch && matchesType && matchesYear && matchesGrape;
+      // Country filter
+      const matchesCountry = filterCountry === "all" || wine.country === filterCountry;
+      
+      return matchesSearch && matchesType && matchesYear && matchesGrape && matchesCountry;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -163,6 +168,8 @@ const Cellar = () => {
       )
     )
   ).sort();
+
+  const uniqueCountries = Array.from(new Set(wines.map(w => w.country).filter(Boolean))).sort();
 
   const totalBottles = wines.reduce((sum, wine) => sum + wine.current_stock, 0);
   const totalValue = wines.length;
@@ -239,6 +246,18 @@ const Cellar = () => {
                 <SelectItem value="all">All Grapes</SelectItem>
                 {uniqueGrapes.map(grape => (
                   <SelectItem key={grape} value={grape}>{grape}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterCountry} onValueChange={setFilterCountry}>
+              <SelectTrigger className="text-xs">
+                <SelectValue placeholder="Country" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Countries</SelectItem>
+                {uniqueCountries.map(country => (
+                  <SelectItem key={country} value={country}>{country}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
