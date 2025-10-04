@@ -167,7 +167,6 @@ const AddWine = () => {
           ...prev,
           ...data.extracted
         }));
-        toast.success("Wine labels scanned successfully!");
         setMagicScanCompleted(true);
 
         // Scroll to the form
@@ -180,7 +179,6 @@ const AddWine = () => {
       }
     } catch (error: any) {
       console.error("AI processing error:", error);
-      toast.error("Failed to process images. You can still add wine manually.");
     } finally {
       setAiProcessing(false);
     }
