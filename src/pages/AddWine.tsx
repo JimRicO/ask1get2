@@ -23,6 +23,7 @@ const AddWine = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
+  const [magicScanCompleted, setMagicScanCompleted] = useState(false);
   const [savedLocations, setSavedLocations] = useState<string[]>([]);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [existingWine, setExistingWine] = useState<any>(null);
@@ -167,6 +168,7 @@ const AddWine = () => {
           ...data.extracted
         }));
         toast.success("Wine labels scanned successfully!");
+        setMagicScanCompleted(true);
 
         // Scroll to the form
         setTimeout(() => {
@@ -379,8 +381,8 @@ const AddWine = () => {
               </Button>}
           </div>
 
-          {/* Form - Only show if at least one image is uploaded */}
-          {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && (
+          {/* Form - Only show after Magic Scan is completed */}
+          {magicScanCompleted && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div ref={formRef} className="bg-[#211111] rounded-2xl p-6 shadow-elegant space-y-4">
               <div className="mb-6 text-center">
