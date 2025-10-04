@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Camera, Upload, Loader2, Wine as WineIcon, X } from "lucide-react";
+import uploadButtonImg from "@/assets/upload-button.png";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -352,11 +353,14 @@ const AddWine = () => {
                       <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-medium capitalize">
                         {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                       </div>
-                    </div> : <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
-                      {type === 'overall' ? <Camera className="h-10 w-10 text-primary/60 mb-2" /> : <WineIcon className="h-10 w-10 text-primary/60 mb-2" />}
-                      <span className="text-sm font-medium capitalize text-white/80">
-                        {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
-                      </span>
+                    </div> : <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer overflow-hidden rounded-xl">
+                      <img src={uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="relative z-10 flex flex-col items-center">
+                        {type === 'overall' ? <Camera className="h-10 w-10 text-white/80 mb-2" /> : <WineIcon className="h-10 w-10 text-white/80 mb-2" />}
+                        <span className="text-sm font-medium capitalize text-white">
+                          {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
+                        </span>
+                      </div>
                       <input type="file" accept="image/*" capture="environment" onChange={e => handleImageChange(e, type)} className="hidden" />
                     </label>}
                 </div>)}
