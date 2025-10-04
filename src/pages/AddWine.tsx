@@ -13,6 +13,7 @@ import bottleIcon from "@/assets/bottle-icon.png";
 import neckButtonImg from "@/assets/neck-button.png";
 import frontLabelButtonImg from "@/assets/front-label-button.png";
 import fullBottleButtonImg from "@/assets/full-bottle-button.png";
+import backLabelButtonImg from "@/assets/back-label-button.png";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -358,9 +359,9 @@ const AddWine = () => {
                         {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                       </div>
                     </div> : <label className="relative flex flex-col items-center justify-center h-32 w-32 cursor-pointer overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                      <img src={type === 'neck' ? neckButtonImg : type === 'front' ? frontLabelButtonImg : type === 'overall' ? fullBottleButtonImg : uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <img src={type === 'neck' ? neckButtonImg : type === 'front' ? frontLabelButtonImg : type === 'back' ? backLabelButtonImg : type === 'overall' ? fullBottleButtonImg : uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                       <div className="relative z-10 flex flex-col items-center drop-shadow-md">
-                        {(type === 'overall' || type === 'neck' || type === 'front') ? null : <img src={bottleIcon} alt="" className="h-8 w-8 mb-1" />}
+                        {(type === 'overall' || type === 'neck' || type === 'front' || type === 'back') ? null : <img src={bottleIcon} alt="" className="h-8 w-8 mb-1" />}
                         <span className="text-xs font-medium capitalize text-white">
                           {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                         </span>
