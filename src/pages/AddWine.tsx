@@ -177,9 +177,23 @@ const AddWine = () => {
           }
         }
 
+        // Normalize wine type to match database enum
+        const normalizeWineType = (type: string | undefined): string => {
+          if (!type) return "";
+          const lowerType = type.toLowerCase();
+          if (lowerType.includes("sparkling")) return "sparkling";
+          if (lowerType.includes("dessert") || lowerType.includes("sweet")) return "dessert";
+          if (lowerType.includes("fortified") || lowerType.includes("port") || lowerType.includes("sherry")) return "fortified";
+          if (lowerType.includes("rosé") || lowerType.includes("rose")) return "rose";
+          if (lowerType.includes("white")) return "white";
+          if (lowerType.includes("red")) return "red";
+          return "";
+        };
+
         setFormData(prev => ({
           ...prev,
           ...data.extracted,
+          wine_type: normalizeWineType(data.extracted.wine_type),
           grape_varietals: mainGrape,
           custom_grape_varietals: additionalGrapes
         }));
