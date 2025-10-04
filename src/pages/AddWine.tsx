@@ -389,7 +389,7 @@ const AddWine = () => {
                 ) : (
                   <>
                     <Camera className="mr-2 h-4 w-4" />
-                    Scan All Photos with AI
+                    Magic Picture Scan
                   </>
                 )}
               </Button>
