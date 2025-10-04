@@ -405,6 +405,11 @@ const AddWine = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div ref={formRef} className="bg-card rounded-2xl p-6 shadow-elegant space-y-4">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold mb-1">Your wine details are ready.</h2>
+                <p className="text-sm text-muted-foreground">Verify and press "Add to Cellar" below</p>
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="wine_name">Wine Name *</Label>
                 <Input
