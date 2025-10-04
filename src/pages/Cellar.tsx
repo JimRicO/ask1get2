@@ -54,6 +54,47 @@ const Cellar = () => {
   useEffect(() => {
     if (session) {
       fetchWines();
+
+      // Set up realtime subscription for wine updates
+      const channel = supabase
+        .channel('wines-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'wines',
+            filter: `user_id=eq.${session.user.id}`
+          },
+          (payload) => {
+            console.log('Wine updated:', payload);
+            // Update the wine in the list
+            setWines(currentWines => 
+              currentWines.map(wine => 
+                wine.id === payload.new.id ? { ...wine, ...payload.new } : wine
+              )
+            );
+            toast.success("Wine images processed!");
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'wines',
+            filter: `user_id=eq.${session.user.id}`
+          },
+          (payload) => {
+            console.log('Wine inserted:', payload);
+            setWines(currentWines => [payload.new as WineData, ...currentWines]);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [session]);
 

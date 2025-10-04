@@ -295,52 +295,6 @@ const AddWine = () => {
       setLoading(false);
     }
   };
-      const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
-      const wineData: any = {
-        user_id: session.user.id,
-        wine_name: formData.wine_name,
-        producer: formData.producer || null,
-        vintage_year: formData.vintage_year ? parseInt(formData.vintage_year) : null,
-        wine_type: formData.wine_type || null,
-        country: formData.country || null,
-        region: formData.region || null,
-        alcohol_content: formData.alcohol_content ? parseFloat(formData.alcohol_content) : null,
-        current_stock: parseInt(formData.current_stock),
-        price_per_bottle: formData.price_per_bottle ? parseFloat(formData.price_per_bottle) : null,
-        storage_location: formData.storage_location || null,
-        grape_varietals: allGrapes.length > 0 ? allGrapes : null,
-        images: Object.keys(cleanedImageUrls).length > 0 ? cleanedImageUrls : null,
-        description: formData.description || null,
-        notes: formData.notes || null
-      };
-      if (updateExisting && existingWine) {
-        // Merge new images with existing ones
-        const mergedImages = {
-          ...(existingWine.images || {}),
-          ...cleanedImageUrls
-        };
-        const {
-          error
-        } = await supabase.from("wines").update({
-          images: mergedImages,
-          current_stock: existingWine.current_stock + parseInt(formData.current_stock)
-        }).eq("id", existingWine.id);
-        if (error) throw error;
-        toast.success("Wine updated with new photos!");
-      } else {
-        const {
-          error
-        } = await supabase.from("wines").insert(wineData);
-        if (error) throw error;
-        toast.success("Wine added to your cellar!");
-      }
-      navigate("/cellar");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add wine");
-    } finally {
-      setLoading(false);
-    }
-  };
   return <Layout>
       <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
         <AlertDialogContent>
