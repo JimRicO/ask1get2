@@ -116,11 +116,6 @@ const Cellar = () => {
       if (error) throw error;
       
       setWines(data || []);
-      
-      // Show debug toast
-      const activeCount = (data || []).filter(w => w.current_stock > 0).length;
-      const archivedCount = (data || []).filter(w => w.current_stock === 0).length;
-      toast.info(`Loaded ${activeCount} active wines, ${archivedCount} archived`);
     } catch (error: any) {
       toast.error("Failed to load wines");
       console.error("Fetch wines error:", error);
