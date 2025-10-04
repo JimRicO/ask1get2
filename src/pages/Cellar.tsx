@@ -20,6 +20,7 @@ interface WineData {
   grape_varietals: any;
   country: string | null;
   storage_location: string | null;
+  storage_locations?: Array<{location: string; quantity: number}>;
 }
 
 const Cellar = () => {
@@ -117,7 +118,14 @@ const Cellar = () => {
 
       if (error) throw error;
       
-      setWines(data || []);
+      // Transform storage_locations from Json to proper type
+      const transformedWines: WineData[] = (data || []).map(wine => ({
+        ...wine,
+        storage_locations: Array.isArray(wine.storage_locations) 
+          ? wine.storage_locations as Array<{location: string; quantity: number}>
+          : []
+      }));
+      setWines(transformedWines);
     } catch (error: any) {
       toast.error("Failed to load wines");
       console.error("Fetch wines error:", error);
@@ -152,7 +160,9 @@ const Cellar = () => {
       const matchesCountry = filterCountry === "all" || wine.country === filterCountry;
       
       // Location filter
-      const matchesLocation = filterLocation === "all" || wine.storage_location === filterLocation;
+      const matchesLocation = filterLocation === "all" || 
+        wine.storage_location === filterLocation ||
+        (wine.storage_locations && wine.storage_locations.some(loc => loc.location === filterLocation));
       
       return matchesSearch && matchesType && matchesYear && matchesGrape && matchesCountry && matchesLocation;
     })
@@ -189,7 +199,16 @@ const Cellar = () => {
   ).sort();
 
   const uniqueCountries = Array.from(new Set(wines.map(w => w.country).filter(Boolean))).sort();
-  const uniqueLocations = Array.from(new Set(wines.map(w => w.storage_location).filter(Boolean))).sort();
+  const uniqueLocations = Array.from(
+    new Set(
+      wines.flatMap(w => {
+        if (w.storage_locations && w.storage_locations.length > 0) {
+          return w.storage_locations.map(loc => loc.location);
+        }
+        return w.storage_location ? [w.storage_location] : [];
+      }).filter(Boolean)
+    )
+  ).sort();
 
   const totalBottles = activeWines.reduce((sum, wine) => sum + wine.current_stock, 0);
   const totalValue = activeWines.length;

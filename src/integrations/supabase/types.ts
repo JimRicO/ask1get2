@@ -103,6 +103,7 @@ export type Database = {
           producer: string | null
           region: string | null
           storage_location: string | null
+          storage_locations: Json | null
           updated_at: string | null
           user_id: string
           vintage_year: number | null
@@ -129,6 +130,7 @@ export type Database = {
           producer?: string | null
           region?: string | null
           storage_location?: string | null
+          storage_locations?: Json | null
           updated_at?: string | null
           user_id: string
           vintage_year?: number | null
@@ -155,6 +157,7 @@ export type Database = {
           producer?: string | null
           region?: string | null
           storage_location?: string | null
+          storage_locations?: Json | null
           updated_at?: string | null
           user_id?: string
           vintage_year?: number | null

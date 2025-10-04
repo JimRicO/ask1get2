@@ -65,6 +65,10 @@ const AddWine = () => {
     description: "",
     notes: ""
   });
+  
+  const [storageLocations, setStorageLocations] = useState<Array<{location: string; quantity: number}>>([
+    { location: "", quantity: 1 }
+  ]);
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -95,9 +99,15 @@ const AddWine = () => {
       if (!session) return;
       const {
         data
-      } = await supabase.from("wines").select("storage_location").eq("user_id", session.user.id).not("storage_location", "is", null);
+      } = await supabase.from("wines").select("storage_locations").eq("user_id", session.user.id);
       if (data) {
-        const uniqueLocations = [...new Set(data.map(w => w.storage_location).filter(Boolean))] as string[];
+        const allLocations = data.flatMap(w => {
+          if (Array.isArray(w.storage_locations)) {
+            return w.storage_locations.map((loc: any) => loc.location);
+          }
+          return [];
+        });
+        const uniqueLocations = [...new Set(allLocations.filter(Boolean))] as string[];
         setSavedLocations(uniqueLocations);
       }
     };
@@ -253,6 +263,12 @@ const AddWine = () => {
 
       const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
       
+      // Calculate total stock from all locations
+      const totalStock = storageLocations.reduce((sum, loc) => sum + loc.quantity, 0);
+      
+      // Filter out empty locations
+      const validStorageLocations = storageLocations.filter(loc => loc.location.trim() !== "");
+      
       const wineData: any = {
         user_id: session.user.id,
         wine_name: formData.wine_name,
@@ -262,9 +278,10 @@ const AddWine = () => {
         country: formData.country || null,
         region: formData.region || null,
         alcohol_content: formData.alcohol_content ? parseFloat(formData.alcohol_content) : null,
-        current_stock: parseInt(formData.current_stock),
+        current_stock: totalStock,
         price_per_bottle: formData.price_per_bottle ? parseFloat(formData.price_per_bottle) : null,
-        storage_location: formData.storage_location || null,
+        storage_location: validStorageLocations.length > 0 ? validStorageLocations[0].location : null,
+        storage_locations: validStorageLocations,
         grape_varietals: allGrapes.length > 0 ? allGrapes : null,
         images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
         description: formData.description || null,
@@ -280,10 +297,28 @@ const AddWine = () => {
           ...imageUrls
         };
         
+        // Merge storage locations
+        const existingLocations = (existingWine.storage_locations || []) as Array<{location: string; quantity: number}>;
+        const newLocations = [...storageLocations];
+        
+        // Merge locations: add quantities for same location, append new locations
+        const mergedLocations = [...existingLocations];
+        newLocations.forEach(newLoc => {
+          const existingIndex = mergedLocations.findIndex(loc => loc.location === newLoc.location);
+          if (existingIndex >= 0) {
+            mergedLocations[existingIndex].quantity += newLoc.quantity;
+          } else {
+            mergedLocations.push(newLoc);
+          }
+        });
+        
+        const newTotalStock = mergedLocations.reduce((sum, loc) => sum + loc.quantity, 0);
+        
         // Build update object: fill empty fields + always update description
         const updates: any = {
           images: mergedImages,
-          current_stock: existingWine.current_stock + parseInt(formData.current_stock),
+          current_stock: newTotalStock,
+          storage_locations: mergedLocations,
           description: formData.description || existingWine.description
         };
         
@@ -560,63 +595,111 @@ const AddWine = () => {
               })} placeholder="Add personal notes about this wine..." rows={3} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="alcohol_content" className="text-white">ABV %</Label>
-                  <Input id="alcohol_content" type="number" step="0.1" value={formData.alcohol_content} onChange={e => setFormData({
-                  ...formData,
-                  alcohol_content: e.target.value
-                })} placeholder="13.5" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="current_stock" className="text-white">Bottles</Label>
-                  <Input id="current_stock" type="number" value={formData.current_stock} onChange={e => setFormData({
-                  ...formData,
-                  current_stock: e.target.value
-                })} required min="1" />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="alcohol_content" className="text-white">ABV %</Label>
+                <Input id="alcohol_content" type="number" step="0.1" value={formData.alcohol_content} onChange={e => setFormData({
+                ...formData,
+                alcohol_content: e.target.value
+              })} placeholder="13.5" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price_per_bottle" className="text-white">Price ($)</Label>
-                  <Input id="price_per_bottle" type="number" step="0.01" value={formData.price_per_bottle} onChange={e => setFormData({
-                  ...formData,
-                  price_per_bottle: e.target.value
-                })} placeholder="50.00" />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="price_per_bottle" className="text-white">Price ($)</Label>
+                <Input id="price_per_bottle" type="number" step="0.01" value={formData.price_per_bottle} onChange={e => setFormData({
+                ...formData,
+                price_per_bottle: e.target.value
+              })} placeholder="50.00" />
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="storage_location" className="text-white">Storage location *</Label>
-                  {savedLocations.length > 0 ? <Select value={formData.storage_location} onValueChange={value => {
-                  if (value === "custom") {
-                    setFormData({
-                      ...formData,
-                      storage_location: ""
-                    });
-                  } else {
-                    setFormData({
-                      ...formData,
-                      storage_location: value
-                    });
-                  }
-                }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select or enter location" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
-                        {savedLocations.map(location => <SelectItem key={location} value={location}>
-                            {location}
-                          </SelectItem>)}
-                        <SelectItem value="custom">+ Add New Location</SelectItem>
-                      </SelectContent>
-                    </Select> : null}
-                  {(!formData.storage_location || !savedLocations.includes(formData.storage_location)) && <Input id="storage_location" value={formData.storage_location} onChange={e => setFormData({
-                  ...formData,
-                  storage_location: e.target.value
-                })} placeholder="e.g., Rack A3, Wine Cellar" className={savedLocations.length > 0 ? "mt-2" : ""} required />}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-white">Storage Locations *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setStorageLocations([...storageLocations, { location: "", quantity: 1 }])}
+                    className="text-xs"
+                  >
+                    + Add Location
+                  </Button>
                 </div>
+                {storageLocations.map((storage, index) => (
+                  <div key={index} className="grid grid-cols-[1fr,100px,auto] gap-2 items-end">
+                    <div className="space-y-2">
+                      <Label htmlFor={`location_${index}`} className="text-white text-sm">Location</Label>
+                      {savedLocations.length > 0 ? (
+                        <Select 
+                          value={storage.location} 
+                          onValueChange={value => {
+                            const newLocations = [...storageLocations];
+                            if (value === "custom") {
+                              newLocations[index].location = "";
+                            } else {
+                              newLocations[index].location = value;
+                            }
+                            setStorageLocations(newLocations);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select location" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
+                            {savedLocations.map(location => (
+                              <SelectItem key={location} value={location}>
+                                {location}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="custom">+ New Location</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : null}
+                      {(!storage.location || !savedLocations.includes(storage.location)) && (
+                        <Input
+                          id={`location_${index}`}
+                          value={storage.location}
+                          onChange={e => {
+                            const newLocations = [...storageLocations];
+                            newLocations[index].location = e.target.value;
+                            setStorageLocations(newLocations);
+                          }}
+                          placeholder="e.g., Rack A3"
+                          className={savedLocations.length > 0 ? "mt-2" : ""}
+                          required
+                        />
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`quantity_${index}`} className="text-white text-sm">Qty</Label>
+                      <Input
+                        id={`quantity_${index}`}
+                        type="number"
+                        min="1"
+                        value={storage.quantity}
+                        onChange={e => {
+                          const newLocations = [...storageLocations];
+                          newLocations[index].quantity = parseInt(e.target.value) || 1;
+                          setStorageLocations(newLocations);
+                        }}
+                        required
+                      />
+                    </div>
+                    {storageLocations.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const newLocations = storageLocations.filter((_, i) => i !== index);
+                          setStorageLocations(newLocations);
+                        }}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 

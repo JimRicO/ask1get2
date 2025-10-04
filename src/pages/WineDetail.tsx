@@ -24,6 +24,7 @@ interface WineData {
   current_stock: number;
   price_per_bottle: number | null;
   storage_location: string | null;
+  storage_locations?: Array<{location: string; quantity: number}>;
   ai_tasting_notes: string | null;
   ai_food_pairings: string[] | null;
   optimal_drinking_window: string | null;
@@ -135,7 +136,15 @@ const WineDetail = () => {
         error
       } = await supabase.from("wines").select("*").eq("id", id).single();
       if (error) throw error;
-      setWine(data);
+      
+      // Transform storage_locations from Json to proper type
+      const wineData: WineData = {
+        ...data,
+        storage_locations: Array.isArray(data.storage_locations) 
+          ? data.storage_locations as Array<{location: string; quantity: number}>
+          : []
+      };
+      setWine(wineData);
 
       // Initialize edit form with current values
       setEditForm({
@@ -572,10 +581,22 @@ const WineDetail = () => {
                   </Button>
                 </div>
               </div>
-              {wine.storage_location && <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Storage Location</span>
-                  <span className="text-white">{wine.storage_location}</span>
-                </div>}
+              {wine.storage_locations && wine.storage_locations.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-gray-400 text-sm">Storage Locations</span>
+                  <div className="space-y-1">
+                    {wine.storage_locations.map((loc, index) => (
+                      <div key={index} className="flex justify-between text-sm bg-[#2a2420]/50 rounded px-2 py-1">
+                        <span className="text-white flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {loc.location}
+                        </span>
+                        <span className="text-gray-400">{loc.quantity} bottles</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
