@@ -44,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
                   {isCenter ? (
                     <div className="relative">
                       <Icon className="h-6 w-6" />
-                      <Plus className="h-3 w-3 absolute -top-1 -right-1" />
+                      <Plus className="h-4 w-4 absolute -top-1 -right-1" />
                     </div>
                   ) : (
                     <Icon className="h-5 w-5" />
