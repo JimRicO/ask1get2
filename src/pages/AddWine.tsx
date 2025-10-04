@@ -492,6 +492,7 @@ const AddWine = () => {
                     <SelectItem value="Sauvignon Blanc">Sauvignon Blanc</SelectItem>
                     <SelectItem value="Riesling">Riesling</SelectItem>
                     <SelectItem value="Pinot Grigio/Gris">Pinot Grigio/Gris</SelectItem>
+                    <SelectItem value="Viognier">Viognier</SelectItem>
                     <SelectItem value="Malbec">Malbec</SelectItem>
                     <SelectItem value="Zinfandel">Zinfandel</SelectItem>
                     <SelectItem value="Tempranillo">Tempranillo</SelectItem>
