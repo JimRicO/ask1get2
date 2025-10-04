@@ -374,7 +374,6 @@ const AddWine = () => {
             {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-primary hover:bg-primary/90 text-white flex justify-center items-center">
                 {aiProcessing ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Scanning Photos...
                   </> : "Magic Scan"}
               </Button>}
           </div>
