@@ -370,49 +370,6 @@ const WineDetail = () => {
         </div>
 
         <div className="px-4 pb-20">
-          {/* Wine Bottle Image with Flip Card */}
-          <div className="rounded-3xl overflow-hidden mt-4 perspective-1000" style={{ minHeight: '280px' }}>
-            {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 0 ? (
-              <div 
-                className={`relative h-80 cursor-pointer transition-all duration-300 ${isFlipping ? 'animate-flip' : ''}`}
-                onClick={handleCardClick}
-                style={{
-                  transformStyle: 'preserve-3d',
-                }}
-              >
-                {Object.entries(wine.images).map(([type, url]: [string, any], index) => (
-                  <div
-                    key={type}
-                    className={`absolute inset-0 flex items-center justify-center p-8 transition-opacity duration-300 ${
-                      index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                    }`}
-                  >
-                    <img
-                      src={url}
-                      alt={`${type} view`}
-                      className="h-72 w-auto object-contain"
-                    />
-                  </div>
-                ))}
-                {Object.keys(wine.images).length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                    {Object.keys(wine.images).map((_, index) => (
-                      <div
-                        key={index}
-                        className={`h-2 w-2 rounded-full transition-all ${
-                          index === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full p-8">
-                <Wine className="h-32 w-32 text-black/20" />
-              </div>
-            )}
-          </div>
 
 
           {/* Wine Name */}
@@ -681,6 +638,51 @@ const WineDetail = () => {
                 Delete
               </Button>
             </div>
+          </div>
+
+          {/* Bottle Images Card */}
+          <div className="mt-6 bg-[#2a2420] rounded-xl p-6 perspective-1000">
+            <h3 className="text-white font-semibold mb-4">Bottle Images</h3>
+            {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 0 ? (
+              <div 
+                className={`relative h-80 cursor-pointer transition-all duration-300 ${isFlipping ? 'animate-flip' : ''}`}
+                onClick={handleCardClick}
+                style={{
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                {Object.entries(wine.images).map(([type, url]: [string, any], index) => (
+                  <div
+                    key={type}
+                    className={`absolute inset-0 flex items-center justify-center p-8 transition-opacity duration-300 ${
+                      index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    <img
+                      src={url}
+                      alt={`${type} view`}
+                      className="h-72 w-auto object-contain"
+                    />
+                  </div>
+                ))}
+                {Object.keys(wine.images).length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                    {Object.keys(wine.images).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`h-2 w-2 rounded-full transition-all ${
+                          index === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-80 p-8">
+                <Wine className="h-32 w-32 text-gray-600/20" />
+              </div>
+            )}
           </div>
 
           {/* Stock Edit Dialog */}
