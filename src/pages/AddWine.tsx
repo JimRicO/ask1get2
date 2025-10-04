@@ -382,7 +382,8 @@ const AddWine = () => {
               </Button>}
           </div>
 
-          {/* Form */}
+          {/* Form - Only show if at least one image is uploaded */}
+          {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div ref={formRef} className="bg-[#211111] rounded-2xl p-6 shadow-elegant space-y-4">
               <div className="mb-6 text-center">
@@ -576,6 +577,7 @@ const AddWine = () => {
                 </> : "Add to Cellar"}
             </Button>
           </form>
+          )}
         </div>
       </div>
     </Layout>;
