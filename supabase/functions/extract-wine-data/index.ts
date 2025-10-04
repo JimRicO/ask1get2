@@ -100,6 +100,18 @@ Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year,
                        extractedText.match(/\{[\s\S]*\}/);
       const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : extractedText;
       extracted = JSON.parse(jsonStr);
+      
+      // Normalize wine_type to match database enum
+      if (extracted.wine_type) {
+        const lowerType = extracted.wine_type.toLowerCase();
+        if (lowerType.includes("sparkling")) extracted.wine_type = "sparkling";
+        else if (lowerType.includes("dessert") || lowerType.includes("sweet")) extracted.wine_type = "dessert";
+        else if (lowerType.includes("fortified") || lowerType.includes("port") || lowerType.includes("sherry")) extracted.wine_type = "fortified";
+        else if (lowerType.includes("rosé") || lowerType.includes("rose")) extracted.wine_type = "rose";
+        else if (lowerType.includes("white")) extracted.wine_type = "white";
+        else if (lowerType.includes("red")) extracted.wine_type = "red";
+        else extracted.wine_type = null; // Invalid type, set to null
+      }
     } catch (e) {
       console.error('Failed to parse AI response:', extractedText);
       // Return a partial result if parsing fails

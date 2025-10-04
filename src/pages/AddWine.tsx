@@ -266,12 +266,20 @@ const AddWine = () => {
       }
 
       const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
+      
+      // Normalize wine type to ensure it's a valid enum value
+      const validWineTypes = ["red", "white", "rose", "sparkling", "dessert", "fortified"];
+      let normalizedWineType = formData.wine_type?.toLowerCase() || null;
+      if (normalizedWineType && !validWineTypes.includes(normalizedWineType)) {
+        normalizedWineType = null;
+      }
+      
       const wineData: any = {
         user_id: session.user.id,
         wine_name: formData.wine_name,
         producer: formData.producer || null,
         vintage_year: formData.vintage_year ? parseInt(formData.vintage_year) : null,
-        wine_type: formData.wine_type || null,
+        wine_type: normalizedWineType,
         country: formData.country || null,
         region: formData.region || null,
         alcohol_content: formData.alcohol_content ? parseFloat(formData.alcohol_content) : null,
