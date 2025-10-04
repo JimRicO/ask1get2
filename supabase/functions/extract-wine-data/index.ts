@@ -25,20 +25,29 @@ serve(async (req) => {
     // Build prompt based on available images
     const imageDescriptions = images.map(img => `${img.type} view`).join(', ');
     
-    const extractionPrompt = `Analyze these wine bottle images (${imageDescriptions}) and extract the following information:
-- Wine name
+    const extractionPrompt = `Analyze these wine bottle images (${imageDescriptions}) carefully and extract ALL visible information:
+
+CRITICAL - ALWAYS extract these if visible on the label:
+- Wine name (REQUIRED)
 - Producer/Winery name
-- Vintage year (if visible)
+- Vintage year
 - Wine type (red, white, rosé, sparkling, dessert, or fortified)
 - Country of origin
 - Region/Appellation
-- Alcohol content (ABV %)
-- Grape varietals (if mentioned)
-- A detailed description (2-3 sentences) of the wine based on visible information about its style, characteristics, and origin
+- **Alcohol content (ABV %) - Look carefully on the label, usually shown as "% ABV", "% vol", or "% alc/vol"**
+- **Grape varietals - Extract ALL grape varieties mentioned on the label (e.g., "Cabernet Sauvignon", "Merlot", "Chardonnay"). This is CRITICAL information that should always be extracted if present.**
+- A detailed description (2-3 sentences) based on visible information about the wine's style, characteristics, and origin
 
-Combine information from all images to give the most complete data possible.
+IMPORTANT INSTRUCTIONS:
+1. Examine ALL images thoroughly to find the alcohol content percentage - it's usually on the front or back label
+2. Look for grape varietals on the front label, back label, or neck label - they are often prominently displayed
+3. Combine information from all images to provide the most complete data possible
+4. Pay special attention to small text that might contain ABV or grape information
+
 Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year, wine_type, country, region, alcohol_content, grape_varietals, description.
-If any information is not visible or unclear, use null for that field.`;
+- For grape_varietals: return as a string with varieties separated by commas (e.g., "Cabernet Sauvignon, Merlot")
+- For alcohol_content: return as a number (e.g., 13.5)
+- If any information is truly not visible or unclear after careful examination, use null for that field.`;
 
     // Prepare content array with all images
     const content: any[] = [{ type: 'text', text: extractionPrompt }];
