@@ -363,7 +363,7 @@ const AddWine = () => {
                       <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4 drop-shadow-md">
                         <Camera className="h-8 w-8 text-white/70 mb-2" />
                         <span className="text-xs font-medium capitalize text-white">
-                          {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
+                          {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : `${type} bottle`}
                         </span>
                       </div>
                       <input type="file" accept="image/*" capture="environment" onChange={e => handleImageChange(e, type)} className="hidden" />
