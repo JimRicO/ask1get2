@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 interface WineData {
   id: string;
   wine_name: string;
@@ -57,6 +58,7 @@ const WineDetail = () => {
   const [occasion, setOccasion] = useState("");
   const [foodPairing, setFoodPairing] = useState("");
   const [processingBackground, setProcessingBackground] = useState(false);
+  const [savedLocations, setSavedLocations] = useState<string[]>([]);
 
   // Flip card state
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -103,8 +105,29 @@ const WineDetail = () => {
     if (id) {
       fetchWine();
       fetchTastingNotes();
+      fetchLocations();
     }
   }, [id]);
+
+  const fetchLocations = async () => {
+    try {
+      const session = await supabase.auth.getSession();
+      if (!session.data.session) return;
+
+      const { data } = await supabase
+        .from("wines")
+        .select("storage_location")
+        .eq("user_id", session.data.session.user.id)
+        .not("storage_location", "is", null);
+
+      if (data) {
+        const uniqueLocations = [...new Set(data.map(w => w.storage_location).filter(Boolean))] as string[];
+        setSavedLocations(uniqueLocations);
+      }
+    } catch (error) {
+      console.error("Failed to fetch locations:", error);
+    }
+  };
   const fetchWine = async () => {
     try {
       const {
@@ -722,10 +745,47 @@ const WineDetail = () => {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white">Storage Location</Label>
-                    <Input value={editForm.storage_location} onChange={e => setEditForm({
-                    ...editForm,
-                    storage_location: e.target.value
-                  })} placeholder="e.g., Rack A3, Wine Cellar" className="bg-[#2a2420] border-gray-700 text-white" />
+                    {savedLocations.length > 0 && (
+                      <Select 
+                        value={editForm.storage_location} 
+                        onValueChange={value => {
+                          if (value === "custom") {
+                            setEditForm({
+                              ...editForm,
+                              storage_location: ""
+                            });
+                          } else {
+                            setEditForm({
+                              ...editForm,
+                              storage_location: value
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="bg-[#2a2420] border-gray-700 text-white">
+                          <SelectValue placeholder="Select or enter location" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
+                          {savedLocations.map(location => (
+                            <SelectItem key={location} value={location}>
+                              {location}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="custom">+ Add New Location</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {(!editForm.storage_location || !savedLocations.includes(editForm.storage_location)) && (
+                      <Input 
+                        value={editForm.storage_location} 
+                        onChange={e => setEditForm({
+                          ...editForm,
+                          storage_location: e.target.value
+                        })} 
+                        placeholder="e.g., Rack A3, Wine Cellar" 
+                        className={`bg-[#2a2420] border-gray-700 text-white ${savedLocations.length > 0 ? "mt-2" : ""}`}
+                      />
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white">Optimal Drinking Window</Label>
