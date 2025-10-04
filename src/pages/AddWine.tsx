@@ -353,9 +353,9 @@ const AddWine = () => {
                       <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-medium capitalize">
                         {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                       </div>
-                    </div> : <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer overflow-hidden rounded-xl">
+                    </div> : <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
                       <img src={uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="relative z-10 flex flex-col items-center">
+                      <div className="relative z-10 flex flex-col items-center drop-shadow-md">
                         {type === 'overall' ? <Camera className="h-10 w-10 text-white/80 mb-2" /> : <WineIcon className="h-10 w-10 text-white/80 mb-2" />}
                         <span className="text-sm font-medium capitalize text-white">
                           {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
