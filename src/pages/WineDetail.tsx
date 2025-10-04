@@ -10,8 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
 
 interface WineData {
   id: string;
@@ -61,6 +59,10 @@ const WineDetail = () => {
   const [foodPairing, setFoodPairing] = useState("");
   const [processingBackground, setProcessingBackground] = useState(false);
   
+  // Flip card state
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isFlipping, setIsFlipping] = useState(false);
+  
   // Edit wine form state
   const [editForm, setEditForm] = useState({
     wine_name: "",
@@ -79,9 +81,17 @@ const WineDetail = () => {
     optimal_drinking_window: "",
   });
   
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
-    Autoplay({ delay: 3000, stopOnInteraction: false })
-  ]);
+  const handleCardClick = () => {
+    if (!wine?.images || isFlipping) return;
+    const imageCount = Object.keys(wine.images).length;
+    if (imageCount <= 1) return;
+    
+    setIsFlipping(true);
+    setTimeout(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % imageCount);
+      setIsFlipping(false);
+    }, 300);
+  };
 
   useEffect(() => {
     if (id) {
@@ -360,21 +370,42 @@ const WineDetail = () => {
         </div>
 
         <div className="px-4 pb-20">
-          {/* Wine Bottle Image Carousel */}
-          <div className="rounded-3xl overflow-hidden mt-4" style={{ minHeight: '280px' }}>
+          {/* Wine Bottle Image with Flip Card */}
+          <div className="rounded-3xl overflow-hidden mt-4 perspective-1000" style={{ minHeight: '280px' }}>
             {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 0 ? (
-              <div className="embla" ref={emblaRef}>
-                <div className="embla__container flex">
-                  {Object.entries(wine.images).map(([type, url]: [string, any]) => (
-                    <div key={type} className="embla__slide flex-[0_0_100%] min-w-0 flex items-center justify-center p-8">
-                      <img
-                        src={url}
-                        alt={`${type} view`}
-                        className="h-72 w-auto object-contain"
+              <div 
+                className={`relative h-80 cursor-pointer transition-all duration-300 ${isFlipping ? 'animate-flip' : ''}`}
+                onClick={handleCardClick}
+                style={{
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                {Object.entries(wine.images).map(([type, url]: [string, any], index) => (
+                  <div
+                    key={type}
+                    className={`absolute inset-0 flex items-center justify-center p-8 transition-opacity duration-300 ${
+                      index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    <img
+                      src={url}
+                      alt={`${type} view`}
+                      className="h-72 w-auto object-contain"
+                    />
+                  </div>
+                ))}
+                {Object.keys(wine.images).length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                    {Object.keys(wine.images).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`h-2 w-2 rounded-full transition-all ${
+                          index === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'
+                        }`}
                       />
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full p-8">
