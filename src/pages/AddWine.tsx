@@ -278,15 +278,29 @@ const AddWine = () => {
           ...(existingWine.images || {}),
           ...imageUrls
         };
+        
+        // Build update object: fill empty fields + always update description
+        const updates: any = {
+          images: mergedImages,
+          current_stock: existingWine.current_stock + parseInt(formData.current_stock),
+          description: formData.description || existingWine.description
+        };
+        
+        // Only update fields that are currently null/empty
+        if (!existingWine.producer && wineData.producer) updates.producer = wineData.producer;
+        if (!existingWine.vintage_year && wineData.vintage_year) updates.vintage_year = wineData.vintage_year;
+        if (!existingWine.wine_type && wineData.wine_type) updates.wine_type = wineData.wine_type;
+        if (!existingWine.country && wineData.country) updates.country = wineData.country;
+        if (!existingWine.region && wineData.region) updates.region = wineData.region;
+        if (!existingWine.alcohol_content && wineData.alcohol_content) updates.alcohol_content = wineData.alcohol_content;
+        if (!existingWine.grape_varietals && wineData.grape_varietals) updates.grape_varietals = wineData.grape_varietals;
+        
         const {
           error
-        } = await supabase.from("wines").update({
-          images: mergedImages,
-          current_stock: existingWine.current_stock + parseInt(formData.current_stock)
-        }).eq("id", existingWine.id);
+        } = await supabase.from("wines").update(updates).eq("id", existingWine.id);
         if (error) throw error;
         wineId = existingWine.id;
-        toast.success("Wine updated with new photos!");
+        toast.success("Wine updated with new photos and details!");
       } else {
         const {
           data,
