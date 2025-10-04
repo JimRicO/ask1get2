@@ -60,6 +60,9 @@ const WineDetail = () => {
   const [foodPairing, setFoodPairing] = useState("");
   const [processingBackground, setProcessingBackground] = useState(false);
   const [savedLocations, setSavedLocations] = useState<string[]>([]);
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [newLocation, setNewLocation] = useState({ location: "", quantity: 1 });
+  const [editingLocationIndex, setEditingLocationIndex] = useState<number | null>(null);
 
   // Flip card state
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -240,6 +243,78 @@ const WineDetail = () => {
       toast.error("Failed to delete wine");
     }
   };
+  
+  const handleSaveLocation = async () => {
+    if (!wine || !newLocation.location.trim()) {
+      toast.error("Please enter a location");
+      return;
+    }
+
+    try {
+      const currentLocations = wine.storage_locations || [];
+      let updatedLocations;
+      let newTotalStock = wine.current_stock;
+
+      if (editingLocationIndex !== null) {
+        // Editing existing location
+        updatedLocations = currentLocations.map((loc, idx) => 
+          idx === editingLocationIndex ? newLocation : loc
+        );
+        // Recalculate total stock
+        newTotalStock = updatedLocations.reduce((sum, loc) => sum + loc.quantity, 0);
+      } else {
+        // Adding new location
+        updatedLocations = [...currentLocations, newLocation];
+        newTotalStock = wine.current_stock + newLocation.quantity;
+      }
+
+      const { error } = await supabase
+        .from("wines")
+        .update({ 
+          storage_locations: updatedLocations,
+          current_stock: newTotalStock
+        })
+        .eq("id", wine.id);
+
+      if (error) throw error;
+
+      toast.success(editingLocationIndex !== null ? "Location updated!" : "Location added!");
+      setLocationDialogOpen(false);
+      setNewLocation({ location: "", quantity: 1 });
+      setEditingLocationIndex(null);
+      fetchWine();
+    } catch (error: any) {
+      toast.error("Failed to save location");
+    }
+  };
+
+  const handleDeleteLocation = async (index: number) => {
+    if (!wine || !confirm("Remove this storage location?")) return;
+
+    try {
+      const currentLocations = wine.storage_locations || [];
+      const locationToRemove = currentLocations[index];
+      const updatedLocations = currentLocations.filter((_, idx) => idx !== index);
+      const newTotalStock = wine.current_stock - locationToRemove.quantity;
+
+      const { error } = await supabase
+        .from("wines")
+        .update({ 
+          storage_locations: updatedLocations,
+          current_stock: Math.max(0, newTotalStock)
+        })
+        .eq("id", wine.id);
+
+      if (error) throw error;
+
+      toast.success("Location removed!");
+      setLocationDialogOpen(false);
+      fetchWine();
+    } catch (error: any) {
+      toast.error("Failed to remove location");
+    }
+  };
+  
   const handleUpdateStock = async () => {
     if (!wine) return;
     
@@ -581,21 +656,64 @@ const WineDetail = () => {
                   </Button>
                 </div>
               </div>
-              {wine.storage_locations && wine.storage_locations.length > 0 && (
+              {wine.storage_locations && wine.storage_locations.length > 0 ? (
                 <div className="space-y-2">
-                  <span className="text-gray-400 text-sm">Storage Locations</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">Storage Locations</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setNewLocation({ location: "", quantity: 1 });
+                        setEditingLocationIndex(null);
+                        setLocationDialogOpen(true);
+                      }}
+                      className="text-xs text-primary hover:text-primary/80"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add
+                    </Button>
+                  </div>
                   <div className="space-y-1">
                     {wine.storage_locations.map((loc, index) => (
-                      <div key={index} className="flex justify-between text-sm bg-[#2a2420]/50 rounded px-2 py-1">
+                      <div key={index} className="flex justify-between items-center text-sm bg-[#2a2420]/50 rounded px-2 py-1 group">
                         <span className="text-white flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           {loc.location}
                         </span>
-                        <span className="text-gray-400">{loc.quantity} bottles</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400">{loc.quantity} bottles</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setNewLocation(loc);
+                              setEditingLocationIndex(index);
+                              setLocationDialogOpen(true);
+                            }}
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setNewLocation({ location: "", quantity: 1 });
+                    setEditingLocationIndex(null);
+                    setLocationDialogOpen(true);
+                  }}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Storage Location
+                </Button>
               )}
             </div>
           </div>
@@ -955,6 +1073,82 @@ const WineDetail = () => {
                   </Button>
                 </div>
               </ScrollArea>
+            </DialogContent>
+          </Dialog>
+
+          {/* Storage Location Dialog */}
+          <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
+            <DialogContent className="bg-[#1a1410] text-white border-gray-700">
+              <DialogHeader>
+                <DialogTitle className="text-white">
+                  {editingLocationIndex !== null ? "Edit Storage Location" : "Add Storage Location"}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label className="text-white">Location</Label>
+                  {savedLocations.length > 0 ? (
+                    <Select 
+                      value={newLocation.location} 
+                      onValueChange={value => {
+                        if (value === "custom") {
+                          setNewLocation({ ...newLocation, location: "" });
+                        } else {
+                          setNewLocation({ ...newLocation, location: value });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="bg-[#2a2420] border-gray-700 text-white">
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
+                        {savedLocations.map(location => (
+                          <SelectItem key={location} value={location}>
+                            {location}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="custom">+ New Location</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : null}
+                  {(!newLocation.location || !savedLocations.includes(newLocation.location)) && (
+                    <Input
+                      value={newLocation.location}
+                      onChange={e => setNewLocation({ ...newLocation, location: e.target.value })}
+                      placeholder="e.g., Rack A3, Wine Cellar"
+                      className={`bg-[#2a2420] border-gray-700 text-white ${savedLocations.length > 0 ? "mt-2" : ""}`}
+                    />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white">Quantity</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={newLocation.quantity}
+                    onChange={e => setNewLocation({ ...newLocation, quantity: parseInt(e.target.value) || 1 })}
+                    className="bg-[#2a2420] border-gray-700 text-white"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSaveLocation} 
+                    className="flex-1 bg-[#5c2e2e] hover:bg-[#4a2424]"
+                  >
+                    {editingLocationIndex !== null ? "Update" : "Add"}
+                  </Button>
+                  {editingLocationIndex !== null && (
+                    <Button 
+                      onClick={() => handleDeleteLocation(editingLocationIndex)} 
+                      variant="destructive"
+                      className="flex-1"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
