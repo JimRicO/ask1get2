@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, Upload, Loader2, Wine as WineIcon, X } from "lucide-react";
+import { Camera, Upload, Loader2, Wine, X } from "lucide-react";
 import uploadButtonImg from "@/assets/upload-button.png";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
@@ -356,7 +356,7 @@ const AddWine = () => {
                     </div> : <label className="relative flex flex-col items-center justify-center h-40 cursor-pointer overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
                       <img src={uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                       <div className="relative z-10 flex flex-col items-center drop-shadow-md">
-                        {type === 'overall' ? <Camera className="h-10 w-10 text-white/80 mb-2" /> : <WineIcon className="h-10 w-10 text-white/80 mb-2" />}
+                        {type === 'overall' ? <Camera className="h-10 w-10 text-white/80 mb-2" /> : <Wine className="h-10 w-10 text-white/80 mb-2" />}
                         <span className="text-sm font-medium capitalize text-white">
                           {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                         </span>
