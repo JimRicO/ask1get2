@@ -108,15 +108,16 @@ const Cellar = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from("wines")
-        .select("*")
+        .select("*", { count: 'exact' })
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       
       console.log("Fetched wines count:", data?.length);
+      console.log("Total count from DB:", count);
       console.log("Fetched wines:", data);
       
       setWines(data || []);
