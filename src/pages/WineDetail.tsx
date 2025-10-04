@@ -484,9 +484,7 @@ const WineDetail = () => {
           <div className="space-y-3 mt-8">
             <Dialog open={consumeDialogOpen} onOpenChange={setConsumeDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="w-full bg-[#f5f5dc] hover:bg-[#e8e8d0] text-[#1a1410] border-0 rounded-lg py-6">
-                  Log Tasting
-                </Button>
+                <Button className="w-full bg-[#f5f5dc] hover:bg-[#e8e8d0] text-[#1a1410] border-0 rounded-lg py-6">Record your tasting note</Button>
               </DialogTrigger>
               <DialogContent className="bg-[#1a1410] text-white border-gray-700">
                 <DialogHeader>
