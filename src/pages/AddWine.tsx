@@ -228,6 +228,56 @@ const AddWine = () => {
           imageUrls[type] = publicUrl;
         }
       }
+
+      // Automatically remove backgrounds from uploaded images
+      const cleanedImageUrls: any = {};
+      for (const [type, imageUrl] of Object.entries(imageUrls)) {
+        try {
+          console.log(`Processing ${type} image for background removal...`);
+          const { data: bgRemovalData, error: bgRemovalError } = await supabase.functions.invoke("remove-wine-background", {
+            body: { imageUrl }
+          });
+
+          if (bgRemovalError) {
+            console.error(`Background removal failed for ${type}:`, bgRemovalError);
+            // If background removal fails, use original image
+            cleanedImageUrls[type] = imageUrl;
+          } else if (bgRemovalData?.processedImage) {
+            // Convert base64 to blob and upload the cleaned image
+            const base64Data = bgRemovalData.processedImage.split(',')[1];
+            const binaryData = atob(base64Data);
+            const arrayBuffer = new ArrayBuffer(binaryData.length);
+            const uint8Array = new Uint8Array(arrayBuffer);
+            for (let i = 0; i < binaryData.length; i++) {
+              uint8Array[i] = binaryData.charCodeAt(i);
+            }
+            const blob = new Blob([uint8Array], { type: 'image/png' });
+            
+            // Upload cleaned image
+            const cleanedFileName = `${session.user.id}/${type}_cleaned_${Date.now()}.png`;
+            const { error: cleanedUploadError } = await supabase.storage
+              .from("wine-images")
+              .upload(cleanedFileName, blob);
+            
+            if (cleanedUploadError) {
+              console.error(`Failed to upload cleaned ${type} image:`, cleanedUploadError);
+              cleanedImageUrls[type] = imageUrl;
+            } else {
+              const { data: { publicUrl: cleanedPublicUrl } } = supabase.storage
+                .from("wine-images")
+                .getPublicUrl(cleanedFileName);
+              cleanedImageUrls[type] = cleanedPublicUrl;
+              console.log(`Successfully cleaned ${type} image`);
+            }
+          } else {
+            cleanedImageUrls[type] = imageUrl;
+          }
+        } catch (error) {
+          console.error(`Error processing ${type} image:`, error);
+          // Fall back to original image on any error
+          cleanedImageUrls[type] = imageUrl;
+        }
+      }
       const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
       const wineData: any = {
         user_id: session.user.id,
@@ -242,7 +292,7 @@ const AddWine = () => {
         price_per_bottle: formData.price_per_bottle ? parseFloat(formData.price_per_bottle) : null,
         storage_location: formData.storage_location || null,
         grape_varietals: allGrapes.length > 0 ? allGrapes : null,
-        images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
+        images: Object.keys(cleanedImageUrls).length > 0 ? cleanedImageUrls : null,
         description: formData.description || null,
         notes: formData.notes || null
       };
@@ -250,7 +300,7 @@ const AddWine = () => {
         // Merge new images with existing ones
         const mergedImages = {
           ...(existingWine.images || {}),
-          ...imageUrls
+          ...cleanedImageUrls
         };
         const {
           error
