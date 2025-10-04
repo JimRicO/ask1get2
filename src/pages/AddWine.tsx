@@ -565,7 +565,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="storage_location" className="text-white">Storage location</Label>
+                  <Label htmlFor="storage_location" className="text-white">Storage location *</Label>
                   {savedLocations.length > 0 ? <Select value={formData.storage_location} onValueChange={value => {
                   if (value === "custom") {
                     setFormData({
@@ -592,7 +592,7 @@ const AddWine = () => {
                   {(!formData.storage_location || !savedLocations.includes(formData.storage_location)) && <Input id="storage_location" value={formData.storage_location} onChange={e => setFormData({
                   ...formData,
                   storage_location: e.target.value
-                })} placeholder="e.g., Rack A3, Wine Cellar" className={savedLocations.length > 0 ? "mt-2" : ""} />}
+                })} placeholder="e.g., Rack A3, Wine Cellar" className={savedLocations.length > 0 ? "mt-2" : ""} required />}
                 </div>
               </div>
             </div>
