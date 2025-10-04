@@ -588,7 +588,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="storage_location">Location</Label>
+                  <Label htmlFor="storage_location">Select or Type your storage location</Label>
                   {savedLocations.length > 0 ? (
                     <Select
                       value={formData.storage_location}
