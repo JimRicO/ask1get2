@@ -62,6 +62,16 @@ const WineDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
 
+  // Edit tasting note state
+  const [editingTastingNoteId, setEditingTastingNoteId] = useState<string | null>(null);
+  const [editTastingForm, setEditTastingForm] = useState({
+    rating: 5,
+    notes: "",
+    occasion: "",
+    food_pairing: "",
+    tasting_date: ""
+  });
+
   // Edit wine form state
   const [editForm, setEditForm] = useState({
     wine_name: "",
@@ -400,6 +410,58 @@ const WineDetail = () => {
       toast.error(error.message || 'Failed to clean backgrounds');
     } finally {
       setProcessingBackground(false);
+    }
+  };
+
+  const handleEditTastingNote = (note: TastingNote) => {
+    setEditingTastingNoteId(note.id);
+    setEditTastingForm({
+      rating: note.rating,
+      notes: note.notes || "",
+      occasion: note.occasion || "",
+      food_pairing: note.food_pairing || "",
+      tasting_date: note.tasting_date
+    });
+  };
+
+  const handleUpdateTastingNote = async () => {
+    if (!editingTastingNoteId) return;
+    try {
+      const { error } = await supabase
+        .from("tasting_notes")
+        .update({
+          rating: editTastingForm.rating,
+          notes: editTastingForm.notes || null,
+          occasion: editTastingForm.occasion || null,
+          food_pairing: editTastingForm.food_pairing || null,
+          tasting_date: editTastingForm.tasting_date
+        })
+        .eq("id", editingTastingNoteId);
+      
+      if (error) throw error;
+      
+      setEditingTastingNoteId(null);
+      await fetchTastingNotes();
+      toast.success("Tasting note updated!");
+    } catch (error: any) {
+      toast.error("Failed to update tasting note");
+    }
+  };
+
+  const handleDeleteTastingNote = async (noteId: string) => {
+    if (!confirm("Are you sure you want to delete this tasting note?")) return;
+    try {
+      const { error } = await supabase
+        .from("tasting_notes")
+        .delete()
+        .eq("id", noteId);
+      
+      if (error) throw error;
+      
+      await fetchTastingNotes();
+      toast.success("Tasting note deleted!");
+    } catch (error: any) {
+      toast.error("Failed to delete tasting note");
     }
   };
   if (loading || !wine) {
@@ -762,6 +824,127 @@ const WineDetail = () => {
                     notes: e.target.value
                   })} placeholder="Add personal notes about this wine..." className="bg-[#2a2420] border-gray-700 text-white" rows={4} />
                   </div>
+
+                  {/* My Tasting Notes Section */}
+                  {tastingNotes.length > 0 && (
+                    <div className="space-y-3 pt-4 border-t border-gray-700">
+                      <h4 className="text-white font-semibold">My Tasting Notes</h4>
+                      {tastingNotes.map(note => (
+                        <div key={note.id} className="bg-[#1a1410] rounded-lg p-3 space-y-3">
+                          {editingTastingNoteId === note.id ? (
+                            <>
+                              <div className="space-y-2">
+                                <Label className="text-white text-xs">Rating</Label>
+                                <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map(star => (
+                                    <button
+                                      key={star}
+                                      type="button"
+                                      onClick={() => setEditTastingForm({...editTastingForm, rating: star})}
+                                      className="text-xl text-yellow-500"
+                                    >
+                                      {star <= editTastingForm.rating ? "★" : "☆"}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-white text-xs">Tasting Date</Label>
+                                <Input
+                                  type="date"
+                                  value={editTastingForm.tasting_date}
+                                  onChange={e => setEditTastingForm({...editTastingForm, tasting_date: e.target.value})}
+                                  className="bg-[#2a2420] border-gray-700 text-white text-sm"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-white text-xs">Notes</Label>
+                                <Textarea
+                                  value={editTastingForm.notes}
+                                  onChange={e => setEditTastingForm({...editTastingForm, notes: e.target.value})}
+                                  placeholder="Tasting notes..."
+                                  className="bg-[#2a2420] border-gray-700 text-white text-sm"
+                                  rows={2}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-white text-xs">Occasion</Label>
+                                <Input
+                                  value={editTastingForm.occasion}
+                                  onChange={e => setEditTastingForm({...editTastingForm, occasion: e.target.value})}
+                                  placeholder="Occasion..."
+                                  className="bg-[#2a2420] border-gray-700 text-white text-sm"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-white text-xs">Food Pairing</Label>
+                                <Input
+                                  value={editTastingForm.food_pairing}
+                                  onChange={e => setEditTastingForm({...editTastingForm, food_pairing: e.target.value})}
+                                  placeholder="Food pairing..."
+                                  className="bg-[#2a2420] border-gray-700 text-white text-sm"
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={handleUpdateTastingNote}
+                                  className="flex-1 bg-[#5c2e2e] hover:bg-[#4a2424] text-xs py-1 h-8"
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  onClick={() => setEditingTastingNoteId(null)}
+                                  variant="outline"
+                                  className="flex-1 text-xs py-1 h-8"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs text-gray-500">
+                                      {new Date(note.tasting_date).toLocaleDateString()}
+                                    </span>
+                                    <div className="text-yellow-500 text-sm">
+                                      {"★".repeat(note.rating)}{"☆".repeat(5 - note.rating)}
+                                    </div>
+                                  </div>
+                                  {note.notes && <p className="text-white text-xs mb-1">{note.notes}</p>}
+                                  {note.occasion && <p className="text-xs text-gray-400">Occasion: {note.occasion}</p>}
+                                  {note.food_pairing && <p className="text-xs text-gray-400">Paired with: {note.food_pairing}</p>}
+                                </div>
+                              </div>
+                              <div className="flex gap-2 mt-2">
+                                <Button
+                                  onClick={() => handleEditTastingNote(note)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 text-xs py-1 h-7"
+                                >
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  onClick={() => handleDeleteTastingNote(note.id)}
+                                  variant="destructive"
+                                  size="sm"
+                                  className="flex-1 text-xs py-1 h-7"
+                                >
+                                  <Trash2 className="h-3 w-3 mr-1" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <Button onClick={handleUpdateWine} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
                     Save Changes
                   </Button>
