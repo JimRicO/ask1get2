@@ -330,8 +330,8 @@ const AddWine = () => {
 
         <div className="px-4 mt-6">
           {/* Image Upload */}
-          <div className="bg-card rounded-2xl p-6 shadow-elegant mb-6">
-            <Label className="text-base font-semibold mb-4 block">Wine Photos</Label>
+          <div className="bg-[#211111] rounded-2xl p-6 shadow-elegant mb-6">
+            <Label className="text-base font-semibold mb-4 block text-white">Wine Photos</Label>
             
             <div className="grid grid-cols-2 gap-4">
               {(['front', 'back', 'neck', 'overall'] as const).map((type, index) => <div key={type}>
@@ -354,7 +354,7 @@ const AddWine = () => {
                       </div>
                     </div> : <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-primary/30 rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
                       {type === 'overall' ? <Camera className="h-10 w-10 text-primary/60 mb-2" /> : <WineIcon className="h-10 w-10 text-primary/60 mb-2" />}
-                      <span className="text-sm font-medium capitalize text-foreground/80">
+                      <span className="text-sm font-medium capitalize text-white/80">
                         {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                       </span>
                       <input type="file" accept="image/*" capture="environment" onChange={e => handleImageChange(e, type)} className="hidden" />
@@ -375,14 +375,14 @@ const AddWine = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div ref={formRef} className="bg-card rounded-2xl p-6 shadow-elegant space-y-4">
+            <div ref={formRef} className="bg-[#211111] rounded-2xl p-6 shadow-elegant space-y-4">
               <div className="mb-6 text-center">
-                <h2 className="text-xl font-semibold mb-1">Your wine details are ready.</h2>
-                <p className="text-sm text-muted-foreground">Verify and press "Add to Cellar" below</p>
+                <h2 className="text-xl font-semibold mb-1 text-white">Your wine details are ready.</h2>
+                <p className="text-sm text-white/60">Verify and press "Add to Cellar" below</p>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="wine_name">Wine Name *</Label>
+                <Label htmlFor="wine_name" className="text-white">Wine Name *</Label>
                 <Input id="wine_name" value={formData.wine_name} onChange={e => setFormData({
                 ...formData,
                 wine_name: e.target.value
@@ -390,7 +390,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="producer">Producer</Label>
+                <Label htmlFor="producer" className="text-white">Producer</Label>
                 <Input id="producer" value={formData.producer} onChange={e => setFormData({
                 ...formData,
                 producer: e.target.value
@@ -399,7 +399,7 @@ const AddWine = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="vintage_year">Vintage</Label>
+                  <Label htmlFor="vintage_year" className="text-white">Vintage</Label>
                   <Input id="vintage_year" type="number" value={formData.vintage_year} onChange={e => setFormData({
                   ...formData,
                   vintage_year: e.target.value
@@ -407,7 +407,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wine_type">Type</Label>
+                  <Label htmlFor="wine_type" className="text-white">Type</Label>
                   <Select value={formData.wine_type} onValueChange={value => setFormData({
                   ...formData,
                   wine_type: value
@@ -429,7 +429,7 @@ const AddWine = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="country">Country</Label>
+                  <Label htmlFor="country" className="text-white">Country</Label>
                   <Input id="country" value={formData.country} onChange={e => setFormData({
                   ...formData,
                   country: e.target.value
@@ -437,7 +437,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="region">Region</Label>
+                  <Label htmlFor="region" className="text-white">Region</Label>
                   <Input id="region" value={formData.region} onChange={e => setFormData({
                   ...formData,
                   region: e.target.value
@@ -446,7 +446,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="grape_varietals">Main Grape Varietal</Label>
+                <Label htmlFor="grape_varietals" className="text-white">Main Grape Varietal</Label>
                 <Select value={formData.grape_varietals} onValueChange={value => setFormData({
                 ...formData,
                 grape_varietals: value
@@ -476,16 +476,16 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="custom_grape_varietals">Additional Grapes (Optional)</Label>
+                <Label htmlFor="custom_grape_varietals" className="text-white">Additional Grapes (Optional)</Label>
                 <Input id="custom_grape_varietals" value={formData.custom_grape_varietals} onChange={e => setFormData({
                 ...formData,
                 custom_grape_varietals: e.target.value
               })} placeholder="e.g., Petit Verdot, Mourvèdre" />
-                <p className="text-xs text-muted-foreground">Separate multiple grapes with commas</p>
+                <p className="text-xs text-white/60">Separate multiple grapes with commas</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description" className="text-white">Description</Label>
                 <Textarea id="description" value={formData.description} onChange={e => setFormData({
                 ...formData,
                 description: e.target.value
@@ -493,7 +493,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes" className="text-white">Notes</Label>
                 <Textarea id="notes" value={formData.notes} onChange={e => setFormData({
                 ...formData,
                 notes: e.target.value
@@ -502,7 +502,7 @@ const AddWine = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="alcohol_content">ABV %</Label>
+                  <Label htmlFor="alcohol_content" className="text-white">ABV %</Label>
                   <Input id="alcohol_content" type="number" step="0.1" value={formData.alcohol_content} onChange={e => setFormData({
                   ...formData,
                   alcohol_content: e.target.value
@@ -510,7 +510,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="current_stock">Bottles</Label>
+                  <Label htmlFor="current_stock" className="text-white">Bottles</Label>
                   <Input id="current_stock" type="number" value={formData.current_stock} onChange={e => setFormData({
                   ...formData,
                   current_stock: e.target.value
@@ -520,7 +520,7 @@ const AddWine = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price_per_bottle">Price ($)</Label>
+                  <Label htmlFor="price_per_bottle" className="text-white">Price ($)</Label>
                   <Input id="price_per_bottle" type="number" step="0.01" value={formData.price_per_bottle} onChange={e => setFormData({
                   ...formData,
                   price_per_bottle: e.target.value
@@ -528,7 +528,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="storage_location">Storage location</Label>
+                  <Label htmlFor="storage_location" className="text-white">Storage location</Label>
                   {savedLocations.length > 0 ? <Select value={formData.storage_location} onValueChange={value => {
                   if (value === "custom") {
                     setFormData({
