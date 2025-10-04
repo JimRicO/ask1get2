@@ -375,10 +375,7 @@ const AddWine = () => {
                 {aiProcessing ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Scanning Photos...
-                  </> : <>
-                    <Camera className="mr-2 h-4 w-4" />
-                    Magic Picture Scan
-                  </>}
+                  </> : "Magic Scan"}
               </Button>}
           </div>
 
