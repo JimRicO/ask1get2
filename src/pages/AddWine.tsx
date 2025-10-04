@@ -337,7 +337,7 @@ const AddWine = () => {
         <div className="px-4 mt-6">
           {/* Image Upload */}
           <div className="bg-[#211111] rounded-2xl p-6 shadow-elegant mb-6">
-            <Label className="text-base font-serif font-semibold mb-4 block text-white">UPLOAD YOUR WINE PICTURES</Label>
+            <Label className="text-base font-serif font-semibold mb-4 block text-white">Take a picture of your wine labels or Upload</Label>
             
             <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
               {(['front', 'back', 'neck', 'overall'] as const).map((type, index) => <div key={type}>
