@@ -434,7 +434,7 @@ const AddWine = () => {
                       <img src={type === 'neck' ? neckButtonImg : type === 'front' ? frontLabelButtonImg : type === 'back' ? backLabelButtonImg : type === 'overall' ? fullBottleButtonImg : uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                       <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4 drop-shadow-md">
                         <Camera className="h-8 w-8 text-white/60 mb-2" strokeWidth={1.5} />
-                        <span className="text-xs font-serif font-medium capitalize text-white/60">
+                        <span className="text-xs font-medium capitalize text-white/60">
                           {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : type === 'overall' ? 'Full bottle' : `${type} bottle`}
                         </span>
                       </div>
@@ -452,7 +452,7 @@ const AddWine = () => {
 
           {/* Form - Only show after Magic Scan is completed */}
           {magicScanCompleted && <form onSubmit={handleSubmit} className="space-y-4">
-            <div ref={formRef} className="bg-card rounded-2xl p-6 shadow-elegant space-y-4 border border-border/50">
+            <div ref={formRef} className="bg-background rounded-2xl p-6 shadow-elegant space-y-4 border border-border/50">
               <div className="mb-6 text-center">
                 <h2 className="text-xl font-semibold mb-1 text-white">Your wine details are ready.</h2>
                 <p className="text-sm text-white/60">Verify and press "Add to Cellar" below</p>
