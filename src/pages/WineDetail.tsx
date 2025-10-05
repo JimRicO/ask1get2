@@ -97,6 +97,7 @@ const WineDetail = () => {
   });
   const [uploadingImages, setUploadingImages] = useState(false);
   const [newImages, setNewImages] = useState<{[key: string]: File}>({});
+  const [additionalImageKeys, setAdditionalImageKeys] = useState<string[]>([]);
   const handleCardClick = () => {
     if (!wine?.images || isFlipping) return;
     const imageCount = Object.keys(wine.images).length;
@@ -1182,6 +1183,78 @@ const WineDetail = () => {
                           </div>
                         ))}
                       </div>
+                    </div>
+
+                    {/* Additional Images */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-white text-xs">Additional Images</Label>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const newKey = `custom_${Date.now()}`;
+                            setAdditionalImageKeys(prev => [...prev, newKey]);
+                          }}
+                          className="h-6 text-xs"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add Image
+                        </Button>
+                      </div>
+                      {additionalImageKeys.length > 0 && (
+                        <div className="space-y-2">
+                          {additionalImageKeys.map((key, index) => (
+                            <div key={key} className="flex items-center gap-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    setNewImages(prev => ({ ...prev, [key]: file }));
+                                  }
+                                }}
+                                className="hidden"
+                                id={`upload-additional-${key}`}
+                              />
+                              <label
+                                htmlFor={`upload-additional-${key}`}
+                                className="flex-1 flex items-center justify-center gap-2 bg-[#2a2420] border border-gray-700 rounded-lg p-2 cursor-pointer hover:bg-[#3a3430] transition-colors"
+                              >
+                                {newImages[key] ? (
+                                  <div className="flex items-center gap-1 text-xs text-green-400">
+                                    <Upload className="h-3 w-3" />
+                                    <span className="truncate">{newImages[key].name.slice(0, 20)}...</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                                    <Upload className="h-3 w-3" />
+                                    <span>Choose additional image</span>
+                                  </div>
+                                )}
+                              </label>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setAdditionalImageKeys(prev => prev.filter((_, i) => i !== index));
+                                  setNewImages(prev => {
+                                    const updated = { ...prev };
+                                    delete updated[key];
+                                    return updated;
+                                  });
+                                }}
+                                className="h-8 w-8 p-0 text-red-400 hover:text-red-500"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
