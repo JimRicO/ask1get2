@@ -18,13 +18,13 @@ const Layout = ({ children }: LayoutProps) => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-gradient-elegant">
       <main className="flex-1 pb-20">{children}</main>
       
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-inset-bottom">
-        <div className="max-w-lg mx-auto px-2 py-2">
-          <div className="flex items-center justify-around">
+      {/* Modern Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border/50 safe-area-inset-bottom shadow-elegant">
+        <div className="max-w-lg mx-auto px-4 py-3">
+          <div className="flex items-center justify-around gap-2">
             {navItems.map(({ icon: Icon, label, path, isCenter }) => {
               const isActive = location.pathname === path;
               
@@ -32,23 +32,23 @@ const Layout = ({ children }: LayoutProps) => {
                 <button
                   key={path}
                   onClick={() => navigate(path)}
-                  className={`flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] px-3 rounded-xl transition-all ${
+                  className={`flex flex-col items-center justify-center gap-1.5 min-w-[60px] min-h-[60px] px-4 rounded-2xl transition-all duration-300 ${
                     isCenter
-                      ? "bg-primary text-primary-foreground scale-110 shadow-wine relative"
+                      ? "bg-gradient-primary text-primary-foreground scale-105 shadow-wine hover:shadow-glow hover:scale-110 relative -mt-4"
                       : isActive
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "text-primary bg-primary/5"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   }`}
                 >
                   {isCenter ? (
                     <div className="relative">
-                      <Icon className="h-6 w-6" />
+                      <Icon className="h-6 w-6" strokeWidth={2.5} />
                       <Plus className="h-4 w-4 absolute -top-1 -right-3" strokeWidth={3} />
                     </div>
                   ) : (
-                    <Icon className="h-5 w-5" />
+                    <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
                   )}
-                  <span className={`text-xs font-medium ${isCenter ? "hidden" : ""}`}>
+                  <span className={`text-[10px] font-semibold tracking-wide ${isCenter ? "hidden" : ""}`}>
                     {label}
                   </span>
                 </button>

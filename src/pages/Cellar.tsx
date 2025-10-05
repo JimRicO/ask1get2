@@ -232,50 +232,56 @@ const Cellar = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#211111]">
-        {/* Header */}
-        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
-          <h1 className="text-3xl font-serif font-bold mb-2">My Cellar</h1>
-          <p className="text-primary-foreground/80">
-            {showArchive ? "Archive - All wines including out of stock" : "Your active wine collection"}
-          </p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 px-4 -mt-4">
-          <div className="bg-[#211111] rounded-xl p-4 shadow-elegant">
-            <div className="text-2xl font-bold text-primary">{totalBottles}</div>
-            <div className="text-xs text-muted-foreground">Bottles</div>
-          </div>
-          <div className="bg-[#211111] rounded-xl p-4 shadow-elegant">
-            <div className="text-2xl font-bold text-primary">{totalValue}</div>
-            <div className="text-xs text-muted-foreground">Active Wines</div>
-          </div>
-          <div className="bg-[#211111] rounded-xl p-4 shadow-elegant">
-            <div className="text-2xl font-bold text-primary">{archivedWines.length}</div>
-            <div className="text-xs text-muted-foreground">Archived</div>
-          </div>
-        </div>
-
-
-        {/* Search & Filters */}
-        <div className="px-4 mt-6 space-y-3">
+      <div className="min-h-screen">
+        {/* Modern Header with Gradient */}
+        <div className="bg-gradient-primary text-primary-foreground px-6 pt-12 pb-8 shadow-wine relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-glow/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
+          
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <h1 className="text-4xl font-serif font-bold mb-2 tracking-tight">My Cellar</h1>
+            <p className="text-primary-foreground/90 text-sm font-medium">
+              {showArchive ? "Archive - All wines including out of stock" : "Your curated wine collection"}
+            </p>
+          </div>
+        </div>
+
+        {/* Modern Stats Cards */}
+        <div className="grid grid-cols-3 gap-3 px-6 -mt-6 relative z-10">
+          <div className="bg-card rounded-2xl p-5 shadow-elegant hover:shadow-wine transition-all duration-300 border border-border/50">
+            <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-1">{totalBottles}</div>
+            <div className="text-xs text-muted-foreground font-medium">Bottles</div>
+          </div>
+          <div className="bg-card rounded-2xl p-5 shadow-elegant hover:shadow-wine transition-all duration-300 border border-border/50">
+            <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-1">{totalValue}</div>
+            <div className="text-xs text-muted-foreground font-medium">Active</div>
+          </div>
+          <div className="bg-card rounded-2xl p-5 shadow-elegant hover:shadow-wine transition-all duration-300 border border-border/50">
+            <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-1">{archivedWines.length}</div>
+            <div className="text-xs text-muted-foreground font-medium">Archived</div>
+          </div>
+        </div>
+
+
+        {/* Modern Search & Filters */}
+        <div className="px-6 mt-8 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder="Search wines..."
+              placeholder="Search your collection..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-12 h-12 rounded-xl border-border/50 bg-card shadow-sm focus:shadow-md transition-all"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 <SelectItem value="all">All Types</SelectItem>
                 {uniqueTypes.map(type => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
@@ -284,10 +290,10 @@ const Cellar = () => {
             </Select>
 
             <Select value={filterYear} onValueChange={setFilterYear}>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 <SelectItem value="all">All Years</SelectItem>
                 {uniqueYears.map(year => (
                   <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
@@ -296,10 +302,10 @@ const Cellar = () => {
             </Select>
 
             <Select value={filterGrape} onValueChange={setFilterGrape}>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
                 <SelectValue placeholder="Grape" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 <SelectItem value="all">All Grapes</SelectItem>
                 {uniqueGrapes.map(grape => (
                   <SelectItem key={grape} value={grape}>{grape}</SelectItem>
@@ -308,10 +314,10 @@ const Cellar = () => {
             </Select>
 
             <Select value={filterCountry} onValueChange={setFilterCountry}>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
                 <SelectValue placeholder="Country" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 <SelectItem value="all">All Countries</SelectItem>
                 {uniqueCountries.map(country => (
                   <SelectItem key={country} value={country}>{country}</SelectItem>
@@ -320,10 +326,10 @@ const Cellar = () => {
             </Select>
 
             <Select value={filterLocation} onValueChange={setFilterLocation}>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 <SelectItem value="all">All Locations</SelectItem>
                 {uniqueLocations.map(location => (
                   <SelectItem key={location} value={location}>{location}</SelectItem>
@@ -332,10 +338,10 @@ const Cellar = () => {
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="text-xs">
+              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 <SelectItem value="recent">Recent</SelectItem>
                 <SelectItem value="name">Name A-Z</SelectItem>
                 <SelectItem value="year-new">Newest Year</SelectItem>
@@ -346,30 +352,33 @@ const Cellar = () => {
           </div>
         </div>
 
-        {/* Wine Grid */}
-        <div className="px-4 mt-6 pb-4">
+        {/* Modern Wine Grid */}
+        <div className="px-6 mt-6 pb-4">
           {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+            <div className="text-center py-16">
+              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+              <p className="text-muted-foreground mt-4 text-sm">Loading your collection...</p>
             </div>
           ) : filteredWines.length === 0 ? (
-            <div className="text-center py-12">
-              <Wine className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No wines yet</h3>
-              <p className="text-muted-foreground mb-6">
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-primary/10 flex items-center justify-center">
+                <Wine className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="text-xl font-serif font-semibold mb-2">No wines yet</h3>
+              <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
                 Start building your collection by adding your first bottle
               </p>
               <Button
                 onClick={() => navigate("/add")}
-                className="bg-primary hover:bg-primary/90"
+                className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-wine h-12 px-8 rounded-xl font-semibold"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-5 w-5 mr-2" />
                 Add Your First Wine
               </Button>
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredWines.map((wine) => {
+              {filteredWines.map((wine, index) => {
                 // Calculate quantity for filtered location
                 const displayQuantity = filterLocation !== "all" && wine.storage_locations
                   ? wine.storage_locations.find(loc => loc.location === filterLocation)?.quantity || 0
@@ -379,11 +388,12 @@ const Cellar = () => {
                   <div
                     key={wine.id}
                     onClick={() => navigate(`/wine/${wine.id}`)}
-                    className="bg-[#211111] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#2a1a1a] transition-colors"
+                    className="group bg-card rounded-2xl p-5 flex items-center justify-between cursor-pointer hover:shadow-wine transition-all duration-300 border border-border/50 hover:border-primary/30 animate-fade-in"
+                    style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <div className="flex items-center gap-4 flex-1">
-                      {/* Wine bottle image */}
-                      <div className="bg-[#d4c4a8] rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {/* Modern wine bottle image */}
+                      <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl w-16 h-16 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50 shadow-sm group-hover:shadow-md transition-all">
                         {wine.images?.front ? (
                           <img 
                             src={wine.images.front} 
@@ -391,27 +401,27 @@ const Cellar = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <Wine className="h-7 w-7 text-[#1a1410]" />
+                          <Wine className="h-8 w-8 text-primary/60" />
                         )}
                       </div>
                       
                       {/* Wine info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-white text-base line-clamp-1">
+                        <h3 className="font-semibold text-foreground text-base line-clamp-1 group-hover:text-primary transition-colors">
                           {wine.wine_name}
                         </h3>
-                        <p className="text-sm text-white">
+                        <p className="text-sm text-muted-foreground font-medium mt-0.5">
                           {wine.vintage_year || "N/A"}
                         </p>
                         {wine.current_stock === 0 && (
-                          <span className="text-xs text-muted-foreground italic">Archived</span>
+                          <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground italic">Archived</span>
                         )}
                       </div>
                     </div>
                     
-                    {/* Stock count */}
+                    {/* Stock count with modern design */}
                     <div className="text-right flex-shrink-0 ml-4">
-                      <div className="text-2xl font-bold text-white">
+                      <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                         {displayQuantity}
                       </div>
                     </div>
@@ -422,12 +432,16 @@ const Cellar = () => {
           )}
         </div>
 
-        {/* Archive Toggle */}
-        <div className="px-4 pb-6 mt-6">
+        {/* Modern Archive Toggle */}
+        <div className="px-6 pb-8 mt-6">
           <Button
             onClick={() => setShowArchive(!showArchive)}
             variant={showArchive ? "default" : "outline"}
-            className="w-full"
+            className={`w-full h-12 rounded-xl font-semibold transition-all ${
+              showArchive 
+                ? "bg-gradient-primary hover:opacity-90 shadow-wine" 
+                : "hover:bg-muted/80 hover:border-primary/50"
+            }`}
           >
             {showArchive ? "Hide Archive" : `View Archive (${archivedWines.length})`}
           </Button>

@@ -8,82 +8,101 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Wine-elegant color palette */
-    --background: 48 100% 97%;
-    --foreground: 200 16% 26%;
+    /* Modern wine-inspired palette - sophisticated burgundy & rose gold */
+    --background: 0 0% 100%;
+    --foreground: 345 10% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 200 16% 26%;
+    --card-foreground: 345 10% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 200 16% 26%;
+    --popover-foreground: 345 10% 15%;
 
-    /* Deep burgundy primary */
-    --primary: 351 42% 32%;
-    --primary-foreground: 48 100% 97%;
+    /* Deep burgundy with modern twist */
+    --primary: 345 65% 42%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 345 75% 55%;
 
-    /* Gold accent */
-    --secondary: 51 100% 50%;
-    --secondary-foreground: 200 16% 26%;
+    /* Rose gold accent */
+    --secondary: 25 85% 70%;
+    --secondary-foreground: 345 10% 15%;
 
-    --muted: 48 30% 90%;
-    --muted-foreground: 200 16% 50%;
+    --muted: 345 10% 96%;
+    --muted-foreground: 345 8% 45%;
 
-    --accent: 51 100% 50%;
-    --accent-foreground: 200 16% 26%;
+    --accent: 25 85% 70%;
+    --accent-foreground: 345 10% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 48 100% 97%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 48 30% 85%;
-    --input: 48 30% 90%;
-    --ring: 351 42% 32%;
+    --border: 345 12% 90%;
+    --input: 345 12% 95%;
+    --ring: 345 65% 42%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Custom wine theme tokens */
-    --wine-burgundy: 351 42% 32%;
-    --wine-gold: 51 100% 50%;
-    --wine-cream: 48 100% 93%;
-    --wine-charcoal: 200 16% 26%;
+    /* Extended design tokens */
+    --wine-burgundy: 345 65% 42%;
+    --wine-dark: 345 55% 25%;
+    --wine-rose-gold: 25 85% 70%;
+    --wine-champagne: 40 60% 92%;
+    --wine-deep: 345 70% 32%;
     
-    /* Gradients */
-    --gradient-wine: linear-gradient(135deg, hsl(351 42% 32%) 0%, hsl(351 42% 22%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(51 100% 50%) 0%, hsl(45 100% 45%) 100%);
+    /* Beautiful gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(345 65% 42%) 0%, hsl(345 70% 32%) 100%);
+    --gradient-rose: linear-gradient(135deg, hsl(25 85% 70%) 0%, hsl(15 75% 65%) 100%);
+    --gradient-elegant: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(345 10% 98%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(345 10% 99%) 100%);
+    --gradient-shimmer: linear-gradient(90deg, transparent, hsl(345 65% 42% / 0.1), transparent);
     
-    /* Shadows */
-    --shadow-wine: 0 10px 30px -10px hsl(351 42% 32% / 0.3);
-    --shadow-elegant: 0 4px 20px -2px hsl(351 42% 32% / 0.15);
+    /* Modern shadows with wine tint */
+    --shadow-sm: 0 1px 2px hsl(345 10% 15% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(345 65% 42% / 0.08), 0 2px 4px -1px hsl(345 65% 42% / 0.04);
+    --shadow-lg: 0 10px 15px -3px hsl(345 65% 42% / 0.12), 0 4px 6px -2px hsl(345 65% 42% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(345 65% 42% / 0.15), 0 10px 10px -5px hsl(345 65% 42% / 0.06);
+    --shadow-wine: 0 10px 40px -10px hsl(345 65% 42% / 0.25);
+    --shadow-elegant: 0 8px 32px hsl(345 65% 42% / 0.12);
+    --shadow-glow: 0 0 30px hsl(345 75% 55% / 0.2);
   }
 
   .dark {
-    --background: 200 16% 14%;
-    --foreground: 48 100% 93%;
+    --background: 345 15% 8%;
+    --foreground: 40 60% 92%;
 
-    --card: 200 16% 18%;
-    --card-foreground: 48 100% 93%;
+    --card: 345 12% 12%;
+    --card-foreground: 40 60% 92%;
 
-    --popover: 200 16% 18%;
-    --popover-foreground: 48 100% 93%;
+    --popover: 345 12% 12%;
+    --popover-foreground: 40 60% 92%;
 
-    --primary: 351 42% 45%;
-    --primary-foreground: 48 100% 97%;
+    --primary: 345 70% 58%;
+    --primary-foreground: 345 15% 8%;
+    --primary-glow: 345 75% 65%;
 
-    --secondary: 51 100% 55%;
-    --secondary-foreground: 200 16% 14%;
+    --secondary: 25 75% 65%;
+    --secondary-foreground: 345 15% 8%;
 
-    --muted: 200 16% 22%;
-    --muted-foreground: 48 30% 65%;
+    --muted: 345 10% 18%;
+    --muted-foreground: 345 8% 60%;
 
-    --accent: 51 100% 55%;
-    --accent-foreground: 200 16% 14%;
+    --accent: 25 75% 65%;
+    --accent-foreground: 345 15% 8%;
 
-    --destructive: 0 62.8% 50.6%;
-    --destructive-foreground: 48 100% 97%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 200 16% 22%;
-    --input: 200 16% 22%;
-    --ring: 351 42% 45%;
+    --border: 345 10% 20%;
+    --input: 345 10% 18%;
+    --ring: 345 70% 58%;
+
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(345 70% 58%) 0%, hsl(345 75% 48%) 100%);
+    --gradient-rose: linear-gradient(135deg, hsl(25 75% 65%) 0%, hsl(15 70% 60%) 100%);
+    --gradient-elegant: linear-gradient(180deg, hsl(345 15% 8%) 0%, hsl(345 12% 12%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(345 12% 12%) 0%, hsl(345 10% 14%) 100%);
+    --shadow-wine: 0 10px 40px -10px hsl(345 70% 58% / 0.4);
+    --shadow-elegant: 0 8px 32px hsl(345 70% 58% / 0.2);
   }
 }
 
@@ -102,8 +121,36 @@ All colors MUST be HSL.
     perspective: 1000px;
   }
   
+  .shadow-wine {
+    box-shadow: var(--shadow-wine);
+  }
+  
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+  
   .animate-flip {
     animation: flip 0.6s ease-in-out;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
   }
   
   @keyframes flip {
@@ -115,6 +162,37 @@ All colors MUST be HSL.
     }
     100% {
       transform: rotateY(0deg);
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
     }
   }
 }
