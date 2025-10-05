@@ -13,7 +13,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   const navItems = [
     { icon: Wine, label: "Cellar", path: "/cellar" },
-    { icon: Camera, label: "Add", path: "/add", isCenter: true },
+    { icon: Camera, label: "New Wine", path: "/add", isCenter: true },
     { icon: Heart, label: "Wishlist", path: "/wishlist" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
@@ -54,7 +54,7 @@ const Layout = ({ children }: LayoutProps) => {
                   ) : (
                     <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
                   )}
-                  <span className={`text-[10px] font-semibold tracking-wide ${isCenter ? "hidden" : ""}`}>
+                  <span className="text-[10px] font-semibold tracking-wide">
                     {label}
                   </span>
                 </button>
