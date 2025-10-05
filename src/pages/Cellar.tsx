@@ -234,7 +234,7 @@ const Cellar = () => {
     <Layout>
       <div className="min-h-screen">
         {/* Modern Header with Gradient */}
-        <div className="bg-gradient-primary text-white px-6 pt-12 pb-8 shadow-wine relative overflow-hidden">
+        <div className="bg-primary text-white px-6 pt-12 pb-8 shadow-wine relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-2xl"></div>
