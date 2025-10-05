@@ -370,7 +370,7 @@ const Cellar = () => {
               </p>
               <Button
                 onClick={() => navigate("/add")}
-                className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-wine h-12 px-8 rounded-xl font-semibold"
+                className="bg-gradient-primary hover:opacity-90 transition-all shadow-wine h-12 px-8 rounded-xl font-semibold hover:scale-105 active:scale-95"
               >
                 <Plus className="h-5 w-5 mr-2" />
                 Add Your First Wine
@@ -437,7 +437,7 @@ const Cellar = () => {
           <Button
             onClick={() => setShowArchive(!showArchive)}
             variant={showArchive ? "default" : "outline"}
-            className={`w-full h-12 rounded-xl font-semibold transition-all ${
+            className={`w-full h-12 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 ${
               showArchive 
                 ? "bg-gradient-primary hover:opacity-90 shadow-wine" 
                 : "hover:bg-muted/80 hover:border-primary/50"
