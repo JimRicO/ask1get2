@@ -54,7 +54,7 @@ const Layout = ({ children }: LayoutProps) => {
                   ) : (
                     <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
                   )}
-                  <span className="text-[10px] font-semibold tracking-wide">
+                  <span className="text-[9px] font-semibold tracking-wide">
                     {label}
                   </span>
                 </button>
