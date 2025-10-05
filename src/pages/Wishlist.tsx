@@ -161,7 +161,7 @@ const Wishlist = () => {
 
       if (aiError) throw aiError;
 
-      const wineData = aiData?.wineData || {};
+      const wineData = aiData?.extracted || {};
       
       setFormData({
         wine_name: wineData.wine_name || "",
@@ -170,7 +170,9 @@ const Wishlist = () => {
         wine_type: wineData.wine_type || "",
         country: wineData.country || "",
         region: wineData.region || "",
-        grape_varietals: wineData.grape_varietals || "",
+        grape_varietals: Array.isArray(wineData.grape_varietals) 
+          ? wineData.grape_varietals.join(", ")
+          : wineData.grape_varietals || "",
         description: wineData.description || "",
         notes: ""
       });
