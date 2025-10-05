@@ -19,6 +19,8 @@ interface WineData {
   images: any;
   grape_varietals: any;
   country: string | null;
+  region: string | null;
+  appellation: string | null;
   storage_location: string | null;
   storage_locations?: Array<{location: string; quantity: number}>;
 }
@@ -140,9 +142,24 @@ const Cellar = () => {
       const isArchived = wine.current_stock === 0;
       if (!showArchive && isArchived) return false;
       
-      // Search filter
-      const matchesSearch = wine.wine_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        wine.producer?.toLowerCase().includes(searchQuery.toLowerCase());
+      // Search filter - search across all wine fields
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = searchQuery === "" || 
+        wine.wine_name.toLowerCase().includes(searchLower) ||
+        wine.producer?.toLowerCase().includes(searchLower) ||
+        wine.vintage_year?.toString().includes(searchQuery) ||
+        wine.country?.toLowerCase().includes(searchLower) ||
+        wine.wine_type?.toLowerCase().includes(searchLower) ||
+        wine.region?.toLowerCase().includes(searchLower) ||
+        wine.appellation?.toLowerCase().includes(searchLower) ||
+        wine.storage_location?.toLowerCase().includes(searchLower) ||
+        (wine.storage_locations && wine.storage_locations.some(loc => 
+          loc.location.toLowerCase().includes(searchLower)
+        )) ||
+        (Array.isArray(wine.grape_varietals) && wine.grape_varietals.some((g: any) => {
+          const grapeName = typeof g === 'string' ? g : g?.name;
+          return grapeName?.toLowerCase().includes(searchLower);
+        }));
       
       // Type filter
       const matchesType = filterType === "all" || wine.wine_type === filterType;
