@@ -403,21 +403,21 @@ const AddWine = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="min-h-screen bg-[#211111] pb-8">
-        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
+      <div className="min-h-screen pb-8">
+        <div className="bg-gradient-primary text-white px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">Add Wine</h1>
-          <p className="text-primary-foreground/80">Expand your collection</p>
+          <p className="text-white/90">Expand your collection</p>
         </div>
 
         <div className="px-4 mt-6">
           {/* Image Upload */}
-          <div className="bg-[#211111] rounded-2xl p-6 shadow-elegant mb-6">
-            <Label className="text-base font-serif font-semibold mb-4 block text-primary-foreground">Take a picture of your wine labels or Upload</Label>
+          <div className="bg-card rounded-2xl p-6 shadow-elegant mb-6 border border-border/50">
+            <Label className="text-base font-serif font-semibold mb-4 block text-white">Take a picture of your wine labels or Upload</Label>
             
             <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
               {(['front', 'back', 'neck', 'overall'] as const).map((type, index) => <div key={type}>
                   {imagePreviews[type] ? <div className="relative group">
-                      <img src={imagePreviews[type]!} alt={`${type} view`} className="w-full h-40 object-cover rounded-xl border-2 border-primary/20" />
+                      <img src={imagePreviews[type]!} alt={`${type} view`} className="w-full h-40 object-cover rounded-xl border-2 border-white/20" />
                       <button type="button" onClick={() => {
                   setImages(prev => ({
                     ...prev,
@@ -446,7 +446,7 @@ const AddWine = () => {
                 </div>)}
             </div>
 
-            {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-primary hover:bg-primary/90 text-white flex justify-center items-center">
+            {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-gradient-primary hover:opacity-90 text-white flex justify-center items-center shadow-wine">
                 {aiProcessing ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   </> : "Magic Scan"}
@@ -456,7 +456,7 @@ const AddWine = () => {
           {/* Form - Only show after Magic Scan is completed */}
           {magicScanCompleted && (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div ref={formRef} className="bg-[#211111] rounded-2xl p-6 shadow-elegant space-y-4">
+            <div ref={formRef} className="bg-card rounded-2xl p-6 shadow-elegant space-y-4 border border-border/50">
               <div className="mb-6 text-center">
                 <h2 className="text-xl font-semibold mb-1 text-white">Your wine details are ready.</h2>
                 <p className="text-sm text-white/60">Verify and press "Add to Cellar" below</p>
