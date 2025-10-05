@@ -120,12 +120,17 @@ const WineDetail = () => {
 
       const { data } = await supabase
         .from("wines")
-        .select("storage_location")
-        .eq("user_id", session.data.session.user.id)
-        .not("storage_location", "is", null);
+        .select("storage_locations")
+        .eq("user_id", session.data.session.user.id);
 
       if (data) {
-        const uniqueLocations = [...new Set(data.map(w => w.storage_location).filter(Boolean))] as string[];
+        const allLocations = data.flatMap(w => {
+          if (Array.isArray(w.storage_locations)) {
+            return w.storage_locations.map((loc: any) => loc.location);
+          }
+          return [];
+        });
+        const uniqueLocations = [...new Set(allLocations.filter(Boolean))] as string[];
         setSavedLocations(uniqueLocations);
       }
     } catch (error) {
