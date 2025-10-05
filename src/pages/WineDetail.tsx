@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Trash2, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Trash2, Plus, Sparkles, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -95,6 +95,8 @@ const WineDetail = () => {
     grape_varietals: "",
     optimal_drinking_window: ""
   });
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [newImages, setNewImages] = useState<{[key: string]: File}>({});
   const handleCardClick = () => {
     if (!wine?.images || isFlipping) return;
     const imageCount = Object.keys(wine.images).length;
@@ -346,6 +348,32 @@ const WineDetail = () => {
   const handleUpdateWine = async () => {
     if (!wine) return;
     try {
+      setUploadingImages(true);
+      const session = await supabase.auth.getSession();
+      
+      // Upload new images if any
+      let updatedImages = { ...wine.images };
+      if (Object.keys(newImages).length > 0) {
+        for (const [type, file] of Object.entries(newImages)) {
+          const fileName = `${session.data.session?.user.id}/${type}_${Date.now()}.${file.name.split('.').pop()}`;
+          const { error: uploadError } = await supabase.storage
+            .from('wine-images')
+            .upload(fileName, file);
+          
+          if (uploadError) {
+            console.error(`Upload error for ${type}:`, uploadError);
+            toast.error(`Failed to upload ${type} image`);
+            continue;
+          }
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('wine-images')
+            .getPublicUrl(fileName);
+          
+          updatedImages[type] = publicUrl;
+        }
+      }
+      
       const grapeArray = editForm.grape_varietals ? editForm.grape_varietals.split(',').map(g => g.trim()).filter(Boolean) : null;
       const validWineTypes = ['red', 'white', 'rose', 'sparkling', 'dessert', 'fortified'];
       const wineType = editForm.wine_type && validWineTypes.includes(editForm.wine_type.toLowerCase()) ? editForm.wine_type.toLowerCase() : null;
@@ -365,16 +393,20 @@ const WineDetail = () => {
         notes: editForm.notes || null,
         description: editForm.description || null,
         grape_varietals: grapeArray,
-        optimal_drinking_window: editForm.optimal_drinking_window || null
+        optimal_drinking_window: editForm.optimal_drinking_window || null,
+        images: updatedImages
       }).eq("id", wine.id);
       if (error) throw error;
       
       // Close dialog and refresh data
       setEditWineDialogOpen(false);
+      setNewImages({});
       await fetchWine();
       toast.success("Wine updated!");
     } catch (error: any) {
       toast.error("Failed to update wine");
+    } finally {
+      setUploadingImages(false);
     }
   };
   const handleRemoveBackground = async () => {
@@ -1073,8 +1105,88 @@ const WineDetail = () => {
                     </div>
                   )}
 
-                  <Button onClick={handleUpdateWine} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
-                    Save Changes
+                  {/* Image Upload Section */}
+                  <div className="space-y-3 pt-4 border-t border-gray-700">
+                    <h4 className="text-white font-semibold flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      Wine Images
+                    </h4>
+                    
+                    {/* Current Images */}
+                    {wine.images && Object.keys(wine.images).length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-gray-400 text-xs">Current Images</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.entries(wine.images).map(([type, url]: [string, any]) => (
+                            <div key={type} className="relative bg-[#1a1410] rounded-lg p-2">
+                              <img 
+                                src={url} 
+                                alt={`${type} view`} 
+                                className="h-24 w-full object-contain rounded"
+                              />
+                              <p className="text-xs text-gray-400 text-center mt-1 capitalize">{type}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Upload New Images */}
+                    <div className="space-y-2">
+                      <Label className="text-white text-xs">Upload New Images</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['front', 'back', 'full', 'neck'].map(type => (
+                          <div key={type} className="space-y-1">
+                            <Label className="text-xs text-gray-400 capitalize">{type} Label</Label>
+                            <div className="relative">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    setNewImages(prev => ({ ...prev, [type]: file }));
+                                  }
+                                }}
+                                className="hidden"
+                                id={`upload-${type}`}
+                              />
+                              <label
+                                htmlFor={`upload-${type}`}
+                                className="flex items-center justify-center gap-2 bg-[#2a2420] border border-gray-700 rounded-lg p-2 cursor-pointer hover:bg-[#3a3430] transition-colors"
+                              >
+                                {newImages[type] ? (
+                                  <div className="flex items-center gap-1 text-xs text-green-400">
+                                    <Upload className="h-3 w-3" />
+                                    <span className="truncate">{newImages[type].name.slice(0, 12)}...</span>
+                                    <X 
+                                      className="h-3 w-3 cursor-pointer hover:text-red-400" 
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        setNewImages(prev => {
+                                          const updated = { ...prev };
+                                          delete updated[type];
+                                          return updated;
+                                        });
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                                    <Upload className="h-3 w-3" />
+                                    <span>Choose file</span>
+                                  </div>
+                                )}
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button onClick={handleUpdateWine} disabled={uploadingImages} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
+                    {uploadingImages ? "Uploading..." : "Save Changes"}
                   </Button>
                 </div>
               </ScrollArea>
