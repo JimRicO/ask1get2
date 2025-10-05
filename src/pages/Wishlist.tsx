@@ -39,8 +39,8 @@ const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<WishlistItem | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [magicScanCompleted, setMagicScanCompleted] = useState(false);
   
@@ -338,7 +338,11 @@ const Wishlist = () => {
               {wishlistItems.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-[#2a2420] rounded-2xl p-4 flex items-start gap-4"
+                  className="bg-[#2a2420] rounded-2xl p-4 flex items-start gap-4 cursor-pointer hover:bg-[#3a3430] transition-colors"
+                  onClick={() => {
+                    setSelectedItem(item);
+                    setDetailDialogOpen(true);
+                  }}
                 >
                   {/* Wine image */}
                   <div className="bg-[#d4c4a8] rounded-xl w-20 h-20 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -347,6 +351,10 @@ const Wishlist = () => {
                         src={item.images.front || item.images.overall}
                         alt={item.wine_name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="h-8 w-8 text-[#1a1410]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>';
+                        }}
                       />
                     ) : (
                       <Heart className="h-8 w-8 text-[#1a1410]" />
@@ -387,7 +395,10 @@ const Wishlist = () => {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-white/60 hover:text-red-400 hover:bg-white/10"
-                      onClick={() => handleDelete(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(item.id);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -692,6 +703,153 @@ const Wishlist = () => {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Wine Detail Dialog */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#211111] border-[#3a3430]">
+          <DialogHeader>
+            <DialogTitle className="text-white text-2xl">{selectedItem?.wine_name}</DialogTitle>
+          </DialogHeader>
+
+          {selectedItem && (
+            <div className="space-y-6">
+              {/* Images Gallery */}
+              {selectedItem.images && (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedItem.images.front && (
+                    <div className="space-y-2">
+                      <Label className="text-white/70 text-xs">Front Label</Label>
+                      <img
+                        src={selectedItem.images.front}
+                        alt="Front label"
+                        className="w-full rounded-lg border border-gray-700"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  {selectedItem.images.back && (
+                    <div className="space-y-2">
+                      <Label className="text-white/70 text-xs">Back Label</Label>
+                      <img
+                        src={selectedItem.images.back}
+                        alt="Back label"
+                        className="w-full rounded-lg border border-gray-700"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  {selectedItem.images.neck && (
+                    <div className="space-y-2">
+                      <Label className="text-white/70 text-xs">Neck</Label>
+                      <img
+                        src={selectedItem.images.neck}
+                        alt="Neck"
+                        className="w-full rounded-lg border border-gray-700"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  {selectedItem.images.overall && (
+                    <div className="space-y-2">
+                      <Label className="text-white/70 text-xs">Full Bottle</Label>
+                      <img
+                        src={selectedItem.images.overall}
+                        alt="Full bottle"
+                        className="w-full rounded-lg border border-gray-700"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Wine Details */}
+              <div className="space-y-4">
+                {selectedItem.producer && (
+                  <div>
+                    <Label className="text-white/70 text-xs">Producer</Label>
+                    <p className="text-white text-lg">{selectedItem.producer}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedItem.vintage_year && (
+                    <div>
+                      <Label className="text-white/70 text-xs">Vintage</Label>
+                      <p className="text-white">{selectedItem.vintage_year}</p>
+                    </div>
+                  )}
+                  {selectedItem.wine_type && (
+                    <div>
+                      <Label className="text-white/70 text-xs">Type</Label>
+                      <p className="text-white capitalize">{selectedItem.wine_type}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedItem.country && (
+                    <div>
+                      <Label className="text-white/70 text-xs">Country</Label>
+                      <p className="text-white">{selectedItem.country}</p>
+                    </div>
+                  )}
+                  {selectedItem.region && (
+                    <div>
+                      <Label className="text-white/70 text-xs">Region</Label>
+                      <p className="text-white">{selectedItem.region}</p>
+                    </div>
+                  )}
+                </div>
+
+                {selectedItem.grape_varietals && (
+                  <div>
+                    <Label className="text-white/70 text-xs">Grape Varietals</Label>
+                    <p className="text-white">{selectedItem.grape_varietals}</p>
+                  </div>
+                )}
+
+                {selectedItem.description && (
+                  <div>
+                    <Label className="text-white/70 text-xs">Description</Label>
+                    <p className="text-white/90 whitespace-pre-wrap">{selectedItem.description}</p>
+                  </div>
+                )}
+
+                {selectedItem.notes && (
+                  <div>
+                    <Label className="text-white/70 text-xs">Personal Notes</Label>
+                    <p className="text-white/90 whitespace-pre-wrap">{selectedItem.notes}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-4 border-t border-gray-700">
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    handleDelete(selectedItem.id);
+                    setDetailDialogOpen(false);
+                  }}
+                  className="flex-1"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remove from Wishlist
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>
