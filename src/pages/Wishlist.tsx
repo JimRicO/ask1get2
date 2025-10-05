@@ -322,7 +322,7 @@ const Wishlist = () => {
               className="mx-auto bg-primary hover:bg-primary/90"
             >
               <Camera className="h-5 w-5 mr-2" />
-              Take Photo of Wine Label
+              Add a bottle to your Wishlist
             </Button>
           </div>
 
