@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Wine, Camera, Heart, User, Plus } from "lucide-react";
+import addButtonTexture from "@/assets/add-button-texture.png";
 
 interface LayoutProps {
   children: ReactNode;
@@ -32,9 +33,14 @@ const Layout = ({ children }: LayoutProps) => {
                 <button
                   key={path}
                   onClick={() => navigate(path)}
+                  style={isCenter ? {
+                    backgroundImage: `url(${addButtonTexture})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  } : undefined}
                   className={`flex flex-col items-center justify-center gap-1.5 min-w-[60px] min-h-[60px] px-4 rounded-2xl transition-all duration-300 ${
                     isCenter
-                      ? "bg-gradient-primary text-white scale-105 shadow-wine hover:shadow-glow hover:scale-110 relative -mt-4"
+                      ? "text-white scale-105 shadow-wine hover:shadow-glow hover:scale-110 relative -mt-4"
                       : isActive
                       ? "text-white bg-white/10"
                       : "text-white/60 hover:text-white hover:bg-white/5"
