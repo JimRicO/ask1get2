@@ -34,10 +34,10 @@ const Layout = ({ children }: LayoutProps) => {
                   onClick={() => navigate(path)}
                   className={`flex flex-col items-center justify-center gap-1.5 min-w-[60px] min-h-[60px] px-4 rounded-2xl transition-all duration-300 ${
                     isCenter
-                      ? "bg-gradient-primary text-primary-foreground scale-105 shadow-wine hover:shadow-glow hover:scale-110 relative -mt-4"
+                      ? "bg-gradient-primary text-white scale-105 shadow-wine hover:shadow-glow hover:scale-110 relative -mt-4"
                       : isActive
-                      ? "text-primary bg-primary/5"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      ? "text-white bg-white/10"
+                      : "text-white/60 hover:text-white hover:bg-white/5"
                   }`}
                 >
                   {isCenter ? (

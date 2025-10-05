@@ -250,15 +250,15 @@ const Cellar = () => {
         {/* Modern Stats Cards */}
         <div className="grid grid-cols-3 gap-3 px-6 -mt-6 relative z-10">
           <div className="bg-card rounded-2xl p-5 shadow-elegant hover:shadow-wine transition-all duration-300 border border-border/50">
-            <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-1">{totalBottles}</div>
+            <div className="text-3xl font-bold text-white mb-1">{totalBottles}</div>
             <div className="text-xs text-muted-foreground font-medium">Bottles</div>
           </div>
           <div className="bg-card rounded-2xl p-5 shadow-elegant hover:shadow-wine transition-all duration-300 border border-border/50">
-            <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-1">{totalValue}</div>
+            <div className="text-3xl font-bold text-white mb-1">{totalValue}</div>
             <div className="text-xs text-muted-foreground font-medium">Active</div>
           </div>
           <div className="bg-card rounded-2xl p-5 shadow-elegant hover:shadow-wine transition-all duration-300 border border-border/50">
-            <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-1">{archivedWines.length}</div>
+            <div className="text-3xl font-bold text-white mb-1">{archivedWines.length}</div>
             <div className="text-xs text-muted-foreground font-medium">Archived</div>
           </div>
         </div>
@@ -361,11 +361,11 @@ const Cellar = () => {
             </div>
           ) : filteredWines.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-primary/10 flex items-center justify-center">
-                <Wine className="h-10 w-10 text-primary" />
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
+                <Wine className="h-10 w-10 text-white" />
               </div>
-              <h3 className="text-xl font-serif font-semibold mb-2">No wines yet</h3>
-              <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+              <h3 className="text-xl font-serif font-semibold mb-2 text-white">No wines yet</h3>
+              <p className="text-white/70 mb-8 max-w-sm mx-auto">
                 Start building your collection by adding your first bottle
               </p>
               <Button
@@ -401,27 +401,27 @@ const Cellar = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <Wine className="h-8 w-8 text-primary/60" />
+                          <Wine className="h-8 w-8 text-white/60" />
                         )}
                       </div>
                       
                       {/* Wine info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground text-base line-clamp-1 group-hover:text-primary transition-colors">
+                        <h3 className="font-semibold text-white text-base line-clamp-1 group-hover:text-white/90 transition-colors">
                           {wine.wine_name}
                         </h3>
-                        <p className="text-sm text-muted-foreground font-medium mt-0.5">
+                        <p className="text-sm text-white/70 font-medium mt-0.5">
                           {wine.vintage_year || "N/A"}
                         </p>
                         {wine.current_stock === 0 && (
-                          <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground italic">Archived</span>
+                          <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-muted text-white/60 italic">Archived</span>
                         )}
                       </div>
                     </div>
                     
                     {/* Stock count with modern design */}
                     <div className="text-right flex-shrink-0 ml-4">
-                      <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                      <div className="text-3xl font-bold text-white">
                         {displayQuantity}
                       </div>
                     </div>
