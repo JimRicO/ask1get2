@@ -38,7 +38,7 @@ const Layout = ({ children }: LayoutProps) => {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                   }}
-                  className={`flex flex-col items-center justify-center gap-1.5 min-w-[60px] min-h-[60px] px-4 rounded-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
+                  className={`flex flex-col items-center justify-center gap-1.5 w-[60px] h-[60px] rounded-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
                     isCenter
                       ? "text-white shadow-wine hover:shadow-glow"
                       : isActive
