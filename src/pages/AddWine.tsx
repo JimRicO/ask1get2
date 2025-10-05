@@ -66,10 +66,13 @@ const AddWine = () => {
     description: "",
     notes: ""
   });
-  
-  const [storageLocations, setStorageLocations] = useState<Array<{location: string; quantity: number}>>([
-    { location: "", quantity: 1 }
-  ]);
+  const [storageLocations, setStorageLocations] = useState<Array<{
+    location: string;
+    quantity: number;
+  }>>([{
+    location: "",
+    quantity: 1
+  }]);
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -177,7 +180,6 @@ const AddWine = () => {
         // Parse grape varietals from AI response
         let mainGrape = "";
         let additionalGrapes = "";
-        
         if (data.extracted.grape_varietals) {
           const grapes = data.extracted.grape_varietals.split(',').map((g: string) => g.trim());
           if (grapes.length > 0) {
@@ -187,7 +189,6 @@ const AddWine = () => {
             }
           }
         }
-
         setFormData(prev => ({
           ...prev,
           ...data.extracted,
@@ -240,14 +241,13 @@ const AddWine = () => {
   };
   const submitWine = async (updateExisting = false) => {
     if (!session) return;
-    
+
     // Validate input data before processing
     const validation = validateWineData(formData);
     if (!validation.success) {
       toast.error(`Validation Error: ${validation.error}`);
       return;
     }
-    
     setLoading(true);
     try {
       const imageUrls: any = {};
@@ -269,15 +269,13 @@ const AddWine = () => {
           imageUrls[type] = publicUrl;
         }
       }
-
       const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
-      
+
       // Calculate total stock from all locations
       const totalStock = storageLocations.reduce((sum, loc) => sum + loc.quantity, 0);
-      
+
       // Filter out empty locations
       const validStorageLocations = storageLocations.filter(loc => loc.location.trim() !== "");
-      
       const wineData: any = {
         user_id: session.user.id,
         wine_name: formData.wine_name,
@@ -296,20 +294,21 @@ const AddWine = () => {
         description: formData.description || null,
         notes: formData.notes || null
       };
-
       let wineId: string | null = null;
-
       if (updateExisting && existingWine) {
         // Merge new images with existing ones
         const mergedImages = {
           ...(existingWine.images || {}),
           ...imageUrls
         };
-        
+
         // Merge storage locations
-        const existingLocations = (existingWine.storage_locations || []) as Array<{location: string; quantity: number}>;
+        const existingLocations = (existingWine.storage_locations || []) as Array<{
+          location: string;
+          quantity: number;
+        }>;
         const newLocations = [...storageLocations];
-        
+
         // Merge locations: add quantities for same location, append new locations
         const mergedLocations = [...existingLocations];
         newLocations.forEach(newLoc => {
@@ -320,9 +319,8 @@ const AddWine = () => {
             mergedLocations.push(newLoc);
           }
         });
-        
         const newTotalStock = mergedLocations.reduce((sum, loc) => sum + loc.quantity, 0);
-        
+
         // Build update object: fill empty fields + always update description
         const updates: any = {
           images: mergedImages,
@@ -330,7 +328,7 @@ const AddWine = () => {
           storage_locations: mergedLocations,
           description: formData.description || existingWine.description
         };
-        
+
         // Only update fields that are currently null/empty
         if (!existingWine.producer && wineData.producer) updates.producer = wineData.producer;
         if (!existingWine.vintage_year && wineData.vintage_year) updates.vintage_year = wineData.vintage_year;
@@ -339,7 +337,6 @@ const AddWine = () => {
         if (!existingWine.region && wineData.region) updates.region = wineData.region;
         if (!existingWine.alcohol_content && wineData.alcohol_content) updates.alcohol_content = wineData.alcohol_content;
         if (!existingWine.grape_varietals && wineData.grape_varietals) updates.grape_varietals = wineData.grape_varietals;
-        
         const {
           error
         } = await supabase.from("wines").update(updates).eq("id", existingWine.id);
@@ -362,9 +359,9 @@ const AddWine = () => {
       // Start background image processing if we have images and a wine ID
       if (wineId && Object.keys(imageUrls).length > 0) {
         supabase.functions.invoke("process-wine-images", {
-          body: { 
+          body: {
             wineId,
-            imageUrls 
+            imageUrls
           }
         }).catch(error => {
           console.error("Background processing error:", error);
@@ -412,7 +409,7 @@ const AddWine = () => {
         <div className="px-4 mt-6">
           {/* Image Upload */}
           <div className="bg-card rounded-2xl p-6 shadow-elegant mb-6 border border-border/50">
-            <Label className="text-base font-serif font-semibold mb-4 block text-white">Take a picture of your wine labels or Upload</Label>
+            <Label className="text-base font-serif font-semibold mb-4 block text-white">Take a picture of your wine labels </Label>
             
             <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
               {(['front', 'back', 'neck', 'overall'] as const).map((type, index) => <div key={type}>
@@ -454,8 +451,7 @@ const AddWine = () => {
           </div>
 
           {/* Form - Only show after Magic Scan is completed */}
-          {magicScanCompleted && (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {magicScanCompleted && <form onSubmit={handleSubmit} className="space-y-4">
             <div ref={formRef} className="bg-card rounded-2xl p-6 shadow-elegant space-y-4 border border-border/50">
               <div className="mb-6 text-center">
                 <h2 className="text-xl font-semibold mb-1 text-white">Your wine details are ready.</h2>
@@ -529,18 +525,18 @@ const AddWine = () => {
               <div className="space-y-2">
                 <Label htmlFor="grape_varietals" className="text-white">Main Grape Varietal</Label>
                 <Select value={formData.grape_varietals} onValueChange={value => {
-                  if (value === "custom") {
-                    setFormData({
-                      ...formData,
-                      grape_varietals: ""
-                    });
-                  } else {
-                    setFormData({
-                      ...formData,
-                      grape_varietals: value
-                    });
-                  }
-                }}>
+                if (value === "custom") {
+                  setFormData({
+                    ...formData,
+                    grape_varietals: ""
+                  });
+                } else {
+                  setFormData({
+                    ...formData,
+                    grape_varietals: value
+                  });
+                }
+              }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select grape varietal" />
                   </SelectTrigger>
@@ -565,18 +561,10 @@ const AddWine = () => {
                     <SelectItem value="custom">+ Add Custom Varietal</SelectItem>
                   </SelectContent>
                 </Select>
-                {(!formData.grape_varietals || formData.grape_varietals === "") && (
-                  <Input 
-                    id="grape_varietals_custom" 
-                    value={formData.grape_varietals} 
-                    onChange={e => setFormData({
-                      ...formData,
-                      grape_varietals: e.target.value
-                    })} 
-                    placeholder="Enter custom grape varietal" 
-                    className="mt-2"
-                  />
-                )}
+                {(!formData.grape_varietals || formData.grape_varietals === "") && <Input id="grape_varietals_custom" value={formData.grape_varietals} onChange={e => setFormData({
+                ...formData,
+                grape_varietals: e.target.value
+              })} placeholder="Enter custom grape varietal" className="mt-2" />}
               </div>
 
               <div className="space-y-2">
@@ -623,92 +611,56 @@ const AddWine = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-white">Storage Locations *</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setStorageLocations([...storageLocations, { location: "", quantity: 1 }])}
-                    className="text-xs hover:scale-110 active:scale-95 transition-all"
-                  >
+                  <Button type="button" variant="outline" size="sm" onClick={() => setStorageLocations([...storageLocations, {
+                  location: "",
+                  quantity: 1
+                }])} className="text-xs hover:scale-110 active:scale-95 transition-all">
                     + Add Location
                   </Button>
                 </div>
-                {storageLocations.map((storage, index) => (
-                  <div key={index} className="grid grid-cols-[1fr,100px,auto] gap-2 items-end">
+                {storageLocations.map((storage, index) => <div key={index} className="grid grid-cols-[1fr,100px,auto] gap-2 items-end">
                     <div className="space-y-2">
                       <Label htmlFor={`location_${index}`} className="text-white text-sm">Location</Label>
-                      {savedLocations.length > 0 ? (
-                        <Select 
-                          value={storage.location} 
-                          onValueChange={value => {
-                            const newLocations = [...storageLocations];
-                            if (value === "custom") {
-                              newLocations[index].location = "";
-                            } else {
-                              newLocations[index].location = value;
-                            }
-                            setStorageLocations(newLocations);
-                          }}
-                        >
+                      {savedLocations.length > 0 ? <Select value={storage.location} onValueChange={value => {
+                    const newLocations = [...storageLocations];
+                    if (value === "custom") {
+                      newLocations[index].location = "";
+                    } else {
+                      newLocations[index].location = value;
+                    }
+                    setStorageLocations(newLocations);
+                  }}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select location" />
                           </SelectTrigger>
                           <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
-                            {savedLocations.map(location => (
-                              <SelectItem key={location} value={location}>
+                            {savedLocations.map(location => <SelectItem key={location} value={location}>
                                 {location}
-                              </SelectItem>
-                            ))}
+                              </SelectItem>)}
                             <SelectItem value="custom">+ New Location</SelectItem>
                           </SelectContent>
-                        </Select>
-                      ) : null}
-                      {(!storage.location || !savedLocations.includes(storage.location)) && (
-                        <Input
-                          id={`location_${index}`}
-                          value={storage.location}
-                          onChange={e => {
-                            const newLocations = [...storageLocations];
-                            newLocations[index].location = e.target.value;
-                            setStorageLocations(newLocations);
-                          }}
-                          placeholder="e.g., Rack A3"
-                          className={savedLocations.length > 0 ? "mt-2" : ""}
-                          required
-                        />
-                      )}
+                        </Select> : null}
+                      {(!storage.location || !savedLocations.includes(storage.location)) && <Input id={`location_${index}`} value={storage.location} onChange={e => {
+                    const newLocations = [...storageLocations];
+                    newLocations[index].location = e.target.value;
+                    setStorageLocations(newLocations);
+                  }} placeholder="e.g., Rack A3" className={savedLocations.length > 0 ? "mt-2" : ""} required />}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor={`quantity_${index}`} className="text-white text-sm">Qty</Label>
-                      <Input
-                        id={`quantity_${index}`}
-                        type="number"
-                        min="1"
-                        value={storage.quantity}
-                        onChange={e => {
-                          const newLocations = [...storageLocations];
-                          newLocations[index].quantity = parseInt(e.target.value) || 1;
-                          setStorageLocations(newLocations);
-                        }}
-                        required
-                      />
+                      <Input id={`quantity_${index}`} type="number" min="1" value={storage.quantity} onChange={e => {
+                    const newLocations = [...storageLocations];
+                    newLocations[index].quantity = parseInt(e.target.value) || 1;
+                    setStorageLocations(newLocations);
+                  }} required />
                     </div>
-                    {storageLocations.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const newLocations = storageLocations.filter((_, i) => i !== index);
-                          setStorageLocations(newLocations);
-                        }}
-                        className="text-destructive hover:text-destructive"
-                      >
+                    {storageLocations.length > 1 && <Button type="button" variant="ghost" size="icon" onClick={() => {
+                  const newLocations = storageLocations.filter((_, i) => i !== index);
+                  setStorageLocations(newLocations);
+                }} className="text-destructive hover:text-destructive">
                         <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                      </Button>}
+                  </div>)}
               </div>
             </div>
 
@@ -718,8 +670,7 @@ const AddWine = () => {
                   Adding Wine...
                 </> : "Add to Cellar"}
             </Button>
-          </form>
-          )}
+          </form>}
         </div>
       </div>
     </Layout>;
