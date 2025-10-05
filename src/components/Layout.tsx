@@ -40,10 +40,10 @@ const Layout = ({ children }: LayoutProps) => {
                   }}
                   className={`flex flex-col items-center justify-center gap-1.5 w-[60px] h-[60px] rounded-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
                     isCenter
-                      ? "text-white shadow-wine hover:shadow-glow"
+                      ? "text-white/80 shadow-wine hover:shadow-glow"
                       : isActive
-                      ? "text-white shadow-md"
-                      : "text-white/60 hover:text-white hover:shadow-md"
+                      ? "text-white/80 shadow-md"
+                      : "text-white/50 hover:text-white/70 hover:shadow-md"
                   }`}
                 >
                   {isCenter ? (
