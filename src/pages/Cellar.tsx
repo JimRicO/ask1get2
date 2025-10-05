@@ -362,48 +362,60 @@ const Cellar = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredWines.map((wine) => (
-                <div
-                  key={wine.id}
-                  onClick={() => navigate(`/wine/${wine.id}`)}
-                  className="bg-[#211111] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#2a1a1a] transition-colors"
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    {/* Wine bottle image */}
-                    <div className="bg-[#d4c4a8] rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      {wine.images?.front ? (
-                        <img 
-                          src={wine.images.front} 
-                          alt={wine.wine_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Wine className="h-7 w-7 text-[#1a1410]" />
-                      )}
+              {filteredWines.map((wine) => {
+                // Calculate quantity for filtered location
+                const displayQuantity = filterLocation !== "all" && wine.storage_locations
+                  ? wine.storage_locations.find(loc => loc.location === filterLocation)?.quantity || 0
+                  : wine.current_stock;
+
+                return (
+                  <div
+                    key={wine.id}
+                    onClick={() => navigate(`/wine/${wine.id}`)}
+                    className="bg-[#211111] rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#2a1a1a] transition-colors"
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      {/* Wine bottle image */}
+                      <div className="bg-[#d4c4a8] rounded-xl w-14 h-14 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {wine.images?.front ? (
+                          <img 
+                            src={wine.images.front} 
+                            alt={wine.wine_name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Wine className="h-7 w-7 text-[#1a1410]" />
+                        )}
+                      </div>
+                      
+                      {/* Wine info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-white text-base line-clamp-1">
+                          {wine.wine_name}
+                        </h3>
+                        <p className="text-sm text-white">
+                          {wine.vintage_year || "N/A"}
+                        </p>
+                        {wine.current_stock === 0 && (
+                          <span className="text-xs text-muted-foreground italic">Archived</span>
+                        )}
+                      </div>
                     </div>
                     
-                    {/* Wine info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-base line-clamp-1">
-                        {wine.wine_name}
-                      </h3>
-                      <p className="text-sm text-white">
-                        {wine.vintage_year || "N/A"}
-                      </p>
-                      {wine.current_stock === 0 && (
-                        <span className="text-xs text-muted-foreground italic">Archived</span>
+                    {/* Stock count */}
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <div className="text-2xl font-bold text-white">
+                        {displayQuantity}
+                      </div>
+                      {filterLocation !== "all" && (
+                        <div className="text-xs text-muted-foreground">
+                          at {filterLocation}
+                        </div>
                       )}
                     </div>
                   </div>
-                  
-                  {/* Stock count */}
-                  <div className="text-right flex-shrink-0 ml-4">
-                    <div className="text-2xl font-bold text-white">
-                      {wine.current_stock}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
