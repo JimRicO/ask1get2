@@ -434,7 +434,7 @@ const AddWine = () => {
                       <img src={type === 'neck' ? neckButtonImg : type === 'front' ? frontLabelButtonImg : type === 'back' ? backLabelButtonImg : type === 'overall' ? fullBottleButtonImg : uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                       <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4 drop-shadow-md">
                         <Camera className="h-8 w-8 text-white/60 mb-2" strokeWidth={1.5} />
-                        <span className="text-xs font-medium capitalize text-white/60">
+                        <span className="text-xs font-serif font-medium capitalize text-white/60">
                           {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : type === 'overall' ? 'Full bottle' : `${type} bottle`}
                         </span>
                       </div>
