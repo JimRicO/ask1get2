@@ -240,16 +240,6 @@ const Cellar = () => {
           </div>
         </div>
 
-        {/* Archive Toggle */}
-        <div className="px-4 mt-6">
-          <Button
-            onClick={() => setShowArchive(!showArchive)}
-            variant={showArchive ? "default" : "outline"}
-            className="w-full"
-          >
-            {showArchive ? "Hide Archive" : `View Archive (${archivedWines.length})`}
-          </Button>
-        </div>
 
         {/* Search & Filters */}
         <div className="px-4 mt-6 space-y-3">
@@ -413,6 +403,17 @@ const Cellar = () => {
               })}
             </div>
           )}
+        </div>
+
+        {/* Archive Toggle */}
+        <div className="px-4 pb-6 mt-6">
+          <Button
+            onClick={() => setShowArchive(!showArchive)}
+            variant={showArchive ? "default" : "outline"}
+            className="w-full"
+          >
+            {showArchive ? "Hide Archive" : `View Archive (${archivedWines.length})`}
+          </Button>
         </div>
       </div>
     </Layout>
