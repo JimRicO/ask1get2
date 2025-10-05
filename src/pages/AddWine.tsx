@@ -403,7 +403,7 @@ const AddWine = () => {
       <div className="min-h-screen pb-8">
         <div className="bg-gradient-primary text-white px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">Add Wine</h1>
-          <p className="text-white/90">Expand your collection</p>
+          <p className="text-white/90 font-serif">Expand your collection</p>
         </div>
 
         <div className="px-4 mt-6">
