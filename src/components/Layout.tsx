@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Wine, Camera, Compass, Heart, User, Plus } from "lucide-react";
+import { Wine, Camera, Heart, User, Plus } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,7 +13,6 @@ const Layout = ({ children }: LayoutProps) => {
   const navItems = [
     { icon: Wine, label: "Cellar", path: "/cellar" },
     { icon: Camera, label: "Add", path: "/add", isCenter: true },
-    { icon: Compass, label: "Discover", path: "/discover" },
     { icon: Heart, label: "Wishlist", path: "/wishlist" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
