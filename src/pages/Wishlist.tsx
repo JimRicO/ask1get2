@@ -43,6 +43,7 @@ const Wishlist = () => {
   const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [magicScanCompleted, setMagicScanCompleted] = useState(false);
+  const formSectionRef = useRef<HTMLDivElement>(null);
   
   const [images, setImages] = useState<{
     front: File | null;
@@ -179,6 +180,11 @@ const Wishlist = () => {
 
       setMagicScanCompleted(true);
       toast.success("Wine data extracted successfully!");
+      
+      // Scroll to form section
+      setTimeout(() => {
+        formSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     } catch (error: any) {
       toast.error("Failed to analyze images");
       console.error(error);
@@ -588,7 +594,7 @@ const Wishlist = () => {
 
             {/* Form Fields - Show after Magic Scan */}
             {magicScanCompleted && (
-              <div className="space-y-4">
+              <div ref={formSectionRef} className="space-y-4 scroll-mt-4">
                 <div className="space-y-2">
                   <Label className="text-white">Wine Name *</Label>
                   <Input
