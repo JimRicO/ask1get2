@@ -389,16 +389,16 @@ const AddWine = () => {
             <AlertDialogAction onClick={() => {
             setShowDuplicateDialog(false);
             submitWine(false);
-          }} className="w-full">
+          }} className="w-full hover:scale-105 active:scale-95 transition-all">
               Create New Entry
             </AlertDialogAction>
             <AlertDialogAction onClick={() => {
             setShowDuplicateDialog(false);
             submitWine(true);
-          }} className="w-full">
+          }} className="w-full hover:scale-105 active:scale-95 transition-all">
               Add Photos to Existing
             </AlertDialogAction>
-            <AlertDialogCancel className="w-full mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="w-full mt-0 hover:scale-105 active:scale-95 transition-all">Cancel</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -446,7 +446,7 @@ const AddWine = () => {
                 </div>)}
             </div>
 
-            {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-gradient-primary hover:opacity-90 text-white flex justify-center items-center shadow-wine">
+            {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-gradient-primary hover:opacity-90 text-white flex justify-center items-center shadow-wine hover:scale-110 active:scale-95 transition-all">
                 {aiProcessing ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   </> : "Magic Scan"}
@@ -628,7 +628,7 @@ const AddWine = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setStorageLocations([...storageLocations, { location: "", quantity: 1 }])}
-                    className="text-xs"
+                    className="text-xs hover:scale-110 active:scale-95 transition-all"
                   >
                     + Add Location
                   </Button>
@@ -712,7 +712,7 @@ const AddWine = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 h-12" disabled={loading}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 h-12 hover:scale-105 active:scale-95 transition-all" disabled={loading}>
               {loading ? <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Adding Wine...
