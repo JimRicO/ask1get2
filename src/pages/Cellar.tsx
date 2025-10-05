@@ -407,11 +407,6 @@ const Cellar = () => {
                       <div className="text-2xl font-bold text-white">
                         {displayQuantity}
                       </div>
-                      {filterLocation !== "all" && (
-                        <div className="text-xs text-muted-foreground">
-                          at {filterLocation}
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
