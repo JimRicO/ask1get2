@@ -19,9 +19,9 @@ All colors MUST be HSL.
     --popover-foreground: 40 60% 95%;
 
     /* Deep burgundy primary */
-    --primary: 345 75% 55%;
-    --primary-foreground: 345 45% 18%;
-    --primary-glow: 345 80% 65%;
+    --primary: 350 60% 28%;
+    --primary-foreground: 40 60% 95%;
+    --primary-glow: 350 65% 40%;
 
     /* Rose gold accent */
     --secondary: 25 85% 70%;
@@ -50,7 +50,7 @@ All colors MUST be HSL.
     --wine-deep: 345 70% 32%;
     
     /* Beautiful gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(345 75% 55%) 0%, hsl(345 70% 45%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(350 60% 28%) 0%, hsl(350 65% 22%) 100%);
     --gradient-rose: linear-gradient(135deg, hsl(25 85% 70%) 0%, hsl(15 75% 65%) 100%);
     --gradient-elegant: linear-gradient(180deg, hsl(345 45% 18%) 0%, hsl(345 40% 22%) 100%);
     --gradient-card: linear-gradient(135deg, hsl(345 40% 22%) 0%, hsl(345 35% 24%) 100%);
@@ -76,9 +76,9 @@ All colors MUST be HSL.
     --popover: 345 12% 12%;
     --popover-foreground: 40 60% 92%;
 
-    --primary: 345 70% 58%;
-    --primary-foreground: 345 15% 8%;
-    --primary-glow: 345 75% 65%;
+    --primary: 350 65% 32%;
+    --primary-foreground: 40 60% 92%;
+    --primary-glow: 350 70% 42%;
 
     --secondary: 25 75% 65%;
     --secondary-foreground: 345 15% 8%;
@@ -97,7 +97,7 @@ All colors MUST be HSL.
     --ring: 345 70% 58%;
 
     /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(345 70% 58%) 0%, hsl(345 75% 48%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(350 65% 32%) 0%, hsl(350 70% 26%) 100%);
     --gradient-rose: linear-gradient(135deg, hsl(25 75% 65%) 0%, hsl(15 70% 60%) 100%);
     --gradient-elegant: linear-gradient(180deg, hsl(345 15% 8%) 0%, hsl(345 12% 12%) 100%);
     --gradient-card: linear-gradient(135deg, hsl(345 12% 12%) 0%, hsl(345 10% 14%) 100%);
