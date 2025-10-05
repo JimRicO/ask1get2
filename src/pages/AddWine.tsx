@@ -17,6 +17,7 @@ import backLabelButtonImg from "@/assets/back-label-button.png";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { validateWineData } from "@/lib/wineValidation";
 const AddWine = () => {
   const formRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -239,6 +240,14 @@ const AddWine = () => {
   };
   const submitWine = async (updateExisting = false) => {
     if (!session) return;
+    
+    // Validate input data before processing
+    const validation = validateWineData(formData);
+    if (!validation.success) {
+      toast.error(`Validation Error: ${validation.error}`);
+      return;
+    }
+    
     setLoading(true);
     try {
       const imageUrls: any = {};

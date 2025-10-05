@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { validateWineData } from "@/lib/wineValidation";
 interface WineData {
   id: string;
   wine_name: string;
@@ -348,6 +349,14 @@ const WineDetail = () => {
   };
   const handleUpdateWine = async () => {
     if (!wine) return;
+    
+    // Validate input data before processing
+    const validation = validateWineData(editForm);
+    if (!validation.success) {
+      toast.error(`Validation Error: ${validation.error}`);
+      return;
+    }
+    
     try {
       setUploadingImages(true);
       const session = await supabase.auth.getSession();
