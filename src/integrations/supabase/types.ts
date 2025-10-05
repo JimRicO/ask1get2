@@ -170,9 +170,11 @@ export type Database = {
         Row: {
           country: string | null
           created_at: string
+          description: string | null
           grape_varietals: string | null
           id: string
-          image_url: string | null
+          images: Json | null
+          notes: string | null
           producer: string | null
           region: string | null
           user_id: string
@@ -183,9 +185,11 @@ export type Database = {
         Insert: {
           country?: string | null
           created_at?: string
+          description?: string | null
           grape_varietals?: string | null
           id?: string
-          image_url?: string | null
+          images?: Json | null
+          notes?: string | null
           producer?: string | null
           region?: string | null
           user_id: string
@@ -196,9 +200,11 @@ export type Database = {
         Update: {
           country?: string | null
           created_at?: string
+          description?: string | null
           grape_varietals?: string | null
           id?: string
-          image_url?: string | null
+          images?: Json | null
+          notes?: string | null
           producer?: string | null
           region?: string | null
           user_id?: string
