@@ -8,37 +8,37 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Modern wine-inspired palette - sophisticated burgundy & rose gold */
-    --background: 0 0% 100%;
-    --foreground: 345 10% 15%;
+    /* Modern wine-inspired palette with burgundy background */
+    --background: 345 45% 18%;
+    --foreground: 40 60% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 345 10% 15%;
+    --card: 345 40% 22%;
+    --card-foreground: 40 60% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 345 10% 15%;
+    --popover: 345 40% 22%;
+    --popover-foreground: 40 60% 95%;
 
-    /* Deep burgundy with modern twist */
-    --primary: 345 65% 42%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 345 75% 55%;
+    /* Deep burgundy primary */
+    --primary: 345 75% 55%;
+    --primary-foreground: 345 45% 18%;
+    --primary-glow: 345 80% 65%;
 
     /* Rose gold accent */
     --secondary: 25 85% 70%;
-    --secondary-foreground: 345 10% 15%;
+    --secondary-foreground: 345 45% 18%;
 
-    --muted: 345 10% 96%;
-    --muted-foreground: 345 8% 45%;
+    --muted: 345 35% 28%;
+    --muted-foreground: 40 40% 70%;
 
     --accent: 25 85% 70%;
-    --accent-foreground: 345 10% 15%;
+    --accent-foreground: 345 45% 18%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 345 12% 90%;
-    --input: 345 12% 95%;
-    --ring: 345 65% 42%;
+    --border: 345 30% 30%;
+    --input: 345 35% 25%;
+    --ring: 345 75% 55%;
 
     --radius: 1rem;
 
@@ -46,24 +46,24 @@ All colors MUST be HSL.
     --wine-burgundy: 345 65% 42%;
     --wine-dark: 345 55% 25%;
     --wine-rose-gold: 25 85% 70%;
-    --wine-champagne: 40 60% 92%;
+    --wine-champagne: 40 40% 80%;
     --wine-deep: 345 70% 32%;
     
     /* Beautiful gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(345 65% 42%) 0%, hsl(345 70% 32%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(345 75% 55%) 0%, hsl(345 70% 45%) 100%);
     --gradient-rose: linear-gradient(135deg, hsl(25 85% 70%) 0%, hsl(15 75% 65%) 100%);
-    --gradient-elegant: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(345 10% 98%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(345 10% 99%) 100%);
-    --gradient-shimmer: linear-gradient(90deg, transparent, hsl(345 65% 42% / 0.1), transparent);
+    --gradient-elegant: linear-gradient(180deg, hsl(345 45% 18%) 0%, hsl(345 40% 22%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(345 40% 22%) 0%, hsl(345 35% 24%) 100%);
+    --gradient-shimmer: linear-gradient(90deg, transparent, hsl(345 75% 55% / 0.1), transparent);
     
     /* Modern shadows with wine tint */
-    --shadow-sm: 0 1px 2px hsl(345 10% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(345 65% 42% / 0.08), 0 2px 4px -1px hsl(345 65% 42% / 0.04);
-    --shadow-lg: 0 10px 15px -3px hsl(345 65% 42% / 0.12), 0 4px 6px -2px hsl(345 65% 42% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(345 65% 42% / 0.15), 0 10px 10px -5px hsl(345 65% 42% / 0.06);
-    --shadow-wine: 0 10px 40px -10px hsl(345 65% 42% / 0.25);
-    --shadow-elegant: 0 8px 32px hsl(345 65% 42% / 0.12);
-    --shadow-glow: 0 0 30px hsl(345 75% 55% / 0.2);
+    --shadow-sm: 0 1px 2px hsl(345 10% 10% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(345 75% 55% / 0.2), 0 2px 4px -1px hsl(345 75% 55% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(345 75% 55% / 0.25), 0 4px 6px -2px hsl(345 75% 55% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(345 75% 55% / 0.3), 0 10px 10px -5px hsl(345 75% 55% / 0.15);
+    --shadow-wine: 0 10px 40px -10px hsl(345 75% 55% / 0.4);
+    --shadow-elegant: 0 8px 32px hsl(345 75% 55% / 0.25);
+    --shadow-glow: 0 0 30px hsl(345 75% 65% / 0.3);
   }
 
   .dark {
