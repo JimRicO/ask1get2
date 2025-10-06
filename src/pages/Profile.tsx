@@ -10,7 +10,10 @@ import { Session } from "@supabase/supabase-js";
 const Profile = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
-  const [manifesto, setManifesto] = useState<string>(`To taste is to feel.
+  const [manifesto, setManifesto] = useState<string>(`No wine, No sex
+Keep track of your bottles. Collection is recollection. Intimacy is legacy.
+
+To taste is to feel.
 To collect is to remember.
 
 This is not an app.
