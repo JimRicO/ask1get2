@@ -46,7 +46,7 @@ const Layout = ({ children }: LayoutProps) => {
                       <Plus className="h-8 w-8 absolute -top-2 -right-6" strokeWidth={2} />
                     </div>
                   ) : (
-                    <Icon className={`h-10 w-10 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
+                    <Icon className={`h-10 w-10 text-card-foreground ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
                   )}
                 </button>
               );
