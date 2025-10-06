@@ -573,7 +573,7 @@ const WineDetail = () => {
           </div>
 
           {/* Wine Information Section */}
-          <div className="mt-6 bg-[#2a2420] rounded-xl p-4 space-y-3">
+          <div className="mt-6 bg-[#211111] rounded-xl p-4 space-y-3">
             <h3 className="text-white font-semibold mb-3">Wine Information</h3>
             
             {wine.producer && <div className="flex justify-between text-sm">
