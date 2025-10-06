@@ -1,11 +1,6 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Wine, Heart, User, Plus } from "lucide-react";
-import threeBottlesIcon from "@/assets/three-bottles.png";
-
-const ThreeBottles = ({ className }: { className?: string }) => (
-  <img src={threeBottlesIcon} alt="Cellar" className={`w-6 h-6 ${className}`} />
-);
+import { Wine, Camera, Heart, User, Plus } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,8 +11,8 @@ const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
 
   const navItems = [
-    { icon: ThreeBottles, label: "Cellar", path: "/cellar" },
-    { icon: Wine, label: "New Wine", path: "/add", isCenter: true },
+    { icon: Wine, label: "Cellar", path: "/cellar" },
+    { icon: Camera, label: "New Wine", path: "/add", isCenter: true },
     { icon: Heart, label: "Wishlist", path: "/wishlist" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
