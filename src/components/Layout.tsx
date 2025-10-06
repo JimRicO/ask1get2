@@ -4,14 +4,14 @@ import { Camera, Heart, User, Plus } from "lucide-react";
 import addButtonTexture from "@/assets/add-button-texture.png";
 
 const ThreeBottles = ({ className }: { className?: string }) => (
-  <div className="flex gap-0.5 items-end">
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <div className="flex items-end relative w-5 h-5">
+    <svg className={`${className} absolute left-0`} style={{ width: '60%', height: '100%' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 2h2v3h-2zM9 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" />
     </svg>
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={`${className} absolute left-1/2 -translate-x-1/2`} style={{ width: '60%', height: '100%' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 2h2v3h-2zM9 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" />
     </svg>
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={`${className} absolute right-0`} style={{ width: '60%', height: '100%' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 2h2v3h-2zM9 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" />
     </svg>
   </div>
