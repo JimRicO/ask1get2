@@ -2,22 +2,10 @@ import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Camera, Heart, User, Plus } from "lucide-react";
 import addButtonTexture from "@/assets/add-button-texture.png";
+import threeBottlesIcon from "@/assets/three-bottles.png";
 
 const ThreeBottles = ({ className }: { className?: string }) => (
-  <div className="flex items-end justify-center gap-1 w-6 h-5 mx-auto mt-6">
-    <svg className={className} width="4" height="18" viewBox="0 0 8 24" fill="currentColor">
-      <rect x="3" y="0" width="2" height="4" rx="0.5" />
-      <path d="M2 4 Q2 6 2 8 L2 22 Q2 23 3 23 L5 23 Q6 23 6 22 L6 8 Q6 6 6 4 Z" />
-    </svg>
-    <svg className={className} width="4" height="18" viewBox="0 0 8 24" fill="currentColor">
-      <rect x="3" y="0" width="2" height="4" rx="0.5" />
-      <path d="M2 4 Q2 6 2 8 L2 22 Q2 23 3 23 L5 23 Q6 23 6 22 L6 8 Q6 6 6 4 Z" />
-    </svg>
-    <svg className={className} width="4" height="18" viewBox="0 0 8 24" fill="currentColor">
-      <rect x="3" y="0" width="2" height="4" rx="0.5" />
-      <path d="M2 4 Q2 6 2 8 L2 22 Q2 23 3 23 L5 23 Q6 23 6 22 L6 8 Q6 6 6 4 Z" />
-    </svg>
-  </div>
+  <img src={threeBottlesIcon} alt="Cellar" className={`w-6 h-6 ${className}`} />
 );
 
 interface LayoutProps {
