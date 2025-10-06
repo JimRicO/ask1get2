@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Camera, Heart, User, Plus } from "lucide-react";
-import addButtonTexture from "@/assets/add-button-texture.png";
 import threeBottlesIcon from "@/assets/three-bottles.png";
 
 const ThreeBottles = ({ className }: { className?: string }) => (
@@ -38,17 +37,12 @@ const Layout = ({ children }: LayoutProps) => {
                 <button
                   key={path}
                   onClick={() => navigate(path)}
-                  style={{
-                    backgroundImage: `url(${addButtonTexture})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
                   className={`flex flex-col items-center justify-center gap-1.5 w-[60px] h-[60px] rounded-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
                     isCenter
-                      ? "text-white/80 shadow-wine hover:shadow-glow"
+                      ? "bg-primary text-white/80 shadow-wine hover:shadow-glow"
                       : isActive
-                      ? "text-white/80 shadow-md"
-                      : "text-white/50 hover:text-white/70 hover:shadow-md"
+                      ? "bg-primary/80 text-white/80 shadow-md"
+                      : "bg-muted text-white/50 hover:text-white/70 hover:shadow-md"
                   }`}
                 >
                   {isCenter ? (
