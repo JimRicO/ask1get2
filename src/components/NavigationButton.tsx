@@ -44,11 +44,11 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
     >
       {isCenter ? (
         <div className="relative text-muted-foreground">
-          <Icon className="h-12 w-12" strokeWidth={2} />
-          <Plus className="h-8 w-8 absolute -top-2 -right-6" strokeWidth={2} />
+          <Icon className="h-11 w-11" strokeWidth={2} />
+          <Plus className="h-7 w-7 absolute -top-2 -right-6" strokeWidth={2} />
         </div>
       ) : (
-        <Icon className={`h-10 w-10 text-muted-foreground ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
+        <Icon className={`h-9 w-9 text-muted-foreground ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
       )}
     </button>
   );
