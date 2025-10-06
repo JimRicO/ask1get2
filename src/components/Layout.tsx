@@ -41,12 +41,12 @@ const Layout = ({ children }: LayoutProps) => {
                   }`}
                 >
                   {isCenter ? (
-                    <div className="relative text-white/60">
-                      <Icon className="h-6 w-6" strokeWidth={2} />
-                      <Plus className="h-4 w-4 absolute -top-1 -right-3" strokeWidth={2} />
+                    <div className="relative text-card-foreground">
+                      <Icon className="h-12 w-12" strokeWidth={2} />
+                      <Plus className="h-8 w-8 absolute -top-2 -right-6" strokeWidth={2} />
                     </div>
                   ) : (
-                    <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
+                    <Icon className={`h-10 w-10 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
                   )}
                 </button>
               );
