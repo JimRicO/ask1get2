@@ -26,6 +26,10 @@ interface WineData {
     quantity: number;
   }>;
 }
+// Editable subtitles
+const CELLAR_SUBTITLE = "Your curated wine collection";
+const ARCHIVE_SUBTITLE = "Archive - All wines including out of stock";
+
 const Cellar = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
@@ -39,8 +43,6 @@ const Cellar = () => {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [showArchive, setShowArchive] = useState<boolean>(false);
-  const [cellarSubtitle, setCellarSubtitle] = useState<string>("Your curated wine collection");
-  const [archiveSubtitle, setArchiveSubtitle] = useState<string>("Archive - All wines including out of stock");
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -198,7 +200,7 @@ const Cellar = () => {
           <div className="relative">
             <h1 className="text-4xl font-serif font-bold mb-2 tracking-tight text-white">No wine, no sex</h1>
             <p className="text-white/90 text-sm font-medium">
-              {showArchive ? archiveSubtitle : cellarSubtitle}
+              {showArchive ? ARCHIVE_SUBTITLE : CELLAR_SUBTITLE}
             </p>
           </div>
         </div>
