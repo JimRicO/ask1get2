@@ -192,9 +192,9 @@ const Cellar = () => {
   const totalBottles = activeWines.reduce((sum, wine) => sum + wine.current_stock, 0);
   const totalValue = activeWines.length;
   return <Layout>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-[#211111]">
         {/* Modern Header with Gradient */}
-        <div className="bg-primary text-white px-6 pt-12 pb-8 shadow-wine relative overflow-hidden">
+        <div className="bg-[#211111] text-primary-foreground px-6 pt-12 pb-8 shadow-wine relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#211111] rounded-full blur-2xl"></div>
