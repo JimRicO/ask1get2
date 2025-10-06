@@ -1,7 +1,21 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Wine, Camera, Heart, User, Plus } from "lucide-react";
+import { Camera, Heart, User, Plus } from "lucide-react";
 import addButtonTexture from "@/assets/add-button-texture.png";
+
+const ThreeBottles = ({ className }: { className?: string }) => (
+  <div className="flex gap-0.5 items-end">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 2h2v3h-2zM9 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" />
+    </svg>
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 2h2v3h-2zM9 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" />
+    </svg>
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 2h2v3h-2zM9 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" />
+    </svg>
+  </div>
+);
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,7 +26,7 @@ const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
 
   const navItems = [
-    { icon: Wine, label: "Cellar", path: "/cellar" },
+    { icon: ThreeBottles, label: "Cellar", path: "/cellar" },
     { icon: Camera, label: "New Wine", path: "/add", isCenter: true },
     { icon: Heart, label: "Wishlist", path: "/wishlist" },
     { icon: User, label: "Profile", path: "/profile" },
