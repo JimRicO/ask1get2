@@ -7,7 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, Upload, Loader2, Wine, X } from "lucide-react";
+import { Upload, Loader2, Wine, X } from "lucide-react";
+import uploadButtonImg from "@/assets/upload-button.png";
+import bottleIcon from "@/assets/bottle-icon.png";
+import neckButtonImg from "@/assets/neck-button.png";
+import frontLabelButtonImg from "@/assets/front-label-button.png";
+import fullBottleButtonImg from "@/assets/full-bottle-button.png";
+import backLabelButtonImg from "@/assets/back-label-button.png";
+
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -424,10 +431,10 @@ const AddWine = () => {
                       <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-medium capitalize">
                         {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                       </div>
-                    </div> : <label className="relative flex flex-col items-center justify-center h-32 w-32 cursor-pointer overflow-hidden rounded-xl bg-card shadow-wine hover:shadow-glow transition-all duration-300 hover:scale-110 active:scale-95 border border-border/50">
-                      <div className="relative z-10 flex flex-col items-center justify-center">
-                        <Camera className="h-8 w-8 text-muted-foreground mb-2" strokeWidth={1.5} />
-                        <span className="text-xs font-serif font-medium capitalize text-muted-foreground">
+                    </div> : <label className="relative flex flex-col items-center justify-center h-32 w-32 cursor-pointer overflow-hidden rounded-xl shadow-wine hover:shadow-glow transition-all duration-300 hover:scale-110 active:scale-95">
+                      <img src={type === 'neck' ? neckButtonImg : type === 'front' ? frontLabelButtonImg : type === 'back' ? backLabelButtonImg : type === 'overall' ? fullBottleButtonImg : uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4 drop-shadow-md">
+                        <span className="text-xs font-serif font-medium capitalize text-white/60">
                           {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : type === 'overall' ? 'Full bottle' : `${type} bottle`}
                         </span>
                       </div>
