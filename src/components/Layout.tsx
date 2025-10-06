@@ -4,15 +4,18 @@ import { Camera, Heart, User, Plus } from "lucide-react";
 import addButtonTexture from "@/assets/add-button-texture.png";
 
 const ThreeBottles = ({ className }: { className?: string }) => (
-  <div className="flex items-end justify-center gap-0.5 w-6 h-5 mx-auto mt-6">
-    <svg className={className} width="5" height="20" viewBox="0 0 10 30" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M4 2 L4 8 L2 10 L2 28 L8 28 L8 10 L6 8 L6 2 Z" />
+  <div className="flex items-end justify-center gap-1 w-6 h-5 mx-auto mt-6">
+    <svg className={className} width="4" height="18" viewBox="0 0 8 24" fill="currentColor">
+      <rect x="3" y="0" width="2" height="4" rx="0.5" />
+      <path d="M2 4 Q2 6 2 8 L2 22 Q2 23 3 23 L5 23 Q6 23 6 22 L6 8 Q6 6 6 4 Z" />
     </svg>
-    <svg className={className} width="5" height="20" viewBox="0 0 10 30" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M4 2 L4 8 L2 10 L2 28 L8 28 L8 10 L6 8 L6 2 Z" />
+    <svg className={className} width="4" height="18" viewBox="0 0 8 24" fill="currentColor">
+      <rect x="3" y="0" width="2" height="4" rx="0.5" />
+      <path d="M2 4 Q2 6 2 8 L2 22 Q2 23 3 23 L5 23 Q6 23 6 22 L6 8 Q6 6 6 4 Z" />
     </svg>
-    <svg className={className} width="5" height="20" viewBox="0 0 10 30" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M4 2 L4 8 L2 10 L2 28 L8 28 L8 10 L6 8 L6 2 Z" />
+    <svg className={className} width="4" height="18" viewBox="0 0 8 24" fill="currentColor">
+      <rect x="3" y="0" width="2" height="4" rx="0.5" />
+      <path d="M2 4 Q2 6 2 8 L2 22 Q2 23 3 23 L5 23 Q6 23 6 22 L6 8 Q6 6 6 4 Z" />
     </svg>
   </div>
 );
