@@ -57,7 +57,7 @@ const Profile = () => {
           {/* Manifesto Section */}
           <div className="bg-card rounded-2xl p-6 shadow-elegant border border-border/50">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-serif font-semibold text-white">My Wine Manifesto</h2>
+              <h2 className="text-xl font-serif font-semibold text-white">No Wine No Sex — The Manifesto</h2>
               {!isEditingManifesto && (
                 <button
                   onClick={() => {
