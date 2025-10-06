@@ -550,9 +550,9 @@ const WineDetail = () => {
       </Layout>;
   }
   return <Layout>
-      <div className="min-h-screen bg-[#1a1410]">
+      <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="bg-[#1a1410] text-white px-4 py-4 flex items-center justify-between">
+        <div className="bg-card text-white px-4 py-4 flex items-center justify-between">::
           <div className="flex items-center">
             <Button variant="ghost" size="sm" onClick={() => navigate("/cellar")} className="text-white hover:text-white/80 p-2">
               <ArrowLeft className="h-5 w-5" />
@@ -573,7 +573,7 @@ const WineDetail = () => {
           </div>
 
           {/* Wine Information Section */}
-          <div className="mt-6 bg-[#211111] rounded-xl p-4 space-y-3">
+          <div className="mt-6 bg-card rounded-xl p-4 space-y-3 border border-border/50">
             <h3 className="text-white font-semibold mb-3">Wine Information</h3>
             
             {wine.producer && <div className="flex justify-between text-sm">
@@ -625,19 +625,19 @@ const WineDetail = () => {
           </div>
 
           {/* Description */}
-          {wine.description && <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
+          {wine.description && <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
               <h3 className="text-white font-semibold mb-2">Description</h3>
               <p className="text-gray-300 text-sm">{wine.description}</p>
             </div>}
 
           {/* Notes */}
-          {wine.notes && <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
+          {wine.notes && <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
               <h3 className="text-white font-semibold mb-2">Notes</h3>
               <p className="text-gray-300 text-sm">{wine.notes}</p>
             </div>}
 
           {/* AI Insights */}
-          {(wine.ai_tasting_notes || wine.ai_food_pairings && wine.ai_food_pairings.length > 0) && <div className="mt-6 bg-[#2a2420] rounded-xl p-4 space-y-3">
+          {(wine.ai_tasting_notes || wine.ai_food_pairings && wine.ai_food_pairings.length > 0) && <div className="mt-6 bg-card rounded-xl p-4 space-y-3 border border-border/50">
               <h3 className="text-white font-semibold mb-3">AI Insights</h3>
               
               {wine.ai_tasting_notes && <div>
@@ -656,7 +656,7 @@ const WineDetail = () => {
             </div>}
 
           {/* Tasting Notes */}
-          {tastingNotes.length > 0 && <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
+          {tastingNotes.length > 0 && <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
               <h3 className="text-white font-semibold mb-3">My Tasting Notes</h3>
               <div className="space-y-4">
                 {tastingNotes.map(note => <div key={note.id} className="border-b border-gray-700 pb-3 last:border-0 last:pb-0">
@@ -676,7 +676,7 @@ const WineDetail = () => {
             </div>}
 
           {/* Purchase Details */}
-          <div className="mt-6 bg-[#2a2420] rounded-xl p-4">
+          <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
             <h3 className="text-white font-semibold mb-3">Purchase Details</h3>
             <div className="space-y-2.5">
               <div className="flex justify-between text-sm">
@@ -816,7 +816,7 @@ const WineDetail = () => {
           </div>
 
           {/* Bottle Images Card */}
-          <div className="mt-6 bg-[#2a2420] rounded-xl p-6 perspective-1000">
+          <div className="mt-6 bg-card rounded-xl p-6 perspective-1000 border border-border/50">
             <h3 className="text-white font-semibold mb-4">Your Bottle Preview</h3>
             {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 0 ? <div className={`relative h-80 cursor-pointer transition-all duration-300 ${isFlipping ? 'animate-flip' : ''}`} onClick={handleCardClick} style={{
             transformStyle: 'preserve-3d'
