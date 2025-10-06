@@ -552,7 +552,7 @@ const WineDetail = () => {
   return <Layout>
       <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="bg-card text-white px-4 py-4 flex items-center justify-between">::
+        <div className="bg-card text-white px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
             <Button variant="ghost" size="sm" onClick={() => navigate("/cellar")} className="text-white hover:text-white/80 p-2">
               <ArrowLeft className="h-5 w-5" />
