@@ -240,8 +240,8 @@ const Cellar = () => {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-2xl"></div>
           
           <div className="relative">
-            <h1 className="text-4xl font-serif font-bold mb-2 tracking-tight text-white">My Cellar</h1>
-            <p className="text-white/90 text-sm font-medium">
+            <h1 className="text-4xl font-serif font-bold mb-2 tracking-tight text-muted-foreground">My Cellar</h1>
+            <p className="text-muted-foreground text-sm font-medium">
               {showArchive ? "Archive - All wines including out of stock" : "Your curated wine collection"}
             </p>
           </div>
