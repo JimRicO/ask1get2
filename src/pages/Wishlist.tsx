@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import uploadButtonImg from "@/assets/upload-button.png";
@@ -41,6 +42,8 @@ const Wishlist = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishlistItem | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [magicScanCompleted, setMagicScanCompleted] = useState(false);
   const formSectionRef = useRef<HTMLDivElement>(null);
@@ -272,15 +275,24 @@ const Wishlist = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const confirmDelete = (id: string, wineName: string) => {
+    setItemToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+    
     try {
       const { error } = await supabase
         .from("wishlist")
         .delete()
-        .eq("id", id);
+        .eq("id", itemToDelete);
 
       if (error) throw error;
       toast.success("Removed from wishlist");
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
       fetchWishlist();
     } catch (error: any) {
       toast.error("Failed to delete item");
@@ -403,7 +415,7 @@ const Wishlist = () => {
                       className="h-8 w-8 text-white/60 hover:text-red-400 hover:bg-white/10"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(item.id);
+                        confirmDelete(item.id, item.wine_name);
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -845,7 +857,7 @@ const Wishlist = () => {
                 <Button
                   variant="destructive"
                   onClick={() => {
-                    handleDelete(selectedItem.id);
+                    confirmDelete(selectedItem.id, selectedItem.wine_name);
                     setDetailDialogOpen(false);
                   }}
                   className="flex-1"
@@ -858,6 +870,29 @@ const Wishlist = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-[#211111] border-[#3a3430]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Remove from Wishlist?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/70">
+              Are you sure you want to remove this wine from your wishlist? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-[#2a2420] text-white hover:bg-[#3a3430] border-[#3a3430]">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
