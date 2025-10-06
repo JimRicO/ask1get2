@@ -769,7 +769,7 @@ const WineDetail = () => {
           <div className="space-y-3 mt-8">
             <Dialog open={consumeDialogOpen} onOpenChange={setConsumeDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="w-full bg-card hover:bg-card/80 text-white border border-border/50 rounded-lg py-6">Record your tasting note</Button>
+                <Button className="w-full bg-card hover:bg-card/80 text-white border border-border/50 rounded-lg py-6 hover:shadow-wine transition-all duration-300">Record your tasting note</Button>
               </DialogTrigger>
               <DialogContent className="bg-[#1a1410] text-white border-gray-700">
                 <DialogHeader>
@@ -804,12 +804,12 @@ const WineDetail = () => {
             </Dialog>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button onClick={() => setEditWineDialogOpen(true)} className="bg-card hover:bg-card/80 text-white border border-border/50 rounded-lg py-6">
+              <Button onClick={() => setEditWineDialogOpen(true)} className="bg-card hover:bg-card/80 text-white border border-border/50 rounded-lg py-6 hover:shadow-wine transition-all duration-300">
                 <Edit className="h-5 w-5 mr-2" />
                 Edit Wine
               </Button>
 
-              <Button variant="destructive" onClick={handleDelete} className="bg-[#dc2626] hover:bg-[#b91c1c] text-white border-0 rounded-lg py-6">
+              <Button variant="destructive" onClick={handleDelete} className="bg-[#dc2626] hover:bg-[#b91c1c] text-white border-0 rounded-lg py-6 hover:shadow-wine transition-all duration-300">
                 Delete
               </Button>
             </div>
