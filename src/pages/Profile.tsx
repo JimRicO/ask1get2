@@ -114,7 +114,7 @@ But on what? Wine, poetry, or virtue, as you wish."
                 </div>
               </div>
             ) : (
-              <p className="text-white/70 text-sm leading-relaxed italic">
+              <p className="text-white/70 text-sm leading-relaxed italic whitespace-pre-line">
                 {manifesto}
               </p>
             )}
