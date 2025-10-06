@@ -4,15 +4,18 @@ import { Camera, Heart, User, Plus } from "lucide-react";
 import addButtonTexture from "@/assets/add-button-texture.png";
 
 const ThreeBottles = ({ className }: { className?: string }) => (
-  <div className="flex items-center justify-center relative w-6 h-5 mx-auto mt-6">
-    <svg className={`${className} absolute left-0`} style={{ width: '45%', height: '100%' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 2h2v3h-2zM9 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" />
+  <div className="flex items-end justify-center gap-0.5 relative w-6 h-5 mx-auto mt-6">
+    <svg className={className} width="6" height="20" viewBox="0 0 6 20" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="0" width="2" height="5" />
+      <rect x="0.5" y="5" width="5" height="14" rx="0.5" />
     </svg>
-    <svg className={`${className} absolute left-1/2 -translate-x-1/2`} style={{ width: '45%', height: '100%' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 2h2v3h-2zM9 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" />
+    <svg className={className} width="6" height="20" viewBox="0 0 6 20" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="0" width="2" height="5" />
+      <rect x="0.5" y="5" width="5" height="14" rx="0.5" />
     </svg>
-    <svg className={`${className} absolute right-0`} style={{ width: '45%', height: '100%' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 2h2v3h-2zM9 5v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5" />
+    <svg className={className} width="6" height="20" viewBox="0 0 6 20" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="0" width="2" height="5" />
+      <rect x="0.5" y="5" width="5" height="14" rx="0.5" />
     </svg>
   </div>
 );
