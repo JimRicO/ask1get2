@@ -39,6 +39,8 @@ const Cellar = () => {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [showArchive, setShowArchive] = useState<boolean>(false);
+  const [cellarSubtitle, setCellarSubtitle] = useState<string>("Your curated wine collection");
+  const [archiveSubtitle, setArchiveSubtitle] = useState<string>("Archive - All wines including out of stock");
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -196,7 +198,7 @@ const Cellar = () => {
           <div className="relative">
             <h1 className="text-4xl font-serif font-bold mb-2 tracking-tight text-white">No wine, no sex</h1>
             <p className="text-white/90 text-sm font-medium">
-              {showArchive ? "Archive - All wines including out of stock" : "Your curated wine collection"}
+              {showArchive ? archiveSubtitle : cellarSubtitle}
             </p>
           </div>
         </div>
