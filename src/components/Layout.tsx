@@ -32,12 +32,12 @@ const Layout = ({ children }: LayoutProps) => {
                 <button
                   key={path}
                   onClick={() => navigate(path)}
-                  className={`flex flex-col items-center justify-center gap-1.5 w-[60px] h-[60px] rounded-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
+                  className={`flex flex-col items-center justify-center gap-1.5 w-[60px] h-[60px] rounded-2xl transition-all duration-300 hover:scale-110 active:scale-95 bg-card shadow-elegant hover:shadow-wine border border-border/50 ${
                     isCenter
-                      ? "bg-primary text-white/80 shadow-wine hover:shadow-glow"
+                      ? "text-card-foreground"
                       : isActive
-                      ? "bg-primary/80 text-white/80 shadow-md"
-                      : "bg-muted text-white/50 hover:text-white/70 hover:shadow-md"
+                      ? "text-card-foreground"
+                      : "text-muted-foreground hover:text-card-foreground"
                   }`}
                 >
                   {isCenter ? (
