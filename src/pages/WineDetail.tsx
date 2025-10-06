@@ -809,7 +809,7 @@ const WineDetail = () => {
                 Edit Wine
               </Button>
 
-              <Button variant="destructive" onClick={handleDelete} className="bg-[#dc2626] hover:bg-[#b91c1c] text-white border-0 rounded-lg py-6 hover:shadow-wine transition-all duration-300">
+              <Button variant="destructive" onClick={handleDelete} className="bg-card hover:bg-card/80 text-white border border-border/50 rounded-lg py-6 hover:shadow-wine transition-all duration-300">
                 Delete
               </Button>
             </div>
