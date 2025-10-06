@@ -10,7 +10,18 @@ import { Session } from "@supabase/supabase-js";
 const Profile = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
-  const [manifesto, setManifesto] = useState<string>("Wine is not just a drink, it's a journey through time, terroir, and tradition. Each bottle tells a story of the land, the vintner's craft, and the moments we choose to celebrate.");
+  const [manifesto, setManifesto] = useState<string>(`To taste is to feel.
+To collect is to remember.
+
+This is not an app.
+It's your private archive.
+Only fill your cellar with the bottles
+that make you feel alive.
+
+"Il faut être toujours ivre.
+That's all there is to it — it's the only way.
+But on what? Wine, poetry, or virtue, as you wish."
+— Charles Baudelaire`);
   const [isEditingManifesto, setIsEditingManifesto] = useState(false);
   const [tempManifesto, setTempManifesto] = useState("");
 
