@@ -400,8 +400,8 @@ const AddWine = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="min-h-screen pb-8">
-        <div className="bg-gradient-primary text-white px-4 pt-8 pb-6 shadow-wine">
+      <div className="min-h-screen bg-[#211111] pb-8">
+        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">Add your bottle</h1>
           <p className="text-white/90">Snap a photo to fill details automatically.</p>
         </div>
