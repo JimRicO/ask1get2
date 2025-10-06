@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { Wine, Plus, Search, Filter, SlidersHorizontal } from "lucide-react";
+import { Wine, Plus, Search, Filter, SlidersHorizontal, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,10 +26,6 @@ interface WineData {
     quantity: number;
   }>;
 }
-// Editable subtitles
-const CELLAR_SUBTITLE = "Your curated wine collection";
-const ARCHIVE_SUBTITLE = "Archive - All wines including out of stock";
-
 const Cellar = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
@@ -43,6 +39,12 @@ const Cellar = () => {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [showArchive, setShowArchive] = useState<boolean>(false);
+  
+  // Editable subtitle states
+  const [cellarSubtitle, setCellarSubtitle] = useState<string>("Your curated wine collection");
+  const [archiveSubtitle, setArchiveSubtitle] = useState<string>("Archive - All wines including out of stock");
+  const [isEditingSubtitle, setIsEditingSubtitle] = useState(false);
+  const [tempSubtitle, setTempSubtitle] = useState("");
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -199,9 +201,62 @@ const Cellar = () => {
           
           <div className="relative">
             <h1 className="text-4xl font-serif font-bold mb-2 tracking-tight text-white">No wine, no sex</h1>
-            <p className="text-white/90 text-sm font-medium">
-              {showArchive ? ARCHIVE_SUBTITLE : CELLAR_SUBTITLE}
-            </p>
+            
+            {isEditingSubtitle ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={tempSubtitle}
+                  onChange={(e) => setTempSubtitle(e.target.value)}
+                  className="bg-white/10 text-white/90 text-sm font-medium px-3 py-1 rounded-lg border border-white/20 focus:outline-none focus:border-white/40 flex-1"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (showArchive) {
+                        setArchiveSubtitle(tempSubtitle);
+                      } else {
+                        setCellarSubtitle(tempSubtitle);
+                      }
+                      setIsEditingSubtitle(false);
+                    } else if (e.key === 'Escape') {
+                      setIsEditingSubtitle(false);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (showArchive) {
+                      setArchiveSubtitle(tempSubtitle);
+                    } else {
+                      setCellarSubtitle(tempSubtitle);
+                    }
+                    setIsEditingSubtitle(false);
+                  }}
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                >
+                  <Check className="h-4 w-4 text-white" />
+                </button>
+                <button
+                  onClick={() => setIsEditingSubtitle(false)}
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                >
+                  <X className="h-4 w-4 text-white" />
+                </button>
+              </div>
+            ) : (
+              <div 
+                className="flex items-center gap-2 group cursor-pointer"
+                onClick={() => {
+                  setTempSubtitle(showArchive ? archiveSubtitle : cellarSubtitle);
+                  setIsEditingSubtitle(true);
+                }}
+              >
+                <p className="text-white/90 text-sm font-medium">
+                  {showArchive ? archiveSubtitle : cellarSubtitle}
+                </p>
+                <Pencil className="h-3 w-3 text-white/60 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
           </div>
         </div>
 
