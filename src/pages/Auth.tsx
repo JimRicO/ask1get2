@@ -119,10 +119,10 @@ const Auth = () => {
             <Wine className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-4xl font-serif font-bold text-primary mb-2">
-            CellarKey
+            No wine, No sex
           </h1>
           <p className="text-muted-foreground">
-            Your personal wine collection curator
+            Keep track of your bottles. Collection is recollection. Intimacy is legacy.
           </p>
         </div>
 
