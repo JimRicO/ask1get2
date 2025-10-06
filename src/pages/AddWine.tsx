@@ -7,14 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Loader2, Wine, X } from "lucide-react";
+import { Camera, Upload, Loader2, Wine, X } from "lucide-react";
 import uploadButtonImg from "@/assets/upload-button.png";
 import bottleIcon from "@/assets/bottle-icon.png";
 import neckButtonImg from "@/assets/neck-button.png";
 import frontLabelButtonImg from "@/assets/front-label-button.png";
 import fullBottleButtonImg from "@/assets/full-bottle-button.png";
 import backLabelButtonImg from "@/assets/back-label-button.png";
-
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -404,7 +403,7 @@ const AddWine = () => {
       <div className="min-h-screen pb-8">
         <div className="bg-gradient-primary text-white px-4 pt-8 pb-6 shadow-wine">
           <h1 className="text-3xl font-serif font-bold mb-2">Add Wine</h1>
-          <p className="text-white/90 font-serif">Expand your collection</p>
+          <p className="text-white/90">Add your wine</p>
         </div>
 
         <div className="px-4 mt-6">
@@ -434,7 +433,8 @@ const AddWine = () => {
                     </div> : <label className="relative flex flex-col items-center justify-center h-32 w-32 cursor-pointer overflow-hidden rounded-xl shadow-wine hover:shadow-glow transition-all duration-300 hover:scale-110 active:scale-95">
                       <img src={type === 'neck' ? neckButtonImg : type === 'front' ? frontLabelButtonImg : type === 'back' ? backLabelButtonImg : type === 'overall' ? fullBottleButtonImg : uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                       <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4 drop-shadow-md">
-                        <span className="text-xs font-serif font-medium capitalize text-white/60">
+                        <Camera className="h-8 w-8 text-white/70 mb-2" />
+                        <span className="text-xs font-medium capitalize text-white">
                           {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : type === 'overall' ? 'Full bottle' : `${type} bottle`}
                         </span>
                       </div>
@@ -452,14 +452,14 @@ const AddWine = () => {
 
           {/* Form - Only show after Magic Scan is completed */}
           {magicScanCompleted && <form onSubmit={handleSubmit} className="space-y-4">
-            <div ref={formRef} className="bg-background rounded-2xl p-6 shadow-elegant space-y-4 border border-border/50">
+            <div ref={formRef} className="bg-card rounded-2xl p-6 shadow-elegant space-y-4 border border-border/50">
               <div className="mb-6 text-center">
-                <h2 className="text-xl font-serif font-semibold mb-1 text-white">Your wine details are ready.</h2>
-                <p className="text-sm font-serif text-white/60">Verify and press "Add to Cellar" below</p>
+                <h2 className="text-xl font-semibold mb-1 text-white">Your wine details are ready.</h2>
+                <p className="text-sm text-white/60">Verify and press "Add to Cellar" below</p>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="wine_name" className="text-white font-serif">Wine Name *</Label>
+                <Label htmlFor="wine_name" className="text-white">Wine Name *</Label>
                 <Input id="wine_name" value={formData.wine_name} onChange={e => setFormData({
                 ...formData,
                 wine_name: e.target.value
@@ -467,7 +467,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="producer" className="text-white font-serif">Producer</Label>
+                <Label htmlFor="producer" className="text-white">Producer</Label>
                 <Input id="producer" value={formData.producer} onChange={e => setFormData({
                 ...formData,
                 producer: e.target.value
@@ -476,7 +476,7 @@ const AddWine = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="vintage_year" className="text-white font-serif">Vintage</Label>
+                  <Label htmlFor="vintage_year" className="text-white">Vintage</Label>
                   <Input id="vintage_year" type="number" value={formData.vintage_year} onChange={e => setFormData({
                   ...formData,
                   vintage_year: e.target.value
@@ -484,7 +484,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wine_type" className="text-white font-serif">Type</Label>
+                  <Label htmlFor="wine_type" className="text-white">Type</Label>
                   <Select value={formData.wine_type} onValueChange={value => setFormData({
                   ...formData,
                   wine_type: value
@@ -506,7 +506,7 @@ const AddWine = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="country" className="text-white font-serif">Country</Label>
+                  <Label htmlFor="country" className="text-white">Country</Label>
                   <Input id="country" value={formData.country} onChange={e => setFormData({
                   ...formData,
                   country: e.target.value
@@ -514,7 +514,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="region" className="text-white font-serif">Region</Label>
+                  <Label htmlFor="region" className="text-white">Region</Label>
                   <Input id="region" value={formData.region} onChange={e => setFormData({
                   ...formData,
                   region: e.target.value
@@ -523,7 +523,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="grape_varietals" className="text-white font-serif">Main Grape Varietal</Label>
+                <Label htmlFor="grape_varietals" className="text-white">Main Grape Varietal</Label>
                 <Select value={formData.grape_varietals} onValueChange={value => {
                 if (value === "custom") {
                   setFormData({
@@ -568,16 +568,16 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="custom_grape_varietals" className="text-white font-serif">Additional Grapes (Optional)</Label>
+                <Label htmlFor="custom_grape_varietals" className="text-white">Additional Grapes (Optional)</Label>
                 <Input id="custom_grape_varietals" value={formData.custom_grape_varietals} onChange={e => setFormData({
                 ...formData,
                 custom_grape_varietals: e.target.value
               })} placeholder="e.g., Petit Verdot, Mourvèdre" />
-                <p className="text-xs font-serif text-white/60">Separate multiple grapes with commas</p>
+                <p className="text-xs text-white/60">Separate multiple grapes with commas</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-white font-serif">Description</Label>
+                <Label htmlFor="description" className="text-white">Description</Label>
                 <Textarea id="description" value={formData.description} onChange={e => setFormData({
                 ...formData,
                 description: e.target.value
@@ -585,7 +585,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-white font-serif">Notes</Label>
+                <Label htmlFor="notes" className="text-white">Notes</Label>
                 <Textarea id="notes" value={formData.notes} onChange={e => setFormData({
                 ...formData,
                 notes: e.target.value
@@ -593,7 +593,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="alcohol_content" className="text-white font-serif">ABV %</Label>
+                <Label htmlFor="alcohol_content" className="text-white">ABV %</Label>
                 <Input id="alcohol_content" type="number" step="0.1" value={formData.alcohol_content} onChange={e => setFormData({
                 ...formData,
                 alcohol_content: e.target.value
@@ -601,7 +601,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price_per_bottle" className="text-white font-serif">Price ($)</Label>
+                <Label htmlFor="price_per_bottle" className="text-white">Price ($)</Label>
                 <Input id="price_per_bottle" type="number" step="0.01" value={formData.price_per_bottle} onChange={e => setFormData({
                 ...formData,
                 price_per_bottle: e.target.value
@@ -610,7 +610,7 @@ const AddWine = () => {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-white font-serif">Storage Locations *</Label>
+                  <Label className="text-white">Storage Locations *</Label>
                   <Button type="button" variant="outline" size="sm" onClick={() => setStorageLocations([...storageLocations, {
                   location: "",
                   quantity: 1
@@ -620,7 +620,7 @@ const AddWine = () => {
                 </div>
                 {storageLocations.map((storage, index) => <div key={index} className="grid grid-cols-[1fr,100px,auto] gap-2 items-end">
                     <div className="space-y-2">
-                      <Label htmlFor={`location_${index}`} className="text-white font-serif text-sm">Location</Label>
+                      <Label htmlFor={`location_${index}`} className="text-white text-sm">Location</Label>
                       {savedLocations.length > 0 ? <Select value={storage.location} onValueChange={value => {
                     const newLocations = [...storageLocations];
                     if (value === "custom") {
@@ -647,7 +647,7 @@ const AddWine = () => {
                   }} placeholder="e.g., Rack A3" className={savedLocations.length > 0 ? "mt-2" : ""} required />}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor={`quantity_${index}`} className="text-white font-serif text-sm">Qty</Label>
+                      <Label htmlFor={`quantity_${index}`} className="text-white text-sm">Qty</Label>
                       <Input id={`quantity_${index}`} type="number" min="1" value={storage.quantity} onChange={e => {
                     const newLocations = [...storageLocations];
                     newLocations[index].quantity = parseInt(e.target.value) || 1;
