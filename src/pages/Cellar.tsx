@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Wine, Plus, Search, Filter, SlidersHorizontal, Pencil, Check, X } from "lucide-react";
+import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -408,6 +409,11 @@ const Cellar = () => {
           <Button onClick={() => setShowArchive(!showArchive)} variant={showArchive ? "default" : "outline"} className={`w-full h-12 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 ${showArchive ? "bg-gradient-primary hover:opacity-90 shadow-wine" : "hover:bg-muted/80 hover:border-primary/50"}`}>
             {showArchive ? "Hide Archive" : `View Archive (${archivedWines.length})`}
           </Button>
+          
+          {/* Wine & Virtue Logo */}
+          <div className="flex justify-center mt-8">
+            <img src={wineVirtueLogo} alt="Wine & Virtue" className="w-64 h-auto opacity-90" />
+          </div>
         </div>
       </div>
     </Layout>;
