@@ -14,6 +14,7 @@ import neckButtonImg from "@/assets/neck-button.png";
 import frontLabelButtonImg from "@/assets/front-label-button.png";
 import fullBottleButtonImg from "@/assets/full-bottle-button.png";
 import backLabelButtonImg from "@/assets/back-label-button.png";
+import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -441,6 +442,11 @@ const AddWine = () => {
                       <input type="file" accept="image/*" capture="environment" onChange={e => handleImageChange(e, type)} className="hidden" />
                     </label>}
                 </div>)}
+            </div>
+
+            {/* Wine & Virtue Logo */}
+            <div className="flex justify-center mt-8 mb-4">
+              <img src={wineVirtueLogo} alt="Wine & Virtue" className="w-48 h-auto opacity-90" />
             </div>
 
             {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-gradient-primary hover:opacity-90 text-white flex justify-center items-center shadow-wine hover:scale-110 active:scale-95 transition-all">
