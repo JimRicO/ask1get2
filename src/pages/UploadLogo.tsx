@@ -14,6 +14,10 @@ const UploadLogo = () => {
     try {
       setUploading(true);
       
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      
       // Fetch the image from the imported asset
       const response = await fetch(wineVirtueLogo);
       const blob = await response.blob();
@@ -21,10 +25,11 @@ const UploadLogo = () => {
       // Create a File object
       const file = new File([blob], "wine-virtue-logo.png", { type: "image/png" });
       
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage in user's folder
+      const filePath = `${user.id}/wine-virtue-logo.png`;
       const { data, error } = await supabase.storage
         .from("wine-images")
-        .upload("wine-virtue-logo.png", file, {
+        .upload(filePath, file, {
           cacheControl: "3600",
           upsert: true // Overwrite if exists
         });
@@ -34,7 +39,7 @@ const UploadLogo = () => {
       // Get public URL
       const { data: urlData } = supabase.storage
         .from("wine-images")
-        .getPublicUrl("wine-virtue-logo.png");
+        .getPublicUrl(filePath);
 
       setPublicUrl(urlData.publicUrl);
       setUploaded(true);
