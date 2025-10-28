@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { User, LogOut, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
+import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -121,6 +122,11 @@ But on what? Wine, poetry, or virtue, as you wish."
                 {manifesto}
               </p>
             )}
+          </div>
+
+          {/* Wine & Virtue Logo */}
+          <div className="flex justify-center my-8">
+            <img src={wineVirtueLogo} alt="Wine & Virtue" className="w-48 h-auto opacity-90" />
           </div>
 
           {/* User Profile Section */}
