@@ -444,16 +444,16 @@ const AddWine = () => {
                 </div>)}
             </div>
 
-            {/* Wine & Virtue Logo */}
-            <div className="flex justify-center mt-8 mb-4">
-              <img src={wineVirtueLogo} alt="Wine & Virtue" className="w-48 h-auto opacity-90" />
-            </div>
-
             {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-gradient-primary hover:opacity-90 text-white flex justify-center items-center shadow-wine hover:scale-110 active:scale-95 transition-all">
                 {aiProcessing ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   </> : "Magic Scan"}
               </Button>}
+          </div>
+
+          {/* Wine & Virtue Logo - After the section */}
+          <div className="flex justify-center my-8">
+            <img src={wineVirtueLogo} alt="Wine & Virtue" className="w-48 h-auto opacity-90" />
           </div>
 
           {/* Form - Only show after Magic Scan is completed */}
