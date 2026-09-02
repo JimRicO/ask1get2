@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { removeWineBackground } from "@/lib/wine-ai.functions";
+
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Trash2, Plus, Sparkles, Upload, X } from "lucide-react";
@@ -48,6 +51,7 @@ const WineDetail = () => {
     id
   } = useParams();
   const navigate = useNavigate();
+  const removeWineBackgroundFn = useServerFn(removeWineBackground);
   const [wine, setWine] = useState<WineData | null>(null);
   const [tastingNotes, setTastingNotes] = useState<TastingNote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -429,15 +433,14 @@ const WineDetail = () => {
       toast.info(`Processing ${imageEntries.length} image(s)...`);
       for (const [type, url] of imageEntries) {
         // Call edge function to process image
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('remove-wine-background', {
-          body: {
-            imageUrl: url
-          }
-        });
-        if (error) {
+        let data: { processedImage: string };
+        try {
+          data = await removeWineBackgroundFn({
+            data: {
+              imageUrl: url as string
+            }
+          });
+        } catch (error) {
           console.error(`Error processing ${type}:`, error);
           toast.error(`Failed to process ${type} image`);
           continue;
