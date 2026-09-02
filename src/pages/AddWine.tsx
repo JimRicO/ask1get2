@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { extractWineData, processWineImages } from "@/lib/wine-ai.functions";
+
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +25,8 @@ import { validateWineData } from "@/lib/wineValidation";
 const AddWine = () => {
   const formRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const extractWineDataFn = useServerFn(extractWineData);
+  const processWineImagesFn = useServerFn(processWineImages);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
@@ -165,18 +170,14 @@ const AddWine = () => {
         });
       });
       const processedImages = await Promise.all(imagePromises);
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke("extract-wine-data", {
-        body: {
+      const data = await extractWineDataFn({
+        data: {
           images: processedImages.map(img => ({
             type: img.type,
             data: img.base64
           }))
         }
       });
-      if (error) throw error;
       if (data?.extracted) {
         // Parse grape varietals from AI response
         let mainGrape = "";
@@ -359,8 +360,8 @@ const AddWine = () => {
 
       // Start background image processing if we have images and a wine ID
       if (wineId && Object.keys(imageUrls).length > 0) {
-        supabase.functions.invoke("process-wine-images", {
-          body: {
+        processWineImagesFn({
+          data: {
             wineId,
             imageUrls
           }

@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { extractWineData } from "@/lib/wine-ai.functions";
+
 import Layout from "@/components/Layout";
 import { Heart, Camera, Trash2, Loader2, Edit, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +39,7 @@ interface WishlistItem {
 
 const Wishlist = () => {
   const navigate = useNavigate();
+  const extractWineDataFn = useServerFn(extractWineData);
   const [session, setSession] = useState<Session | null>(null);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -159,11 +163,9 @@ const Wishlist = () => {
           })
       );
 
-      const { data: aiData, error: aiError } = await supabase.functions.invoke("extract-wine-data", {
-        body: { images: imageData }
+      const aiData = await extractWineDataFn({
+        data: { images: imageData }
       });
-
-      if (aiError) throw aiError;
 
       const wineData = aiData?.extracted || {};
       
