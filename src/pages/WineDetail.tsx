@@ -146,16 +146,16 @@ const WineDetail = () => {
       const {
         data,
         error
-      } = await supabase.from("wines").select("*").eq("id", id).single();
+      } = await supabase.from("wines").select("*").eq("id", id ?? "").single();
       if (error) throw error;
       
       // Transform storage_locations from Json to proper type
-      const wineData: WineData = {
+      const wineData = {
         ...data,
         storage_locations: Array.isArray(data.storage_locations) 
           ? data.storage_locations as Array<{location: string; quantity: number}>
           : []
-      };
+      } as unknown as WineData;
       setWine(wineData);
 
       // Initialize edit form with current values
@@ -187,11 +187,11 @@ const WineDetail = () => {
       const {
         data,
         error
-      } = await supabase.from("tasting_notes").select("*").eq("wine_id", id).order("tasting_date", {
+      } = await supabase.from("tasting_notes").select("*").eq("wine_id", id ?? "").order("tasting_date", {
         ascending: false
       });
       if (error) throw error;
-      setTastingNotes(data || []);
+      setTastingNotes((data || []) as unknown as TastingNote[]);
     } catch (error) {
       console.error("Failed to fetch tasting notes:", error);
     }
@@ -204,7 +204,7 @@ const WineDetail = () => {
         error: noteError
       } = await supabase.from("tasting_notes").insert({
         wine_id: wine.id,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        user_id: (await supabase.auth.getUser()).data.user?.id ?? "",
         rating,
         notes: notes || null,
         occasion: occasion || null,
@@ -390,7 +390,7 @@ const WineDetail = () => {
       const {
         error
       } = await supabase.from("wines").update({
-        wine_name: editForm.wine_name || null,
+        wine_name: editForm.wine_name || undefined,
         producer: editForm.producer || null,
         vintage_year: editForm.vintage_year ? parseInt(editForm.vintage_year) : null,
         wine_type: wineType as any,
