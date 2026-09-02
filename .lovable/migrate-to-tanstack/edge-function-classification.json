@@ -1,0 +1,28 @@
+{
+  "functions": [
+    {
+      "name": "extract-wine-data",
+      "classification": "internal-only",
+      "signal": "invoked from src/pages/AddWine.tsx and src/pages/Wishlist.tsx",
+      "outcome": "left"
+    },
+    {
+      "name": "extract-wine-name",
+      "classification": "unknown",
+      "signal": "no internal call sites, no signature verification",
+      "outcome": "left"
+    },
+    {
+      "name": "process-wine-images",
+      "classification": "internal-only",
+      "signal": "invoked from src/pages/AddWine.tsx",
+      "outcome": "left"
+    },
+    {
+      "name": "remove-wine-background",
+      "classification": "internal-only",
+      "signal": "invoked from src/pages/WineDetail.tsx",
+      "outcome": "left"
+    }
+  ]
+}

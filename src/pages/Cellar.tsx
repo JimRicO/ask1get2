@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import Layout from "@/components/Layout";
 import { Wine, Plus, Search, Filter, SlidersHorizontal, Pencil, Check, X } from "lucide-react";
 import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
@@ -98,6 +98,7 @@ const Cellar = () => {
         supabase.removeChannel(channel);
       };
     }
+    return undefined;
   }, [session]);
   const fetchWines = async () => {
     try {
@@ -118,13 +119,13 @@ const Cellar = () => {
       if (error) throw error;
 
       // Transform storage_locations from Json to proper type
-      const transformedWines: WineData[] = (data || []).map(wine => ({
+      const transformedWines = (data || []).map(wine => ({
         ...wine,
         storage_locations: Array.isArray(wine.storage_locations) ? wine.storage_locations as Array<{
           location: string;
           quantity: number;
         }> : []
-      }));
+      })) as unknown as WineData[];
       setWines(transformedWines);
     } catch (error: any) {
       toast.error("Failed to load wines");
@@ -178,12 +179,12 @@ const Cellar = () => {
   });
   const activeWines = wines.filter(w => w.current_stock > 0);
   const archivedWines = wines.filter(w => w.current_stock === 0);
-  const uniqueTypes = Array.from(new Set(wines.map(w => w.wine_type).filter(Boolean)));
-  const uniqueYears = Array.from(new Set(wines.map(w => w.vintage_year).filter(Boolean))).sort((a, b) => b - a);
+  const uniqueTypes = Array.from(new Set(wines.map(w => w.wine_type).filter((v): v is NonNullable<typeof v> => Boolean(v))));
+  const uniqueYears = Array.from(new Set(wines.map(w => w.vintage_year).filter((v): v is number => v !== null && v !== undefined))).sort((a, b) => b - a);
 
   // Extract unique grape varietals from all wines
   const uniqueGrapes = Array.from(new Set(wines.flatMap(wine => Array.isArray(wine.grape_varietals) ? wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean) : []))).sort();
-  const uniqueCountries = Array.from(new Set(wines.map(w => w.country).filter(Boolean))).sort();
+  const uniqueCountries = Array.from(new Set(wines.map(w => w.country).filter((v): v is string => Boolean(v)))).sort();
   const uniqueLocations = Array.from(new Set(wines.flatMap(w => {
     if (w.storage_locations && w.storage_locations.length > 0) {
       return w.storage_locations.map(loc => loc.location);
