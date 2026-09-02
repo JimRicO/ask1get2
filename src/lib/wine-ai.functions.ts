@@ -140,9 +140,9 @@ Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year,
     if (!text) throw new Error("No response from AI");
 
     const parsed = parseJsonFromText(text);
-    if (!parsed) {
-      return {
-        extracted: {
+    const extracted: Record<string, JsonValue> = parsed
+      ? { ...parsed, wine_type: normalizeWineType(parsed["wine_type"]) }
+      : {
           wine_name: "Unknown Wine",
           producer: null,
           vintage_year: null,
@@ -152,13 +152,9 @@ Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year,
           alcohol_content: null,
           grape_varietals: null,
           description: null,
-        },
-      };
-    }
+        };
 
-    return {
-      extracted: { ...parsed, wine_type: normalizeWineType(parsed["wine_type"]) },
-    };
+    return { extracted };
   });
 
 /** Read a wine label image and return the basic identifying fields. */
