@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import Layout from "@/components/Layout";
 import { Wine, Plus, Search, Filter, SlidersHorizontal, Pencil, Check, X } from "lucide-react";
 import wineVirtueLogo from "@/assets/wine-virtue-logo.png";

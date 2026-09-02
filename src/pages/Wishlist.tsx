@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Heart, Camera, Trash2, Loader2, Edit, Upload, X } from "lucide-react";
