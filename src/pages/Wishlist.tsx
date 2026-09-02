@@ -163,9 +163,9 @@ const Wishlist = () => {
           })
       );
 
-      const aiData = await extractWineDataFn({
+      const aiData = (await extractWineDataFn({
         data: { images: imageData }
-      });
+      })) as { extracted: Record<string, any> };
 
       const wineData = aiData?.extracted || {};
       

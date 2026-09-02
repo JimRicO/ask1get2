@@ -170,14 +170,14 @@ const AddWine = () => {
         });
       });
       const processedImages = await Promise.all(imagePromises);
-      const data = await extractWineDataFn({
+      const data = (await extractWineDataFn({
         data: {
           images: processedImages.map(img => ({
             type: img.type,
             data: img.base64
           }))
         }
-      });
+      })) as { extracted: Record<string, any> };
       if (data?.extracted) {
         // Parse grape varietals from AI response
         let mainGrape = "";
