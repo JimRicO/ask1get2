@@ -44,12 +44,14 @@ async function callGateway(body: Record<string, unknown>) {
   };
 }
 
-function parseJsonFromText(text: string): Record<string, unknown> | null {
+type JsonValue = string | number | boolean | null;
+
+function parseJsonFromText(text: string): Record<string, JsonValue> | null {
   const fenced = text.match(/```json\n?([\s\S]*?)\n?```/);
   const braced = text.match(/\{[\s\S]*\}/);
   const candidate = fenced?.[1] ?? braced?.[0] ?? text;
   try {
-    return JSON.parse(candidate.trim()) as Record<string, unknown>;
+    return JSON.parse(candidate.trim()) as Record<string, JsonValue>;
   } catch {
     return null;
   }
