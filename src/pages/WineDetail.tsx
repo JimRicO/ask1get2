@@ -430,73 +430,45 @@ const WineDetail = () => {
     }
   };
   const handleRemoveBackground = async () => {
-    if (!wine || !wine.images) return;
+    const frontUrl = wine?.images?.front;
+    if (!wine || !frontUrl) {
+      toast.error("Add a front-label image first");
+      return;
+    }
     setProcessingBackground(true);
     const session = await supabase.auth.getSession();
     try {
-      const processedImages: any = {};
-      const imageEntries = Object.entries(wine.images);
-      toast.info(`Processing ${imageEntries.length} image(s)...`);
-      for (const [type, url] of imageEntries) {
-        // Call edge function to process image
-        let data: { processedImage: string };
-        try {
-          data = await removeWineBackgroundFn({
-            data: {
-              imageUrl: url as string
-            }
-          });
-        } catch (error) {
-          console.error(`Error processing ${type}:`, error);
-          toast.error(`Failed to process ${type} image`);
-          continue;
-        }
-        if (!data.processedImage) {
-          console.error(`No processed image for ${type}`);
-          continue;
-        }
+      toast.info("Processing front label...");
+      const data = await removeWineBackgroundFn({
+        data: { imageUrl: frontUrl as string }
+      });
+      if (!data.processedImage) throw new Error("No visible front image returned");
 
-        // Convert base64 to blob
-        const base64Data = data.processedImage.split(',')[1];
-        const blob = await fetch(`data:image/png;base64,${base64Data}`).then(r => r.blob());
+      const base64Data = data.processedImage.split(',')[1];
+      if (!base64Data) throw new Error("Invalid front image returned");
+      const blob = await fetch(`data:image/png;base64,${base64Data}`).then(r => r.blob());
+      if (!blob.size) throw new Error("Blank front image returned");
 
-        // Upload to storage
-        const fileName = `${session.data.session?.user.id}/${type}_cleaned_${Date.now()}.png`;
-        const {
-          error: uploadError
-        } = await supabase.storage.from('wine-images').upload(fileName, blob);
-        if (uploadError) {
-          console.error(`Upload error for ${type}:`, uploadError);
-          toast.error(`Failed to upload ${type} image`);
-          continue;
-        }
-        const {
-          data: {
-            publicUrl
-          }
-        } = supabase.storage.from('wine-images').getPublicUrl(fileName);
-        processedImages[type] = publicUrl;
-        toast.success(`${type} image cleaned!`);
-      }
+      const ownerId = session.data.session?.user.id;
+      if (!ownerId) throw new Error("Not signed in");
+      const fileName = `${ownerId}/front_cleaned_${Date.now()}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from('wine-images')
+        .upload(fileName, blob, { contentType: "image/png" });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage
+        .from('wine-images')
+        .getPublicUrl(fileName);
 
-      // Update wine record with new images
-      if (Object.keys(processedImages).length > 0) {
-        const {
-          error: updateError
-        } = await supabase.from('wines').update({
-          images: processedImages
-        }).eq('id', wine.id);
-        if (updateError) throw updateError;
-        // The AI can return a sideways landscape canvas; force portrait.
-        const ownerId = session.data.session?.user.id;
-        if (ownerId) {
-          await uprightWineImages(wine.id, processedImages, ownerId);
-        }
-        toast.success('All images updated with clean backgrounds!');
-        fetchWine();
-      } else {
-        toast.error('No images were successfully processed');
-      }
+      const updatedImages = { ...wine.images, front: publicUrl };
+      const { error: updateError } = await supabase
+        .from('wines')
+        .update({ images: updatedImages })
+        .eq('id', wine.id);
+      if (updateError) throw updateError;
+      await uprightWineImages(wine.id, updatedImages, ownerId);
+      toast.success('Front label background cleaned');
+      fetchWine();
     } catch (error: any) {
       console.error('Background removal error:', error);
       toast.error(error.message || 'Failed to clean backgrounds');
