@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { extractWineData } from "@/lib/wine-ai.functions";
 import { normalizeCountry } from "@/lib/normalizeCountry";
+import { normalizeGrapeList } from "@/lib/normalizeGrape";
 
 import Layout from "@/components/Layout";
 import { Heart, Camera, Trash2, Loader2, Edit, Upload, X } from "lucide-react";
@@ -238,7 +239,7 @@ const Wishlist = () => {
         wine_type: formData.wine_type || null,
         country: normalizeCountry(formData.country),
         region: formData.region || null,
-        grape_varietals: formData.grape_varietals || null,
+        grape_varietals: normalizeGrapeList(formData.grape_varietals.split(',')).join(', ') || null,
         images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
         description: formData.description || null,
         notes: formData.notes || null

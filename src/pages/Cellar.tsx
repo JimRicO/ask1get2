@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { normalizeCountry } from "@/lib/normalizeCountry";
+import { normalizeGrape } from "@/lib/normalizeGrape";
 import { Session } from "@supabase/supabase-js";
 interface WineData {
   id: string;
@@ -154,7 +155,10 @@ const Cellar = () => {
     const matchesYear = filterYear === "all" || wine.vintage_year?.toString() === filterYear;
 
     // Grape filter
-    const matchesGrape = filterGrape === "all" || Array.isArray(wine.grape_varietals) && wine.grape_varietals.some((g: any) => typeof g === 'string' ? g === filterGrape : g?.name === filterGrape);
+    const matchesGrape = filterGrape === "all" || Array.isArray(wine.grape_varietals) && wine.grape_varietals.some((g: any) => {
+      const name = typeof g === 'string' ? g : g?.name;
+      return typeof name === 'string' && name.trim().toLowerCase() === filterGrape.trim().toLowerCase();
+    });
 
     // Country filter
     const matchesCountry = filterCountry === "all" || (wine.country ?? "").trim().toLowerCase() === filterCountry.toLowerCase();
@@ -184,7 +188,11 @@ const Cellar = () => {
   const uniqueYears = Array.from(new Set(wines.map(w => w.vintage_year).filter((v): v is number => v !== null && v !== undefined))).sort((a, b) => b - a);
 
   // Extract unique grape varietals from all wines
-  const uniqueGrapes = Array.from(new Set(wines.flatMap(wine => Array.isArray(wine.grape_varietals) ? wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean) : []))).sort();
+  const uniqueGrapes = Array.from(wines.flatMap(wine => Array.isArray(wine.grape_varietals) ? wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name) : []).reduce((map: Map<string, string>, raw: any) => {
+    const normalized = normalizeGrape(typeof raw === 'string' ? raw : null);
+    if (normalized && !map.has(normalized.toLowerCase())) map.set(normalized.toLowerCase(), normalized);
+    return map;
+  }, new Map<string, string>()).values()).sort();
   const uniqueCountries = Array.from(wines.reduce((map, w) => {
     const normalized = normalizeCountry(w.country);
     if (normalized && !map.has(normalized.toLowerCase())) map.set(normalized.toLowerCase(), normalized);
