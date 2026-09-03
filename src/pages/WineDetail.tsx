@@ -1158,12 +1158,14 @@ const WineDetail = () => {
                               <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
+                                onChange={async (e) => {
+                                  const rawFile = e.target.files?.[0];
+                                  if (rawFile) {
+                                    const file = await normalizeImageOrientation(rawFile);
                                     setNewImages(prev => ({ ...prev, [type]: file }));
                                   }
                                 }}
+
                                 className="hidden"
                                 id={`upload-${type}`}
                               />
