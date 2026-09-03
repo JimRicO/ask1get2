@@ -5,6 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { extractWineData, processWineImages } from "@/lib/wine-ai.functions";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
+import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
+
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
