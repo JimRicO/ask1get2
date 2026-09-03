@@ -102,7 +102,6 @@ CRITICAL - ALWAYS extract these if visible on the label:
 - Region/Appellation
 - **Alcohol content (ABV %) - Look carefully on the label, usually shown as "% ABV", "% vol", or "% alc/vol"**
 - **Grape varietals - Extract ALL grape varieties mentioned on the label. This is CRITICAL information that should always be extracted if present.**
-- A detailed description (2-3 sentences) based on visible information about the wine's style, characteristics, and origin
 
 IMPORTANT INSTRUCTIONS:
 1. Examine ALL images thoroughly to find the alcohol content percentage - it's usually on the front or back label
@@ -111,7 +110,7 @@ IMPORTANT INSTRUCTIONS:
 4. Pay special attention to small text that might contain ABV or grape information
 5. **CRITICAL**: wine_type MUST be lowercase and ONLY one of: "red", "white", "rose", "sparkling", "dessert", "fortified"
 
-Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year, wine_type, country, region, alcohol_content, grape_varietals, description.
+Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year, wine_type, country, region, alcohol_content, grape_varietals.
 - For grape_varietals: return as a string with varieties separated by commas
 - For alcohol_content: return as a number (e.g., 13.5)
 - For wine_type: MUST be lowercase
@@ -132,7 +131,7 @@ Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year,
     }
 
     const result = await callGateway({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.7-flash",
       messages: [{ role: "user", content }],
     });
 
@@ -165,7 +164,7 @@ export const extractWineName = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const result = await callGateway({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.7-flash",
       messages: [
         {
           role: "user",
@@ -206,6 +205,56 @@ Return ONLY valid JSON, no other text.`,
 
     const parsed = parseJsonFromText(text);
     return { wineData: parsed ?? { ...fallback, wine_name: text } };
+  });
+
+/** Research a wine on the web and write a grounded description. */
+export const describeWine = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        wine_name: z.string().min(1),
+        producer: z.string().nullable().optional(),
+        vintage_year: z.union([z.number(), z.string()]).nullable().optional(),
+        region: z.string().nullable().optional(),
+        country: z.string().nullable().optional(),
+        grape_varietals: z.string().nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const facts = [
+      `Wine name: ${data.wine_name}`,
+      data.producer ? `Producer: ${data.producer}` : null,
+      data.vintage_year ? `Vintage: ${data.vintage_year}` : null,
+      data.region ? `Region: ${data.region}` : null,
+      data.country ? `Country: ${data.country}` : null,
+      data.grape_varietals ? `Grapes: ${data.grape_varietals}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const prompt = `Search the web for this specific wine and write a factual description of it.
+
+${facts}
+
+Rules:
+- Use Google Search to find real information about this producer, cuvée and vintage.
+- Write 2 to 3 sentences covering style, grapes, terroir/appellation and typical character.
+- Only state what you actually found or what is given above. Do NOT invent tasting notes, scores, awards or prices.
+- If the web search finds nothing specific about this wine, write a short factual description based only on the facts given above, and say nothing you cannot support.
+- Return the description text only: no preamble, no bullet points, no markdown, no citations.`;
+
+    const result = await callGateway({
+      model: "google/gemini-3.7-flash",
+      messages: [{ role: "user", content: prompt }],
+      tools: [{ type: "google_search" }],
+    });
+
+    const description = result.choices?.[0]?.message?.content?.trim();
+    if (!description) throw new Error("No description returned by AI");
+
+    return { description };
   });
 
 /** Remove the background of a single wine image and return the processed PNG data URL. */
