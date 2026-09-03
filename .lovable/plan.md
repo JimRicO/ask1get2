@@ -1,42 +1,54 @@
-# Fix front-label recovery: stop offering unrelated bottles
+# Remove orientation machinery and preserve vertical uploads
 
-## The problem
+## Goal
 
-Stored image files are named `front_<timestamp>.jpg` — nothing in the filename or the
-database links a file to a specific wine. So "Choose earlier front" lists every front
-photo in your account, which is why unrelated bottles show up. There is no reliable way
-to auto-match old files to a wine, so the page should stop pretending it can.
+Return image handling to a simple wine-cellar rule: the user uploads the four bottle
+views, the app respects each photo's camera orientation, and every view is displayed in
+a vertical frame. The app must not guess, classify, replace, or associate images.
 
-## What changes on /fix-orientation
+## Remove the added recovery system
 
-Each wine row keeps only actions that cannot show the wrong bottle:
+- Delete the `/fix-orientation` route and recovery page.
+- Remove the stored-image candidate browser and “Choose earlier front”.
+- Remove `uprightWineImages`, the label-readability AI check, stored-image rotation,
+  and inspection/data-URL helpers.
+- Remove every automatic post-upload orientation pass and every call that rewrites a
+  saved wine image after upload.
+- Do not modify any existing database image references or delete storage objects.
 
-1. **Current front preview** — the image the cellar card actually uses, portrait sized.
-2. **Rotate left / 180 / rotate right** — manual pixel rotation of that front image only.
-3. **Replace front photo** — a file/camera input that uploads a new front image for that
-   one wine. Uploaded as-is (no AI, no auto-rotation), then set as `front`.
+## Upload behavior
 
-The name-based candidate list and its search box are removed. In its place, an optional,
-collapsed **"Show all my stored photos"** panel per wine renders a thumbnail grid of
-stored front files so you can *visually* pick one and confirm it — it stays closed by
-default and is never presented as a suggestion for that wine.
+For **front, back, neck, and overall** in Add Wine, Wishlist, and Edit Wine:
 
-## Rules that stay enforced
+1. Read the uploaded photo using its embedded camera/EXIF orientation.
+2. Bake that orientation into the image pixels once.
+3. Save exactly that normalized upload—no AI orientation, no bottle/neck detection,
+   no label-reading, and no background-generated replacement as part of orientation.
+4. Show the preview in a stable portrait frame with `object-contain`, so the complete
+   view remains visible without cropping.
 
-- Only `front` is ever read, rotated, replaced or saved.
-- `back`, `neck` and `overall` are never displayed, rotated, processed or overwritten.
-- Failed operations leave the whole image map untouched — no partial writes.
-- No AI orientation or background pass runs anywhere on this page.
-- No storage objects are deleted.
+This corrects the common phone-photo problem where a vertical photo is stored with
+sideways pixels plus orientation metadata. It does not guess a rotation when the source
+photo itself contains no correct orientation metadata.
 
-## Technical notes
+## Existing background-removal feature
 
-- Edit `src/pages/FixOrientation.tsx` only.
-- Drop `visibleCandidates`, `candidateSearch` and the filename-filtered candidate flow;
-  keep `storedFronts` loading solely to feed the collapsed thumbnail grid.
-- Add an upload handler writing to `${userId}/front_manual_${Date.now()}.<ext>` in the
-  `wine-images` bucket, then `saveFrontReference(wine, publicUrl)`.
-- `rotateFront` and `saveFrontReference` stay as-is (rotate → upload JPEG → merge only
-  the `front` key).
-- Verify with `bunx tsgo --noEmit` and a browser check that `/fix-orientation` renders
-  rows with no candidate list visible by default.
+Keep the explicit user-triggered front-background-removal feature, but remove its
+orientation follow-up. Remove the automatic background-processing call after adding a
+wine, because it silently replaces the uploaded front photo. A user upload remains the
+stored image unless the user explicitly requests background removal.
+
+## Display behavior
+
+- Cellar thumbnail: front view only, portrait frame, `object-contain`.
+- Wine detail carousel: all stored views, portrait frame, `object-contain`.
+- Add/Edit/Wishlist previews: all four views, portrait frame, `object-contain`.
+- No fallback from front to another view for thumbnails.
+
+## Verification
+
+- Confirm no references remain to `/fix-orientation`, `uprightWineImages`,
+  `checkLabelOrientation`, or stored-image rotation helpers.
+- Typecheck and build.
+- Browser-test upload previews for front, back, neck, and overall using a phone-oriented
+  image and confirm each preview remains vertical and uncropped.
