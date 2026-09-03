@@ -245,7 +245,10 @@ Rules:
 - NEVER estimate, guess or invent blend percentages. If no percentages are found, simply name the grape varieties without numbers.
 - Only state what you actually found or what is given above. Do NOT invent tasting notes, scores, awards or prices.
 - If the web search finds nothing specific about this wine, write a short factual description based only on the facts given above, and say nothing you cannot support.
-- Return the description text only: no preamble, no bullet points, no markdown, no citations.`;
+- Cite your sources: list the full URLs of the web pages you actually used, at most 3. Never invent a URL. If you used no web page, return an empty list.
+
+Return ONLY valid JSON in this exact shape, no markdown fences:
+{"description": "the description text with no citations inside it", "sources": ["https://...", "https://..."]}`;
 
     const result = await callGateway({
       model: "google/gemini-3.7-flash",
@@ -253,11 +256,73 @@ Rules:
       tools: [{ type: "google_search" }],
     });
 
-    const description = result.choices?.[0]?.message?.content?.trim();
-    if (!description) throw new Error("No description returned by AI");
+    const text = result.choices?.[0]?.message?.content?.trim();
+    if (!text) throw new Error("No description returned by AI");
 
-    return { description };
+    let description = text;
+    const rawSources: string[] = [];
+
+    const fenced = text.match(/```json\n?([\s\S]*?)\n?```/);
+    const braced = text.match(/\{[\s\S]*\}/);
+    const candidate = fenced?.[1] ?? braced?.[0];
+    if (candidate) {
+      try {
+        const parsed = JSON.parse(candidate.trim()) as {
+          description?: unknown;
+          sources?: unknown;
+        };
+        if (typeof parsed.description === "string" && parsed.description.trim()) {
+          description = parsed.description.trim();
+        }
+        if (Array.isArray(parsed.sources)) {
+          for (const raw of parsed.sources) {
+            if (typeof raw !== "string") continue;
+            try {
+              const url = new URL(raw.trim());
+              if (url.protocol === "https:") rawSources.push(url.toString());
+            } catch {
+              // skip malformed URL
+            }
+          }
+        }
+      } catch {
+        // keep the raw text as the description, no sources
+      }
+    }
+
+    // Search grounding returns redirect URLs; follow them to the real page.
+    const resolved = await Promise.all(
+      rawSources.slice(0, 6).map(async (url) => {
+        if (!url.includes("grounding-api-redirect")) return url;
+        try {
+          const head = await fetch(url, { method: "GET", redirect: "manual" });
+          const location = head.headers.get("location");
+          return location && location.startsWith("https://") ? location : url;
+        } catch {
+          return url;
+        }
+      }),
+    );
+
+    const seenHosts = new Set<string>();
+    const sources: string[] = [];
+    for (const url of resolved) {
+      let host: string;
+      try {
+        host = new URL(url).host;
+      } catch {
+        continue;
+      }
+      if (seenHosts.has(host)) continue;
+      seenHosts.add(host);
+      sources.push(url);
+      if (sources.length >= 3) break;
+    }
+
+    return { description, sources };
+
   });
+
 
 /** Remove the background of a single wine image and return the processed PNG data URL. */
 export const removeWineBackground = createServerFn({ method: "POST" })
