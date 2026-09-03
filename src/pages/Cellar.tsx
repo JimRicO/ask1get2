@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { normalizeCountry } from "@/lib/normalizeCountry";
 import { Session } from "@supabase/supabase-js";
 interface WineData {
   id: string;
@@ -156,7 +157,7 @@ const Cellar = () => {
     const matchesGrape = filterGrape === "all" || Array.isArray(wine.grape_varietals) && wine.grape_varietals.some((g: any) => typeof g === 'string' ? g === filterGrape : g?.name === filterGrape);
 
     // Country filter
-    const matchesCountry = filterCountry === "all" || wine.country === filterCountry;
+    const matchesCountry = filterCountry === "all" || (wine.country ?? "").trim().toLowerCase() === filterCountry.toLowerCase();
 
     // Location filter
     const matchesLocation = filterLocation === "all" || wine.storage_location === filterLocation || wine.storage_locations && wine.storage_locations.some(loc => loc.location === filterLocation);
@@ -184,7 +185,11 @@ const Cellar = () => {
 
   // Extract unique grape varietals from all wines
   const uniqueGrapes = Array.from(new Set(wines.flatMap(wine => Array.isArray(wine.grape_varietals) ? wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean) : []))).sort();
-  const uniqueCountries = Array.from(new Set(wines.map(w => w.country).filter((v): v is string => Boolean(v)))).sort();
+  const uniqueCountries = Array.from(wines.reduce((map, w) => {
+    const normalized = normalizeCountry(w.country);
+    if (normalized && !map.has(normalized.toLowerCase())) map.set(normalized.toLowerCase(), normalized);
+    return map;
+  }, new Map<string, string>()).values()).sort();
   const uniqueLocations = Array.from(new Set(wines.flatMap(w => {
     if (w.storage_locations && w.storage_locations.length > 0) {
       return w.storage_locations.map(loc => loc.location);

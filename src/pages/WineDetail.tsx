@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { validateWineData } from "@/lib/wineValidation";
+import { normalizeCountry } from "@/lib/normalizeCountry";
 interface WineData {
   id: string;
   wine_name: string;
@@ -398,7 +399,7 @@ const WineDetail = () => {
         producer: editForm.producer || null,
         vintage_year: editForm.vintage_year ? parseInt(editForm.vintage_year) : null,
         wine_type: wineType as any,
-        country: editForm.country || null,
+        country: normalizeCountry(editForm.country),
         region: editForm.region || null,
         appellation: editForm.appellation || null,
         alcohol_content: editForm.alcohol_content ? parseFloat(editForm.alcohol_content) : null,

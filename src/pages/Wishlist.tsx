@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { extractWineData } from "@/lib/wine-ai.functions";
+import { normalizeCountry } from "@/lib/normalizeCountry";
 
 import Layout from "@/components/Layout";
 import { Heart, Camera, Trash2, Loader2, Edit, Upload, X } from "lucide-react";
@@ -235,7 +236,7 @@ const Wishlist = () => {
         producer: formData.producer || null,
         vintage_year: formData.vintage_year ? parseInt(formData.vintage_year) : null,
         wine_type: formData.wine_type || null,
-        country: formData.country || null,
+        country: normalizeCountry(formData.country),
         region: formData.region || null,
         grape_varietals: formData.grape_varietals || null,
         images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
