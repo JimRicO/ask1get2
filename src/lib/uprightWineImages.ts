@@ -1,15 +1,28 @@
 /**
- * Post-AI orientation guard.
+ * Post-AI readability guard.
  *
- * The AI background-removal step returns its own canvas (often 1472x704
- * landscape) with the bottle lying on its side. The server runtime has no
- * canvas API, so the correction runs in the browser: any stored wine image
- * that is wider than tall is rotated upright, re-uploaded and saved back to
- * the wine record.
+ * The AI background-removal step returns its own canvas and can hand back a
+ * sideways or inverted bottle. One rule decides the fix: the label text must
+ * read normally. The AI readability check says how far to turn each image, and
+ * the rotation happens in the browser (the server runtime has no canvas).
  */
 
 import { supabase } from "@/integrations/supabase/client";
-import { normalizeStoredImage } from "@/lib/normalizeImageOrientation";
+import { checkLabelOrientation } from "@/lib/wine-ai.functions";
+import {
+  rotateStoredImage,
+  toInspectableDataUrl,
+} from "@/lib/normalizeImageOrientation";
+
+/** Clockwise degrees needed to make the label readable, or null if unreadable. */
+export async function readableRotation(
+  imageUrl: string,
+): Promise<number | null> {
+  const dataUrl = await toInspectableDataUrl(imageUrl);
+  if (!dataUrl) return null;
+  const result = await checkLabelOrientation({ data: { image: dataUrl } });
+  return result?.degrees ?? null;
+}
 
 export async function uprightWineImages(
   wineId: string,
@@ -24,13 +37,16 @@ export async function uprightWineImages(
   for (const [type, url] of Object.entries(images)) {
     if (!url || typeof url !== "string") continue;
     try {
-      const result = await normalizeStoredImage(url);
-      if (!result) continue; // already portrait
+      const degrees = await readableRotation(url);
+      if (!degrees) continue; // already readable, or nothing legible to judge
 
-      const fileName = `${ownerId}/${type}_upright_${Date.now()}.jpg`;
+      const blob = await rotateStoredImage(url, degrees);
+      if (!blob) continue;
+
+      const fileName = `${ownerId}/${type}_readable_${Date.now()}.jpg`;
       const { error: uploadError } = await supabase.storage
         .from("wine-images")
-        .upload(fileName, result.blob, {
+        .upload(fileName, blob, {
           contentType: "image/jpeg",
           upsert: true,
         });
@@ -42,7 +58,7 @@ export async function uprightWineImages(
       updated[type] = publicUrl;
       changed = true;
     } catch (error) {
-      console.error(`Could not upright ${type} image:`, error);
+      console.error(`Could not straighten ${type} image:`, error);
     }
   }
 
@@ -53,7 +69,7 @@ export async function uprightWineImages(
     .update({ images: updated })
     .eq("id", wineId);
   if (error) {
-    console.error("Could not save upright images:", error);
+    console.error("Could not save straightened images:", error);
     return null;
   }
 

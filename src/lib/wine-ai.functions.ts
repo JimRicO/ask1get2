@@ -323,3 +323,54 @@ export const processWineImages = createServerFn({ method: "POST" })
 
     return { success: true, wineId: data.wineId, cleanedImageUrls };
   });
+
+/**
+ * The only orientation rule we have: the label text must read normally.
+ * Returns the clockwise rotation (0/90/180/270) that makes it readable,
+ * or null when there is no readable text to judge.
+ */
+export const checkLabelOrientation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ image: z.string().min(1) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const result = await callGateway({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Look at the text printed on this wine label. Which way is the text currently facing?
+
+Answer with ONLY one of these words:
+- "upright" if the text reads normally already
+- "upside_down" if the text is rotated 180 degrees
+- "rotate_left" if the text runs vertically and you must turn the image counter-clockwise (90 degrees left) to read it
+- "rotate_right" if the text runs vertically and you must turn the image clockwise (90 degrees right) to read it
+- "unreadable" if there is no legible text at all
+
+Return only the single word, nothing else.`,
+            },
+            { type: "image_url", image_url: { url: data.image } },
+          ] satisfies GatewayMessageContent,
+        },
+      ],
+    });
+
+    const answer = (result.choices?.[0]?.message?.content ?? "")
+      .toLowerCase()
+      .replace(/[^a-z_]/g, "");
+
+    const rotation: Record<string, number> = {
+      upright: 0,
+      upside_down: 180,
+      rotate_left: 270,
+      rotate_right: 90,
+    };
+
+    const degrees = rotation[answer];
+    return { degrees: degrees === undefined ? null : degrees };
+  });

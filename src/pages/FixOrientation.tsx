@@ -3,11 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, RotateCw, CheckCircle2, AlertTriangle } from "lucide-react";
 import {
-  normalizeStoredImage,
-  rotateStoredImage,
-} from "@/lib/normalizeImageOrientation";
+  Loader2,
+  RotateCw,
+  RotateCcw,
+  FlipVertical2,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
+import { rotateStoredImage } from "@/lib/normalizeImageOrientation";
+import { readableRotation } from "@/lib/uprightWineImages";
 
 type WineRow = {
   id: string;
@@ -19,7 +24,8 @@ type ReportEntry = {
   wineId: string;
   wineName: string;
   fixed: string[];
-  skipped: string[];
+  alreadyGood: string[];
+  needsReview: string[];
   failed: string[];
 };
 
@@ -59,7 +65,7 @@ const FixOrientation = () => {
     type: string,
     blob: Blob,
   ): Promise<string> => {
-    const fileName = `${ownerId}/${type}_upright_${Date.now()}.jpg`;
+    const fileName = `${ownerId}/${type}_readable_${Date.now()}.jpg`;
     const { error } = await supabase.storage
       .from("wine-images")
       .upload(fileName, blob, { contentType: "image/jpeg", upsert: true });
@@ -83,7 +89,8 @@ const FixOrientation = () => {
         wineId: wine.id,
         wineName: wine.wine_name,
         fixed: [],
-        skipped: [],
+        alreadyGood: [],
+        needsReview: [],
         failed: [],
       };
       const images = wine.images ?? {};
@@ -93,12 +100,18 @@ const FixOrientation = () => {
       for (const [type, url] of Object.entries(images)) {
         if (!url || typeof url !== "string") continue;
         try {
-          const result = await normalizeStoredImage(url);
-          if (!result) {
-            entry.skipped.push(type);
+          const degrees = await readableRotation(url);
+          if (degrees === null) {
+            entry.needsReview.push(type);
             continue;
           }
-          updated[type] = await uploadFixed(userId, type, result.blob);
+          if (degrees === 0) {
+            entry.alreadyGood.push(type);
+            continue;
+          }
+          const blob = await rotateStoredImage(url, degrees);
+          if (!blob) throw new Error("Rotation failed");
+          updated[type] = await uploadFixed(userId, type, blob);
           entry.fixed.push(type);
           changed = true;
         } catch (error: any) {
@@ -131,18 +144,22 @@ const FixOrientation = () => {
     const totalFixed = entries.reduce((n, e) => n + e.fixed.length, 0);
     toast.success(
       totalFixed > 0
-        ? `Rotated ${totalFixed} image${totalFixed === 1 ? "" : "s"} upright.`
-        : "No sideways images found.",
+        ? `Straightened ${totalFixed} image${totalFixed === 1 ? "" : "s"}.`
+        : "Every label already reads correctly.",
     );
   };
 
-  const manualRotate = async (wine: WineRow, type: string) => {
+  const manualRotate = async (
+    wine: WineRow,
+    type: string,
+    degrees: number,
+  ) => {
     if (!userId) return;
     const url = wine.images?.[type];
     if (!url) return;
     setManualBusy(`${wine.id}:${type}`);
     try {
-      const blob = await rotateStoredImage(url);
+      const blob = await rotateStoredImage(url, degrees);
       if (!blob) throw new Error("Could not rotate this image");
       const publicUrl = await uploadFixed(userId, type, blob);
       const updated = { ...(wine.images ?? {}), [type]: publicUrl };
@@ -181,18 +198,19 @@ const FixOrientation = () => {
   return (
     <div className="min-h-screen bg-[#211111] p-6 space-y-6">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold text-white">Fix bottle orientation</h1>
+        <h1 className="text-2xl font-semibold text-white">Make labels readable</h1>
         <p className="text-sm text-white/70 max-w-xl">
-          One-off maintenance pass. Every stored bottle image is checked; any image
-          that is wider than it is tall gets rotated upright, re-uploaded and saved
-          back to the wine. Portrait images are left untouched.
+          One-off maintenance pass. Every stored bottle image is checked with one
+          rule: the label text must read normally. Any image whose label is
+          sideways or upside down is rotated and saved back to the wine. Images
+          with no legible text are left alone for you to set by hand below.
         </p>
       </header>
 
       <div className="flex items-center gap-4">
         <Button onClick={runPass} disabled={running} className="gap-2">
           {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" />}
-          {running ? `Processing ${progress.done}/${progress.total}` : `Run pass on ${wines.length} wines`}
+          {running ? `Checking ${progress.done}/${progress.total}` : `Run pass on ${wines.length} wines`}
         </Button>
       </div>
 
@@ -200,15 +218,14 @@ const FixOrientation = () => {
         <div className="space-y-3">
           {report.map((entry) => {
             const wine = wines.find((w) => w.id === entry.wineId);
-            const stillPortraitButOdd = entry.skipped;
             return (
-              <Card key={entry.wineId} className="bg-card p-4 space-y-2 border-border/50">
+              <Card key={entry.wineId} className="bg-card p-4 space-y-3 border-border/50">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-white font-medium">{entry.wineName}</span>
                   {entry.fixed.length > 0 ? (
                     <span className="flex items-center gap-1 text-xs text-green-400">
                       <CheckCircle2 className="h-3 w-3" />
-                      rotated: {entry.fixed.join(", ")}
+                      straightened: {entry.fixed.join(", ")}
                     </span>
                   ) : entry.failed.length > 0 ? (
                     <span className="flex items-center gap-1 text-xs text-red-400">
@@ -216,32 +233,58 @@ const FixOrientation = () => {
                       failed: {entry.failed.join(", ")}
                     </span>
                   ) : (
-                    <span className="text-xs text-white/50">already upright</span>
+                    <span className="text-xs text-white/50">reads correctly</span>
                   )}
                 </div>
 
-                {stillPortraitButOdd.length > 0 && wine && (
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <span className="text-xs text-white/50">
-                      Looks portrait already — rotate manually if it is still wrong:
-                    </span>
-                    {stillPortraitButOdd.map((type) => (
-                      <Button
-                        key={type}
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs gap-1"
-                        disabled={manualBusy === `${wine.id}:${type}`}
-                        onClick={() => manualRotate(wine, type)}
-                      >
-                        {manualBusy === `${wine.id}:${type}` ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <RotateCw className="h-3 w-3" />
-                        )}
-                        {type}
-                      </Button>
-                    ))}
+                {wine && (entry.needsReview.length > 0 || entry.fixed.length > 0) && (
+                  <div className="space-y-3 pt-1">
+                    {[...new Set([...entry.needsReview, ...entry.fixed])].map((type) => {
+                      const url = wine.images?.[type];
+                      if (!url) return null;
+                      const busy = manualBusy === `${wine.id}:${type}`;
+                      return (
+                        <div key={type} className="flex items-center gap-3">
+                          <div className="w-14 h-[76px] rounded-lg overflow-hidden bg-black/30 shrink-0">
+                            <img
+                              src={url}
+                              alt={`${entry.wineName} ${type}`}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                          <span className="text-xs text-white/60 w-16">{type}</span>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2"
+                              disabled={busy}
+                              onClick={() => manualRotate(wine, type, 270)}
+                            >
+                              {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2"
+                              disabled={busy}
+                              onClick={() => manualRotate(wine, type, 180)}
+                            >
+                              <FlipVertical2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2"
+                              disabled={busy}
+                              onClick={() => manualRotate(wine, type, 90)}
+                            >
+                              <RotateCw className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </Card>
