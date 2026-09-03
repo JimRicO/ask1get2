@@ -532,13 +532,15 @@ const AddWine = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="grape_varietals" className="text-white">Main Grape Varietal</Label>
-                <Select value={formData.grape_varietals} onValueChange={value => {
+                <Select value={useCustomGrape ? "custom" : formData.grape_varietals} onValueChange={value => {
                 if (value === "custom") {
+                  setUseCustomGrape(true);
                   setFormData({
                     ...formData,
                     grape_varietals: ""
                   });
                 } else {
+                  setUseCustomGrape(false);
                   setFormData({
                     ...formData,
                     grape_varietals: value
