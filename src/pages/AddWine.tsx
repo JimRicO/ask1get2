@@ -572,7 +572,7 @@ const AddWine = () => {
                     <SelectItem value="custom">+ Add Custom Varietal</SelectItem>
                   </SelectContent>
                 </Select>
-                {(!formData.grape_varietals || formData.grape_varietals === "") && <Input id="grape_varietals_custom" value={formData.grape_varietals} onChange={e => setFormData({
+                {useCustomGrape && <Input id="grape_varietals_custom" autoFocus value={formData.grape_varietals} onChange={e => setFormData({
                 ...formData,
                 grape_varietals: e.target.value
               })} placeholder="Enter custom grape varietal" className="mt-2" />}
