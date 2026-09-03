@@ -102,7 +102,6 @@ CRITICAL - ALWAYS extract these if visible on the label:
 - Region/Appellation
 - **Alcohol content (ABV %) - Look carefully on the label, usually shown as "% ABV", "% vol", or "% alc/vol"**
 - **Grape varietals - Extract ALL grape varieties mentioned on the label. This is CRITICAL information that should always be extracted if present.**
-- A detailed description (2-3 sentences) based on visible information about the wine's style, characteristics, and origin
 
 IMPORTANT INSTRUCTIONS:
 1. Examine ALL images thoroughly to find the alcohol content percentage - it's usually on the front or back label
@@ -111,7 +110,7 @@ IMPORTANT INSTRUCTIONS:
 4. Pay special attention to small text that might contain ABV or grape information
 5. **CRITICAL**: wine_type MUST be lowercase and ONLY one of: "red", "white", "rose", "sparkling", "dessert", "fortified"
 
-Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year, wine_type, country, region, alcohol_content, grape_varietals, description.
+Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year, wine_type, country, region, alcohol_content, grape_varietals.
 - For grape_varietals: return as a string with varieties separated by commas
 - For alcohol_content: return as a number (e.g., 13.5)
 - For wine_type: MUST be lowercase
@@ -132,7 +131,7 @@ Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year,
     }
 
     const result = await callGateway({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.7-flash",
       messages: [{ role: "user", content }],
     });
 
@@ -165,7 +164,7 @@ export const extractWineName = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const result = await callGateway({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3.7-flash",
       messages: [
         {
           role: "user",
