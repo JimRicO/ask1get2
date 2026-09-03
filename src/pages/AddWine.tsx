@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { extractWineData, processWineImages } from "@/lib/wine-ai.functions";
-import { uprightWineImages } from "@/lib/uprightWineImages";
+import { extractWineData } from "@/lib/wine-ai.functions";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
 import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
@@ -31,7 +30,6 @@ const AddWine = () => {
   const formRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const extractWineDataFn = useServerFn(extractWineData);
-  const processWineImagesFn = useServerFn(processWineImages);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
@@ -132,8 +130,7 @@ const AddWine = () => {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'neck' | 'overall') => {
     const rawFile = e.target.files?.[0];
     if (rawFile) {
-      // Only the front-label thumbnail is normalized. Secondary views stay untouched.
-      const file = type === "front" ? await normalizeImageOrientation(rawFile) : rawFile;
+      const file = await normalizeImageOrientation(rawFile);
       setImages(prev => ({
         ...prev,
         [type]: file
@@ -311,7 +308,6 @@ const AddWine = () => {
         description: formData.description || null,
         notes: formData.notes || null
       };
-      let wineId: string | null = null;
       if (updateExisting && existingWine) {
         // Merge new images with existing ones
         const mergedImages = {
@@ -358,7 +354,6 @@ const AddWine = () => {
           error
         } = await supabase.from("wines").update(updates).eq("id", existingWine.id);
         if (error) throw error;
-        wineId = existingWine.id;
         toast.success("Wine updated with new photos and details!");
       } else {
         const {
@@ -366,35 +361,12 @@ const AddWine = () => {
           error
         } = await supabase.from("wines").insert(wineData).select();
         if (error) throw error;
-        wineId = data?.[0]?.id;
         toast.success("Wine added to your cellar!");
       }
 
       // Navigate immediately to cellar
       navigate("/cellar");
 
-      // Start background image processing if we have images and a wine ID
-      if (wineId && Object.keys(imageUrls).length > 0) {
-        const processingWineId = wineId;
-        processWineImagesFn({
-          data: {
-            wineId: processingWineId,
-            imageUrls
-          }
-        }).then(async result => {
-          // Only the main front-label thumbnail may be orientation-corrected.
-          const {
-            data: {
-              user
-            }
-          } = await supabase.auth.getUser();
-          if (user) {
-            await uprightWineImages(processingWineId, result?.cleanedImageUrls ?? null, user.id);
-          }
-        }).catch(error => {
-          console.error("Background processing error:", error);
-        });
-      }
     } catch (error: any) {
       toast.error(error.message || "Failed to add wine");
     } finally {
@@ -442,7 +414,7 @@ const AddWine = () => {
             <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
               {(['front', 'back', 'neck', 'overall'] as const).map((type, index) => <div key={type}>
                   {imagePreviews[type] ? <div className="relative group">
-                      <img src={imagePreviews[type]!} alt={`${type} view`} className="w-full h-40 object-cover rounded-xl border-2 border-white/20" />
+                      <img src={imagePreviews[type]!} alt={`${type} view`} className="w-full h-40 object-contain rounded-xl border-2 border-white/20 bg-muted" />
                       <button type="button" onClick={() => {
                   setImages(prev => ({
                     ...prev,

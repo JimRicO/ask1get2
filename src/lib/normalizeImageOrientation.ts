@@ -1,10 +1,4 @@
-/**
- * Image orientation helpers.
- *
- * Rule: the label text must read normally. Nothing here guesses where a bottle
- * neck is — rotation amounts come from the AI readability check
- * (`checkLabelOrientation`), and these helpers only apply them to the pixels.
- */
+/** Bake a photo's embedded camera/EXIF orientation into its pixels. */
 
 const isBrowser = () =>
   typeof window !== "undefined" &&
@@ -17,23 +11,13 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
   );
 }
 
-/** Draw a bitmap rotated clockwise by 0/90/180/270 degrees. */
-function drawRotated(
-  bitmap: ImageBitmap,
-  degrees: number,
-): HTMLCanvasElement | null {
-  const normalized = ((degrees % 360) + 360) % 360;
+function drawBitmap(bitmap: ImageBitmap): HTMLCanvasElement | null {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
-
-  const swap = normalized === 90 || normalized === 270;
-  canvas.width = swap ? bitmap.height : bitmap.width;
-  canvas.height = swap ? bitmap.width : bitmap.height;
-
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate((normalized * Math.PI) / 180);
-  ctx.drawImage(bitmap, -bitmap.width / 2, -bitmap.height / 2);
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  ctx.drawImage(bitmap, 0, 0);
   return canvas;
 }
 
@@ -49,7 +33,7 @@ export async function normalizeImageOrientation(file: File): Promise<File> {
     const bitmap = await createImageBitmap(file, {
       imageOrientation: "from-image",
     });
-    const canvas = drawRotated(bitmap, 0);
+    const canvas = drawBitmap(bitmap);
     bitmap.close?.();
     if (!canvas) return file;
 
@@ -65,53 +49,4 @@ export async function normalizeImageOrientation(file: File): Promise<File> {
     console.error("Failed to normalize image orientation:", error);
     return file;
   }
-}
-
-/** Rotate a stored image clockwise by the given degrees (0/90/180/270). */
-export async function rotateStoredImage(
-  imageUrl: string,
-  degrees: number,
-): Promise<Blob | null> {
-  if (!isBrowser()) return null;
-  if (((degrees % 360) + 360) % 360 === 0) return null;
-
-  const response = await fetch(imageUrl, { cache: "no-store" });
-  if (!response.ok) throw new Error(`Failed to load image (${response.status})`);
-  const bitmap = await createImageBitmap(await response.blob(), {
-    imageOrientation: "from-image",
-  });
-
-  const canvas = drawRotated(bitmap, degrees);
-  bitmap.close?.();
-  if (!canvas) return null;
-
-  return canvasToBlob(canvas);
-}
-
-/** Fetch a stored image and return it as a compact JPEG data URL for the AI check. */
-export async function toInspectableDataUrl(
-  imageUrl: string,
-  maxSide = 640,
-): Promise<string | null> {
-  if (!isBrowser()) return null;
-
-  const response = await fetch(imageUrl, { cache: "no-store" });
-  if (!response.ok) throw new Error(`Failed to load image (${response.status})`);
-  const bitmap = await createImageBitmap(await response.blob(), {
-    imageOrientation: "from-image",
-  });
-
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    bitmap.close?.();
-    return null;
-  }
-  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close?.();
-
-  return canvas.toDataURL("image/jpeg", 0.85);
 }
