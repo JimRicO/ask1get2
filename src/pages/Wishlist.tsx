@@ -5,6 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { extractWineData } from "@/lib/wine-ai.functions";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
+import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
+
 
 import Layout from "@/components/Layout";
 import { Heart, Camera, Trash2, Loader2, Edit, Upload, X } from "lucide-react";
@@ -131,19 +133,22 @@ const Wishlist = () => {
     }
   };
 
-  const handleImageChange = (type: 'front' | 'back' | 'neck' | 'overall', file: File | null) => {
-    setImages(prev => ({ ...prev, [type]: file }));
-    
-    if (file) {
+  const handleImageChange = async (type: 'front' | 'back' | 'neck' | 'overall', rawFile: File | null) => {
+    if (rawFile) {
+      // Bake EXIF orientation in and force portrait so bottles are never sideways.
+      const file = await normalizeImageOrientation(rawFile);
+      setImages(prev => ({ ...prev, [type]: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreviews(prev => ({ ...prev, [type]: reader.result as string }));
       };
       reader.readAsDataURL(file);
     } else {
+      setImages(prev => ({ ...prev, [type]: null }));
       setImagePreviews(prev => ({ ...prev, [type]: null }));
     }
   };
+
 
   const processImageWithAI = async () => {
     if (!Object.values(images).some(img => img !== null)) {

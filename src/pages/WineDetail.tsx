@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { validateWineData } from "@/lib/wineValidation";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
+import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
+
 interface WineData {
   id: string;
   wine_name: string;
@@ -1158,12 +1160,14 @@ const WineDetail = () => {
                               <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
+                                onChange={async (e) => {
+                                  const rawFile = e.target.files?.[0];
+                                  if (rawFile) {
+                                    const file = await normalizeImageOrientation(rawFile);
                                     setNewImages(prev => ({ ...prev, [type]: file }));
                                   }
                                 }}
+
                                 className="hidden"
                                 id={`upload-${type}`}
                               />
@@ -1225,12 +1229,14 @@ const WineDetail = () => {
                               <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
+                                onChange={async (e) => {
+                                  const rawFile = e.target.files?.[0];
+                                  if (rawFile) {
+                                    const file = await normalizeImageOrientation(rawFile);
                                     setNewImages(prev => ({ ...prev, [key]: file }));
                                   }
                                 }}
+
                                 className="hidden"
                                 id={`upload-additional-${key}`}
                               />

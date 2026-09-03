@@ -5,6 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { extractWineData, processWineImages } from "@/lib/wine-ai.functions";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
+import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
+
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -126,9 +128,11 @@ const AddWine = () => {
     };
     fetchLocations();
   }, [session]);
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'neck' | 'overall') => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'neck' | 'overall') => {
+    const rawFile = e.target.files?.[0];
+    if (rawFile) {
+      // Bake EXIF orientation in and force portrait so bottles are never sideways.
+      const file = await normalizeImageOrientation(rawFile);
       setImages(prev => ({
         ...prev,
         [type]: file
@@ -143,6 +147,7 @@ const AddWine = () => {
       reader.readAsDataURL(file);
     }
   };
+
   const processImageWithAI = async () => {
     if (!session) return;
 
