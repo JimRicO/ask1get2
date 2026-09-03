@@ -275,7 +275,7 @@ export const processWineImages = createServerFn({ method: "POST" })
               content: [
                 {
                   type: "text",
-                  text: "Remove the background from this wine bottle image and replace it with a clean, professional monochrome cream background. Do not modify the wine bottle, and maintain all label details.",
+                  text: "Remove the background from this wine bottle image and replace it with a clean, professional monochrome cream background. Keep the original framing and aspect ratio, and return the bottle upright and vertical in a portrait (taller than wide) image. Do not modify the wine bottle, and maintain all label details.",
                 },
                 { type: "image_url", image_url: { url: imageUrl } },
               ] satisfies GatewayMessageContent,
