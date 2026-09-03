@@ -73,6 +73,7 @@ const AddWine = () => {
     description: "",
     notes: ""
   });
+  const [useCustomGrape, setUseCustomGrape] = useState(false);
   const [storageLocations, setStorageLocations] = useState<Array<{
     location: string;
     quantity: number;
