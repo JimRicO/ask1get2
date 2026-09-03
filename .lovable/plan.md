@@ -1,60 +1,30 @@
-# Guarantee one upright orientation for every wine image
+# Make every bottle label readable, right way up
 
-## Confirmed problem
+## What went wrong
 
-The one-off pass repaired 20 wine records, including 18 front images and 18 overall images. The resulting files are portrait-shaped, but some are upside down.
+The last repair guessed the top of the bottle by measuring the silhouette's thickness (the "neck" idea). On label close-ups there is no neck to measure, so it fell back to a fixed clockwise rotation. That's why 20 repaired records came out with several labels upside down.
 
-The current algorithm only compares the thickness at the left and right ends of a landscape image to guess where the bottle neck is. This fails for front/back label close-ups where no neck is visible. When it cannot distinguish the ends, it defaults to clockwise rotation; that arbitrary fallback produced the mixed orientations shown in the cellar.
+## The simple rule
 
-## Fix
+One rule, no silhouette analysis: **the label text must read normally.**
 
-### 1. Replace the ambiguous neck guess
+For each image, ask the AI vision model a single question — "is the text on this label upright, upside down, rotated left, or rotated right?" — then rotate the pixels by 0, 90, 180 or 270 degrees to make it upright. That's it.
 
-Add an image-orientation classifier that returns exactly one of:
+## What gets built
 
-- upright
-- upside down
-- rotate clockwise
-- rotate counter-clockwise
-- uncertain
+### 1. Readability check on every new upload
+Add Wine and Edit Wine: after the photo is taken and after background removal, check text readability and rotate to upright before the image is saved to the wine record.
 
-It will judge bottle shape, bottle base/neck, label text, and label artwork together instead of relying on a single silhouette measurement. Local pixel rotation will then apply the classifier’s explicit correction. No direction will be chosen from a blind clockwise fallback.
+### 2. One-off repair of what's already stored
+Update `/fix-orientation` to run the readability check on every current wine image — including the files the previous pass already touched — and rotate each one so the label reads normally. Anything the model can't read (blank or textless images, like the current Blanc Sec thumbnail) is left alone and listed with rotate-left / rotate-180 / rotate-right buttons and a preview so you can set it in one click.
 
-### 2. Make new uploads safe before saving
+### 3. Display
+Portrait thumbnail frame with `object-contain` stays as is, so nothing is cropped.
 
-For both Add Wine and Edit Wine:
-
-- Normalize the original camera image first.
-- Run background removal while explicitly preserving the source orientation.
-- Classify the processed result before it becomes the wine’s stored image.
-- Rotate only when the result is explicit.
-- If classification is uncertain, keep the correctly normalized original rather than save a potentially inverted AI result.
-- Verify the final image is portrait and upright before updating the wine record.
-
-### 3. Repair the images inverted by the previous pass
-
-Update `/fix-orientation` to inspect every current wine image, including portrait-shaped files created by the previous repair. The new pass will:
-
-- classify each current image;
-- rotate upside-down images by 180°;
-- rotate sideways images in the required direction;
-- leave confirmed-upright images unchanged;
-- refuse to auto-save uncertain results and show them for manual review;
-- provide rotate-left, rotate-180, and rotate-right controls with a visible preview;
-- save only the corrected file and update that wine record.
-
-This specifically covers the existing `_upright_` files; it will not skip them merely because their dimensions are portrait.
-
-### 4. Verification
-
-- Test the classifier against known upright, upside-down, clockwise, and counter-clockwise stored images.
-- Run typecheck and production build.
-- Verify representative corrected records visually in the cellar and confirm their stored dimensions are portrait.
-- Keep `object-contain` in the portrait thumbnail frame so the bottle is never cropped.
+## Verification
+Run the repair, then re-check the affected wines in the cellar and confirm the labels read normally. Typecheck and production build.
 
 ## Technical notes
-
-- Classification uses the existing authenticated AI gateway; rotation remains client-side Canvas processing.
-- The orientation response is schema-validated before any rotation is applied.
-- The existing silhouette detector may be retained only as supporting evidence when a full bottle outline is clearly present; it will never again decide an ambiguous case by default.
-- No database schema change is required.
+- Readability check goes through the existing authenticated AI gateway (`src/lib/wine-ai.functions.ts`), returning only one of: upright / upside-down / rotate-left / rotate-right / unreadable.
+- Rotation stays client-side Canvas work in `src/lib/normalizeImageOrientation.ts`; the neck/thickness detector is deleted.
+- No database schema change.
