@@ -40,6 +40,7 @@ interface WineData {
   images: any;
   created_at: string;
   description?: string | null;
+  description_sources?: string[] | null;
   notes?: string | null;
 }
 interface TastingNote {
@@ -444,11 +445,12 @@ const WineDetail = () => {
           country: wine.country,
           grape_varietals: grapes
         }
-      })) as { description: string };
+      })) as { description: string; sources?: string[] };
       if (!result?.description) throw new Error("No description returned");
-      const { error } = await supabase.from("wines").update({ description: result.description }).eq("id", wine.id);
+      const sources = Array.isArray(result.sources) && result.sources.length > 0 ? result.sources : null;
+      const { error } = await supabase.from("wines").update({ description: result.description, description_sources: sources }).eq("id", wine.id);
       if (error) throw error;
-      setWine(prev => prev ? { ...prev, description: result.description } : prev);
+      setWine(prev => prev ? { ...prev, description: result.description, description_sources: sources } : prev);
       setEditForm(prev => ({ ...prev, description: result.description }));
       toast.success("Description rewritten from web research");
     } catch (error: any) {
@@ -650,6 +652,20 @@ const WineDetail = () => {
             <p className="text-gray-300 text-sm">
               {wine.description || "No description yet. Use Rewrite description to look this wine up on the web."}
             </p>
+            {wine.description_sources && wine.description_sources.length > 0 && <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
+                <span>Sources:</span>
+                {wine.description_sources.map(url => {
+                  let label = url;
+                  try {
+                    label = new URL(url).hostname.replace(/^www\./, "");
+                  } catch {
+                    label = url;
+                  }
+                  return <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
+                      {label}
+                    </a>;
+                })}
+              </div>}
           </div>
 
           {/* Notes */}
