@@ -461,7 +461,7 @@ const Wishlist = () => {
                     htmlFor="upload-front"
                     className="block cursor-pointer"
                   >
-                    <div className="relative aspect-square bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
                       {imagePreviews.front ? (
                          <img src={imagePreviews.front} alt="Front" className="w-full h-full object-contain" />
                       ) : (
@@ -496,7 +496,7 @@ const Wishlist = () => {
                     id="upload-back"
                   />
                   <label htmlFor="upload-back" className="block cursor-pointer">
-                    <div className="relative aspect-square bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
                       {imagePreviews.back ? (
                          <img src={imagePreviews.back} alt="Back" className="w-full h-full object-contain" />
                       ) : (
@@ -531,7 +531,7 @@ const Wishlist = () => {
                     id="upload-neck"
                   />
                   <label htmlFor="upload-neck" className="block cursor-pointer">
-                    <div className="relative aspect-square bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
                       {imagePreviews.neck ? (
                          <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-contain" />
                       ) : (
@@ -566,7 +566,7 @@ const Wishlist = () => {
                     id="upload-overall"
                   />
                   <label htmlFor="upload-overall" className="block cursor-pointer">
-                    <div className="relative aspect-square bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
                       {imagePreviews.overall ? (
                          <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-contain" />
                       ) : (

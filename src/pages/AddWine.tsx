@@ -308,7 +308,6 @@ const AddWine = () => {
         description: formData.description || null,
         notes: formData.notes || null
       };
-      let wineId: string | null = null;
       if (updateExisting && existingWine) {
         // Merge new images with existing ones
         const mergedImages = {
@@ -355,7 +354,6 @@ const AddWine = () => {
           error
         } = await supabase.from("wines").update(updates).eq("id", existingWine.id);
         if (error) throw error;
-        wineId = existingWine.id;
         toast.success("Wine updated with new photos and details!");
       } else {
         const {
@@ -363,7 +361,6 @@ const AddWine = () => {
           error
         } = await supabase.from("wines").insert(wineData).select();
         if (error) throw error;
-        wineId = data?.[0]?.id;
         toast.success("Wine added to your cellar!");
       }
 

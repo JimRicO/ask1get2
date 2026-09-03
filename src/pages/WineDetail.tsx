@@ -806,7 +806,7 @@ const WineDetail = () => {
             transformStyle: 'preserve-3d'
           }}>
                 {Object.entries(wine.images).map(([type, url]: [string, any], index) => <div key={type} className={`absolute inset-0 flex items-center justify-center p-8 transition-opacity duration-300 ${index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                    <img src={url} alt={`${type} view`} className="h-72 w-full object-contain" />
+                    <img src={url} alt={`${type} view`} className="h-72 w-54 max-w-full object-contain" />
                   </div>)}
                 {Object.keys(wine.images).length > 1 && <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
                     {Object.keys(wine.images).map((_, index) => <div key={index} className={`h-2 w-2 rounded-full transition-all ${index === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'}`} />)}
@@ -1112,11 +1112,11 @@ const WineDetail = () => {
                         <Label className="text-gray-400 text-xs">Current Images</Label>
                         <div className="grid grid-cols-2 gap-2">
                           {Object.entries(wine.images).map(([type, url]: [string, any]) => (
-                            <div key={type} className="relative bg-[#1a1410] rounded-lg p-2">
+                            <div key={type} className="relative bg-[#1a1410] rounded-lg p-2 aspect-[3/4] flex flex-col">
                               <img 
                                 src={url} 
                                 alt={`${type} view`} 
-                                className="h-24 w-full object-contain rounded"
+                                className="min-h-0 flex-1 w-full object-contain rounded"
                               />
                               <p className="text-xs text-gray-400 text-center mt-1 capitalize">{type}</p>
                             </div>
