@@ -135,8 +135,7 @@ const Wishlist = () => {
 
   const handleImageChange = async (type: 'front' | 'back' | 'neck' | 'overall', rawFile: File | null) => {
     if (rawFile) {
-      // Only the front-label thumbnail is normalized. Secondary views stay untouched.
-      const file = type === "front" ? await normalizeImageOrientation(rawFile) : rawFile;
+      const file = await normalizeImageOrientation(rawFile);
       setImages(prev => ({ ...prev, [type]: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -377,7 +376,7 @@ const Wishlist = () => {
                       <img
                         src={item.images.front}
                         alt={item.wine_name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                           e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="h-8 w-8 text-[#1a1410]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>';
@@ -464,7 +463,7 @@ const Wishlist = () => {
                   >
                     <div className="relative aspect-square bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
                       {imagePreviews.front ? (
-                        <img src={imagePreviews.front} alt="Front" className="w-full h-full object-cover" />
+                         <img src={imagePreviews.front} alt="Front" className="w-full h-full object-contain" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={frontLabelButtonImg} alt="Front Label" className="w-16 h-16 mb-2" />
@@ -499,7 +498,7 @@ const Wishlist = () => {
                   <label htmlFor="upload-back" className="block cursor-pointer">
                     <div className="relative aspect-square bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
                       {imagePreviews.back ? (
-                        <img src={imagePreviews.back} alt="Back" className="w-full h-full object-cover" />
+                         <img src={imagePreviews.back} alt="Back" className="w-full h-full object-contain" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={backLabelButtonImg} alt="Back Label" className="w-16 h-16 mb-2" />
@@ -534,7 +533,7 @@ const Wishlist = () => {
                   <label htmlFor="upload-neck" className="block cursor-pointer">
                     <div className="relative aspect-square bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
                       {imagePreviews.neck ? (
-                        <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-cover" />
+                         <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-contain" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={neckButtonImg} alt="Neck" className="w-16 h-16 mb-2" />
@@ -569,7 +568,7 @@ const Wishlist = () => {
                   <label htmlFor="upload-overall" className="block cursor-pointer">
                     <div className="relative aspect-square bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
                       {imagePreviews.overall ? (
-                        <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-cover" />
+                         <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-contain" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={fullBottleButtonImg} alt="Full Bottle" className="w-16 h-16 mb-2" />
