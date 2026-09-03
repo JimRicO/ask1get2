@@ -1,4 +1,4 @@
-- [ ] Remove orientation recovery, AI guessing, and automatic image rewriting
-- [ ] Normalize all four uploaded views from camera metadata
-- [ ] Display all wine views vertically without cropping
-- [ ] Verify typecheck, build, and upload previews
+- [x] Remove orientation recovery, AI guessing, and automatic image rewriting
+- [x] Normalize all four uploaded views from camera metadata
+- [x] Display all wine views vertically without cropping
+- [x] Verify typecheck, build, and upload previews
