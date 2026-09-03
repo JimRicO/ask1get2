@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { extractWineData } from "@/lib/wine-ai.functions";
+import { extractWineData, describeWine } from "@/lib/wine-ai.functions";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
 import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
@@ -44,6 +44,7 @@ interface WishlistItem {
 const Wishlist = () => {
   const navigate = useNavigate();
   const extractWineDataFn = useServerFn(extractWineData);
+  const describeWineFn = useServerFn(describeWine);
   const [session, setSession] = useState<Session | null>(null);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -191,6 +192,29 @@ const Wishlist = () => {
 
       setMagicScanCompleted(true);
       toast.success("Wine data extracted successfully!");
+
+      // Look the wine up on the web and write a grounded description
+      if (wineData.wine_name) {
+        try {
+          const described = (await describeWineFn({
+            data: {
+              wine_name: String(wineData.wine_name),
+              producer: wineData.producer ?? null,
+              vintage_year: wineData.vintage_year ?? null,
+              region: wineData.region ?? null,
+              country: wineData.country ?? null,
+              grape_varietals: Array.isArray(wineData.grape_varietals)
+                ? wineData.grape_varietals.join(", ")
+                : wineData.grape_varietals ?? null
+            }
+          })) as { description: string };
+          if (described?.description) {
+            setFormData(prev => ({ ...prev, description: described.description }));
+          }
+        } catch (err) {
+          console.error("Description lookup failed:", err);
+        }
+      }
       
       // Scroll to form section
       setTimeout(() => {

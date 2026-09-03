@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { extractWineData } from "@/lib/wine-ai.functions";
+import { extractWineData, describeWine } from "@/lib/wine-ai.functions";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
 import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
@@ -30,6 +30,7 @@ const AddWine = () => {
   const formRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const extractWineDataFn = useServerFn(extractWineData);
+  const describeWineFn = useServerFn(describeWine);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
@@ -204,6 +205,30 @@ const AddWine = () => {
           custom_grape_varietals: additionalGrapes
         }));
         setMagicScanCompleted(true);
+
+        // Look the wine up on the web and write a grounded description
+        if (data.extracted.wine_name) {
+          try {
+            const described = (await describeWineFn({
+              data: {
+                wine_name: String(data.extracted.wine_name),
+                producer: data.extracted.producer ?? null,
+                vintage_year: data.extracted.vintage_year ?? null,
+                region: data.extracted.region ?? null,
+                country: data.extracted.country ?? null,
+                grape_varietals: data.extracted.grape_varietals ?? null
+              }
+            })) as { description: string };
+            if (described?.description) {
+              setFormData(prev => ({
+                ...prev,
+                description: described.description
+              }));
+            }
+          } catch (err) {
+            console.error("Description lookup failed:", err);
+          }
+        }
 
         // Scroll to the form
         setTimeout(() => {
