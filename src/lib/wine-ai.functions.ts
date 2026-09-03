@@ -260,7 +260,7 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
     if (!text) throw new Error("No description returned by AI");
 
     let description = text;
-    let sources: string[] = [];
+    const sources: string[] = [];
 
     const fenced = text.match(/```json\n?([\s\S]*?)\n?```/);
     const braced = text.match(/\{[\s\S]*\}/);
