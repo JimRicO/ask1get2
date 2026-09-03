@@ -1141,7 +1141,9 @@ const WineDetail = () => {
                                 onChange={async (e) => {
                                   const rawFile = e.target.files?.[0];
                                   if (rawFile) {
-                                    const file = await normalizeImageOrientation(rawFile);
+                                     const file = type === "front"
+                                       ? await normalizeImageOrientation(rawFile)
+                                       : rawFile;
                                     setNewImages(prev => ({ ...prev, [type]: file }));
                                   }
                                 }}
