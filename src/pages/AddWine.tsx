@@ -132,8 +132,8 @@ const AddWine = () => {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back' | 'neck' | 'overall') => {
     const rawFile = e.target.files?.[0];
     if (rawFile) {
-      // Bake EXIF orientation in and force portrait so bottles are never sideways.
-      const file = await normalizeImageOrientation(rawFile);
+      // Only the front-label thumbnail is normalized. Secondary views stay untouched.
+      const file = type === "front" ? await normalizeImageOrientation(rawFile) : rawFile;
       setImages(prev => ({
         ...prev,
         [type]: file

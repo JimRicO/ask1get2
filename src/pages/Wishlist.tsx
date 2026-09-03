@@ -135,8 +135,8 @@ const Wishlist = () => {
 
   const handleImageChange = async (type: 'front' | 'back' | 'neck' | 'overall', rawFile: File | null) => {
     if (rawFile) {
-      // Bake EXIF orientation in and force portrait so bottles are never sideways.
-      const file = await normalizeImageOrientation(rawFile);
+      // Only the front-label thumbnail is normalized. Secondary views stay untouched.
+      const file = type === "front" ? await normalizeImageOrientation(rawFile) : rawFile;
       setImages(prev => ({ ...prev, [type]: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -373,9 +373,9 @@ const Wishlist = () => {
                 >
                   {/* Wine image */}
                   <div className="bg-[#d4c4a8] rounded-xl w-20 h-20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {item.images?.front || item.images?.overall ? (
+                    {item.images?.front ? (
                       <img
-                        src={item.images.front || item.images.overall}
+                        src={item.images.front}
                         alt={item.wine_name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
