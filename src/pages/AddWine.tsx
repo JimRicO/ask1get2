@@ -73,6 +73,7 @@ const AddWine = () => {
     description: "",
     notes: ""
   });
+  const [useCustomGrape, setUseCustomGrape] = useState(false);
   const [storageLocations, setStorageLocations] = useState<Array<{
     location: string;
     quantity: number;
@@ -532,13 +533,15 @@ const AddWine = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="grape_varietals" className="text-white">Main Grape Varietal</Label>
-                <Select value={formData.grape_varietals} onValueChange={value => {
+                <Select value={useCustomGrape ? "custom" : formData.grape_varietals} onValueChange={value => {
                 if (value === "custom") {
+                  setUseCustomGrape(true);
                   setFormData({
                     ...formData,
                     grape_varietals: ""
                   });
                 } else {
+                  setUseCustomGrape(false);
                   setFormData({
                     ...formData,
                     grape_varietals: value
@@ -569,7 +572,7 @@ const AddWine = () => {
                     <SelectItem value="custom">+ Add Custom Varietal</SelectItem>
                   </SelectContent>
                 </Select>
-                {(!formData.grape_varietals || formData.grape_varietals === "") && <Input id="grape_varietals_custom" value={formData.grape_varietals} onChange={e => setFormData({
+                {useCustomGrape && <Input id="grape_varietals_custom" autoFocus value={formData.grape_varietals} onChange={e => setFormData({
                 ...formData,
                 grape_varietals: e.target.value
               })} placeholder="Enter custom grape varietal" className="mt-2" />}
