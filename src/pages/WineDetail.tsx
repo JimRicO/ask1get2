@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { validateWineData } from "@/lib/wineValidation";
 import { normalizeCountry } from "@/lib/normalizeCountry";
+import { normalizeGrapeList } from "@/lib/normalizeGrape";
 interface WineData {
   id: string;
   wine_name: string;
@@ -389,7 +390,8 @@ const WineDetail = () => {
         }
       }
       
-      const grapeArray = editForm.grape_varietals ? editForm.grape_varietals.split(',').map(g => g.trim()).filter(Boolean) : null;
+      const normalizedGrapes = editForm.grape_varietals ? normalizeGrapeList(editForm.grape_varietals.split(',')) : [];
+      const grapeArray = normalizedGrapes.length > 0 ? normalizedGrapes : null;
       const validWineTypes = ['red', 'white', 'rose', 'sparkling', 'dessert', 'fortified'];
       const wineType = editForm.wine_type && validWineTypes.includes(editForm.wine_type.toLowerCase()) ? editForm.wine_type.toLowerCase() : null;
       const {

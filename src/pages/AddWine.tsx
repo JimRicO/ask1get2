@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { extractWineData, processWineImages } from "@/lib/wine-ai.functions";
 import { normalizeCountry } from "@/lib/normalizeCountry";
+import { normalizeGrapeList } from "@/lib/normalizeGrape";
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -273,7 +274,7 @@ const AddWine = () => {
           imageUrls[type] = publicUrl;
         }
       }
-      const allGrapes = [formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',').map(g => g.trim()) : [])].filter(g => g);
+      const allGrapes = normalizeGrapeList([formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',') : [])]);
 
       // Calculate total stock from all locations
       const totalStock = storageLocations.reduce((sum, loc) => sum + loc.quantity, 0);
