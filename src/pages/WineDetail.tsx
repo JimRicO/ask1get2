@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { validateWineData } from "@/lib/wineValidation";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
+import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
+
 interface WineData {
   id: string;
   wine_name: string;
