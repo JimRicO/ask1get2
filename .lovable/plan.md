@@ -2,30 +2,26 @@
 
 ## The problem
 
-The description is written with web search grounding, but the gateway does not return any citation
-metadata with the answer — I checked the live response, and there is no grounding/annotations field.
-So the only way to get sources is to ask the model to hand back the URLs it used, and then verify
-them before showing anything.
+The description is written with web search grounding, but the gateway returns no citation metadata
+with the answer (I checked the live response). So the model itself is asked to cite the pages it used.
 
 ## What changes
 
-1. The description lookup returns, alongside the text, up to 3 source URLs the model says it used.
-2. Each URL is checked server-side (a real request; dead, blocked or non-200 links are dropped).
-   Nothing unverified is ever shown, so no invented links can appear.
-3. Verified sources are saved with the wine and shown under the description on the Wine Details page
-   as a small "Sources" line of clickable links (domain name as the label, opening in a new tab).
-4. If no source survives verification, the description is shown exactly as today with no Sources line.
-5. The "Rewrite description" button refreshes the sources at the same time.
+1. The description lookup returns the text plus up to 3 source URLs the model cites.
+2. Those URLs are saved with the wine and shown under the description on the Wine Details page as a
+   small "Sources" line of clickable links (domain as label, opening in a new tab).
+3. The prompt tells the model to cite only pages it actually opened via search, and to return an
+   empty list when it found nothing — no sources line is shown in that case.
+4. The "Rewrite description" button refreshes the sources at the same time.
 
 ## Technical notes
 
-- Migration: add `description_sources text[]` to `public.wines` (nullable, no default). Existing
-  GRANTs and RLS policies already cover the table; no policy change needed.
+- Migration: add `description_sources text[]` to `public.wines` (nullable). Existing GRANTs and RLS
+  policies already cover the table; no policy change needed.
 - `describeWine` in `src/lib/wine-ai.functions.ts`: prompt asks for JSON
-  `{ "description": string, "sources": string[] }` instead of raw text; parse with the existing
-  `parseJsonFromText` helper, fall back to treating the whole reply as the description with no
-  sources. Then filter sources: valid `https:` URL, deduped by host, HEAD (GET fallback) returning
-  ok, capped at 3, with a short per-URL timeout so a slow site cannot hang the call.
+  `{ "description": string, "sources": string[] }`; parse with the existing `parseJsonFromText`
+  helper, falling back to the whole reply as the description with no sources. Keep only well-formed
+  `https:` URLs, dedupe by host, cap at 3.
 - `AddWine.tsx` and `Wishlist.tsx`: store the returned sources on insert.
 - `WineDetail.tsx`: render the Sources line from `wine.description_sources`; the rewrite handler
   writes both `description` and `description_sources`.
