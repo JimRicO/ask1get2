@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { removeWineBackground } from "@/lib/wine-ai.functions";
+import { removeWineBackground, describeWine } from "@/lib/wine-ai.functions";
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Trash2, Plus, Sparkles, Upload, X } from "lucide-react";
+import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Trash2, Plus, Sparkles, Upload, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -56,6 +56,8 @@ const WineDetail = () => {
   } = useParams();
   const navigate = useNavigate();
   const removeWineBackgroundFn = useServerFn(removeWineBackground);
+  const describeWineFn = useServerFn(describeWine);
+  const [rewritingDescription, setRewritingDescription] = useState(false);
   const [wine, setWine] = useState<WineData | null>(null);
   const [tastingNotes, setTastingNotes] = useState<TastingNote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -428,6 +430,34 @@ const WineDetail = () => {
       setUploadingImages(false);
     }
   };
+  const handleRewriteDescription = async () => {
+    if (!wine) return;
+    setRewritingDescription(true);
+    try {
+      const grapes = Array.isArray(wine.grape_varietals) ? wine.grape_varietals.join(", ") : wine.grape_varietals ?? null;
+      const result = (await describeWineFn({
+        data: {
+          wine_name: wine.wine_name,
+          producer: wine.producer,
+          vintage_year: wine.vintage_year,
+          region: wine.region,
+          country: wine.country,
+          grape_varietals: grapes
+        }
+      })) as { description: string };
+      if (!result?.description) throw new Error("No description returned");
+      const { error } = await supabase.from("wines").update({ description: result.description }).eq("id", wine.id);
+      if (error) throw error;
+      setWine(prev => prev ? { ...prev, description: result.description } : prev);
+      setEditForm(prev => ({ ...prev, description: result.description }));
+      toast.success("Description rewritten from web research");
+    } catch (error: any) {
+      console.error("Rewrite description failed:", error);
+      toast.error(error?.message || "Failed to rewrite description");
+    } finally {
+      setRewritingDescription(false);
+    }
+  };
   const handleRemoveBackground = async () => {
     const frontUrl = wine?.images?.front;
     if (!wine || !frontUrl) {
@@ -609,10 +639,18 @@ const WineDetail = () => {
           </div>
 
           {/* Description */}
-          {wine.description && <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
-              <h3 className="text-white font-semibold mb-2">Description</h3>
-              <p className="text-gray-300 text-sm">{wine.description}</p>
-            </div>}
+          <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-white font-semibold">Description</h3>
+              <Button variant="ghost" size="sm" onClick={handleRewriteDescription} disabled={rewritingDescription} className="text-gray-300 hover:text-white">
+                <RefreshCw className={`h-4 w-4 mr-1 ${rewritingDescription ? "animate-spin" : ""}`} />
+                {rewritingDescription ? "Researching..." : "Rewrite description"}
+              </Button>
+            </div>
+            <p className="text-gray-300 text-sm">
+              {wine.description || "No description yet. Use Rewrite description to look this wine up on the web."}
+            </p>
+          </div>
 
           {/* Notes */}
           {wine.notes && <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
