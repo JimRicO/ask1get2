@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { extractWineData, processWineImages } from "@/lib/wine-ai.functions";
+import { normalizeCountry } from "@/lib/normalizeCountry";
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -284,7 +285,7 @@ const AddWine = () => {
         producer: formData.producer || null,
         vintage_year: formData.vintage_year ? parseInt(formData.vintage_year) : null,
         wine_type: formData.wine_type || null,
-        country: formData.country || null,
+        country: normalizeCountry(formData.country),
         region: formData.region || null,
         alcohol_content: formData.alcohol_content ? parseFloat(formData.alcohol_content) : null,
         current_stock: totalStock,

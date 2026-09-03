@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { normalizeCountry } from "@/lib/normalizeCountry";
 import { Session } from "@supabase/supabase-js";
 interface WineData {
   id: string;
@@ -156,7 +157,7 @@ const Cellar = () => {
     const matchesGrape = filterGrape === "all" || Array.isArray(wine.grape_varietals) && wine.grape_varietals.some((g: any) => typeof g === 'string' ? g === filterGrape : g?.name === filterGrape);
 
     // Country filter
-    const matchesCountry = filterCountry === "all" || wine.country === filterCountry;
+    const matchesCountry = filterCountry === "all" || (wine.country ?? "").trim().toLowerCase() === filterCountry.toLowerCase();
 
     // Location filter
     const matchesLocation = filterLocation === "all" || wine.storage_location === filterLocation || wine.storage_locations && wine.storage_locations.some(loc => loc.location === filterLocation);
