@@ -208,6 +208,56 @@ Return ONLY valid JSON, no other text.`,
     return { wineData: parsed ?? { ...fallback, wine_name: text } };
   });
 
+/** Research a wine on the web and write a grounded description. */
+export const describeWine = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        wine_name: z.string().min(1),
+        producer: z.string().nullable().optional(),
+        vintage_year: z.union([z.number(), z.string()]).nullable().optional(),
+        region: z.string().nullable().optional(),
+        country: z.string().nullable().optional(),
+        grape_varietals: z.string().nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const facts = [
+      `Wine name: ${data.wine_name}`,
+      data.producer ? `Producer: ${data.producer}` : null,
+      data.vintage_year ? `Vintage: ${data.vintage_year}` : null,
+      data.region ? `Region: ${data.region}` : null,
+      data.country ? `Country: ${data.country}` : null,
+      data.grape_varietals ? `Grapes: ${data.grape_varietals}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const prompt = `Search the web for this specific wine and write a factual description of it.
+
+${facts}
+
+Rules:
+- Use Google Search to find real information about this producer, cuvée and vintage.
+- Write 2 to 3 sentences covering style, grapes, terroir/appellation and typical character.
+- Only state what you actually found or what is given above. Do NOT invent tasting notes, scores, awards or prices.
+- If the web search finds nothing specific about this wine, write a short factual description based only on the facts given above, and say nothing you cannot support.
+- Return the description text only: no preamble, no bullet points, no markdown, no citations.`;
+
+    const result = await callGateway({
+      model: "google/gemini-3.7-flash",
+      messages: [{ role: "user", content: prompt }],
+      tools: [{ type: "google_search" }],
+    });
+
+    const description = result.choices?.[0]?.message?.content?.trim();
+    if (!description) throw new Error("No description returned by AI");
+
+    return { description };
+  });
+
 /** Remove the background of a single wine image and return the processed PNG data URL. */
 export const removeWineBackground = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
