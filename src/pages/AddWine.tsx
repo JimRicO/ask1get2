@@ -631,7 +631,7 @@ const AddWine = () => {
                   <Label className="text-white">Storage Locations *</Label>
                   <Button type="button" variant="outline" size="sm" onClick={() => setStorageLocations([...storageLocations, {
                   location: "",
-                  quantity: 1
+                  quantity: "1"
                 }])} className="text-xs hover:scale-110 active:scale-95 transition-all">
                     + Add Location
                   </Button>
