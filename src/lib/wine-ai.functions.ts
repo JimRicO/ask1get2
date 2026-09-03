@@ -240,7 +240,9 @@ ${facts}
 
 Rules:
 - Use Google Search to find real information about this producer, cuvée and vintage.
-- Write 2 to 3 sentences covering style, grapes, terroir/appellation and typical character.
+- Write 2 to 4 sentences covering style, grapes, terroir/appellation and typical character.
+- Search specifically for the blend composition of this cuvée and vintage. If the percentages of each grape variety are stated by the producer or a reliable source, include them in the description exactly as found (for example "70% Cabernet Sauvignon, 20% Merlot, 10% Cabernet Franc").
+- NEVER estimate, guess or invent blend percentages. If no percentages are found, simply name the grape varieties without numbers.
 - Only state what you actually found or what is given above. Do NOT invent tasting notes, scores, awards or prices.
 - If the web search finds nothing specific about this wine, write a short factual description based only on the facts given above, and say nothing you cannot support.
 - Return the description text only: no preamble, no bullet points, no markdown, no citations.`;
