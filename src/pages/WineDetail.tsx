@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { removeWineBackground } from "@/lib/wine-ai.functions";
+import { uprightWineImages } from "@/lib/uprightWineImages";
 
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -486,6 +487,11 @@ const WineDetail = () => {
           images: processedImages
         }).eq('id', wine.id);
         if (updateError) throw updateError;
+        // The AI can return a sideways landscape canvas; force portrait.
+        const ownerId = session.data.session?.user.id;
+        if (ownerId) {
+          await uprightWineImages(wine.id, processedImages, ownerId);
+        }
         toast.success('All images updated with clean backgrounds!');
         fetchWine();
       } else {

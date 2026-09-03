@@ -3,6 +3,7 @@ import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { extractWineData, processWineImages } from "@/lib/wine-ai.functions";
+import { uprightWineImages } from "@/lib/uprightWineImages";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
 import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
@@ -374,10 +375,21 @@ const AddWine = () => {
 
       // Start background image processing if we have images and a wine ID
       if (wineId && Object.keys(imageUrls).length > 0) {
+        const processingWineId = wineId;
         processWineImagesFn({
           data: {
-            wineId,
+            wineId: processingWineId,
             imageUrls
+          }
+        }).then(async result => {
+          // The AI can return a sideways landscape canvas; force portrait.
+          const {
+            data: {
+              user
+            }
+          } = await supabase.auth.getUser();
+          if (user) {
+            await uprightWineImages(processingWineId, result?.cleanedImageUrls ?? null, user.id);
           }
         }).catch(error => {
           console.error("Background processing error:", error);

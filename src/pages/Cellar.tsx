@@ -391,7 +391,7 @@ const Cellar = () => {
             }}>
                     <div className="flex items-center gap-4 flex-1">
                       {/* Modern wine bottle image */}
-                      <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl w-16 h-16 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50 shadow-sm group-hover:shadow-md transition-all">
+                      <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl w-14 h-[76px] flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50 shadow-sm group-hover:shadow-md transition-all">
                         {wine.images?.front ? <img src={wine.images.front} alt={wine.wine_name} className="w-full h-full object-contain" /> : <Wine className="h-8 w-8 text-white/60" />}
                       </div>
                       
