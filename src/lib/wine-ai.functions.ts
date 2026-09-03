@@ -260,7 +260,7 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
     if (!text) throw new Error("No description returned by AI");
 
     let description = text;
-    const sources: string[] = [];
+    const rawSources: string[] = [];
 
     const fenced = text.match(/```json\n?([\s\S]*?)\n?```/);
     const braced = text.match(/\{[\s\S]*\}/);
@@ -275,20 +275,14 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
           description = parsed.description.trim();
         }
         if (Array.isArray(parsed.sources)) {
-          const seenHosts = new Set<string>();
           for (const raw of parsed.sources) {
             if (typeof raw !== "string") continue;
-            let url: URL;
             try {
-              url = new URL(raw.trim());
+              const url = new URL(raw.trim());
+              if (url.protocol === "https:") rawSources.push(url.toString());
             } catch {
-              continue;
+              // skip malformed URL
             }
-            if (url.protocol !== "https:") continue;
-            if (seenHosts.has(url.host)) continue;
-            seenHosts.add(url.host);
-            sources.push(url.toString());
-            if (sources.length >= 3) break;
           }
         }
       } catch {
@@ -296,7 +290,37 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
       }
     }
 
+    // Search grounding returns redirect URLs; follow them to the real page.
+    const resolved = await Promise.all(
+      rawSources.slice(0, 6).map(async (url) => {
+        if (!url.includes("grounding-api-redirect")) return url;
+        try {
+          const head = await fetch(url, { method: "GET", redirect: "manual" });
+          const location = head.headers.get("location");
+          return location && location.startsWith("https://") ? location : url;
+        } catch {
+          return url;
+        }
+      }),
+    );
+
+    const seenHosts = new Set<string>();
+    const sources: string[] = [];
+    for (const url of resolved) {
+      let host: string;
+      try {
+        host = new URL(url).host;
+      } catch {
+        continue;
+      }
+      if (seenHosts.has(host)) continue;
+      seenHosts.add(host);
+      sources.push(url);
+      if (sources.length >= 3) break;
+    }
+
     return { description, sources };
+
   });
 
 
