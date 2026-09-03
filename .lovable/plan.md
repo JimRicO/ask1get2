@@ -13,7 +13,10 @@ Phone cameras store portrait shots as a landscape pixel grid plus an EXIF "rotat
 3. **Apply on every entry point** that accepts a bottle photo: Add Wine, Wishlist, and the Wine Detail re-photograph flow — so the fix is not limited to the one screen.
 4. **Guard the display.** Give the list/detail thumbnails a portrait aspect box so a stray landscape image from an older record is letterboxed upright instead of cropping the label sideways.
 
-Existing records already stored sideways stay as they are unless you want a one-off pass to re-process them — say so and I will add it.
+5. **One-off repair pass for existing records.** Add a temporary owner-only maintenance page (`/fix-orientation`) that lists your wines, loads each stored image, detects landscape ones, rotates them upright, uploads the corrected file to storage and updates the wine record — with a progress readout and a report of what was changed and what was skipped. Portrait images are left untouched. The page is removable once the pass has run.
+
+   Note: this pass can only fix images whose pixel grid is landscape. If a bottle was stored as a portrait-shaped image that is still visually rotated, automatic detection cannot see it; those get flagged in the report with a manual "rotate this one" button so you can correct them by hand.
+
 
 ## Technical notes
 
