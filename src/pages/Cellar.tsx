@@ -184,7 +184,11 @@ const Cellar = () => {
 
   // Extract unique grape varietals from all wines
   const uniqueGrapes = Array.from(new Set(wines.flatMap(wine => Array.isArray(wine.grape_varietals) ? wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean) : []))).sort();
-  const uniqueCountries = Array.from(new Set(wines.map(w => w.country).filter((v): v is string => Boolean(v)))).sort();
+  const uniqueCountries = Array.from(wines.reduce((map, w) => {
+    const normalized = normalizeCountry(w.country);
+    if (normalized && !map.has(normalized.toLowerCase())) map.set(normalized.toLowerCase(), normalized);
+    return map;
+  }, new Map<string, string>()).values()).sort();
   const uniqueLocations = Array.from(new Set(wines.flatMap(w => {
     if (w.storage_locations && w.storage_locations.length > 0) {
       return w.storage_locations.map(loc => loc.location);
