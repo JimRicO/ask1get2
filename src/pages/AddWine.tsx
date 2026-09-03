@@ -77,10 +77,10 @@ const AddWine = () => {
   const [useCustomGrape, setUseCustomGrape] = useState(false);
   const [storageLocations, setStorageLocations] = useState<Array<{
     location: string;
-    quantity: number;
+    quantity: string;
   }>>([{
     location: "",
-    quantity: 1
+    quantity: "1"
   }]);
   useEffect(() => {
     supabase.auth.getSession().then(({
@@ -276,11 +276,17 @@ const AddWine = () => {
       }
       const allGrapes = normalizeGrapeList([formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',') : [])]);
 
+      // Coerce typed quantities to valid numbers (minimum 1)
+      const normalizedLocations = storageLocations.map(loc => ({
+        location: loc.location,
+        quantity: Math.max(1, parseInt(loc.quantity, 10) || 1)
+      }));
+
       // Calculate total stock from all locations
-      const totalStock = storageLocations.reduce((sum, loc) => sum + loc.quantity, 0);
+      const totalStock = normalizedLocations.reduce((sum, loc) => sum + loc.quantity, 0);
 
       // Filter out empty locations
-      const validStorageLocations = storageLocations.filter(loc => loc.location.trim() !== "");
+      const validStorageLocations = normalizedLocations.filter(loc => loc.location.trim() !== "");
       const wineData: any = {
         user_id: session.user.id,
         wine_name: formData.wine_name,
@@ -312,7 +318,7 @@ const AddWine = () => {
           location: string;
           quantity: number;
         }>;
-        const newLocations = [...storageLocations];
+        const newLocations = [...normalizedLocations];
 
         // Merge locations: add quantities for same location, append new locations
         const mergedLocations = [...existingLocations];
@@ -625,7 +631,7 @@ const AddWine = () => {
                   <Label className="text-white">Storage Locations *</Label>
                   <Button type="button" variant="outline" size="sm" onClick={() => setStorageLocations([...storageLocations, {
                   location: "",
-                  quantity: 1
+                  quantity: "1"
                 }])} className="text-xs hover:scale-110 active:scale-95 transition-all">
                     + Add Location
                   </Button>
@@ -660,9 +666,20 @@ const AddWine = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor={`quantity_${index}`} className="text-white text-sm">Qty</Label>
-                      <Input id={`quantity_${index}`} type="number" min="1" value={storage.quantity} onChange={e => {
+                      <Input id={`quantity_${index}`} type="number" inputMode="numeric" min="1" value={storage.quantity} onChange={e => {
                     const newLocations = [...storageLocations];
-                    newLocations[index].quantity = parseInt(e.target.value) || 1;
+                    newLocations[index] = {
+                      ...newLocations[index],
+                      quantity: e.target.value.replace(/[^0-9]/g, "")
+                    };
+                    setStorageLocations(newLocations);
+                  }} onBlur={() => {
+                    const newLocations = [...storageLocations];
+                    const parsed = parseInt(newLocations[index].quantity, 10);
+                    newLocations[index] = {
+                      ...newLocations[index],
+                      quantity: String(!parsed || parsed < 1 ? 1 : parsed)
+                    };
                     setStorageLocations(newLocations);
                   }} required />
                     </div>
