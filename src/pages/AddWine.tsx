@@ -382,7 +382,7 @@ const AddWine = () => {
             imageUrls
           }
         }).then(async result => {
-          // The AI can return a sideways landscape canvas; force portrait.
+          // Only the main front-label thumbnail may be orientation-corrected.
           const {
             data: {
               user

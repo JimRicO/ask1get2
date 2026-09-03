@@ -262,10 +262,21 @@ export const processWineImages = createServerFn({ method: "POST" })
     if (wineError) throw new Error(wineError.message);
     if (!wine || wine.user_id !== userId) throw new Error("Wine not found");
 
-    const cleanedImageUrls: Record<string, string> = {};
+    const { data: currentWine, error: currentWineError } = await supabase
+      .from("wines")
+      .select("images")
+      .eq("id", data.wineId)
+      .single();
+    if (currentWineError) throw new Error(currentWineError.message);
 
-    for (const [type, imageUrl] of Object.entries(data.imageUrls)) {
-      cleanedImageUrls[type] = imageUrl;
+    const existingImages =
+      currentWine?.images && typeof currentWine.images === "object"
+        ? (currentWine.images as Record<string, string>)
+        : {};
+    const cleanedImageUrls: Record<string, string> = { ...existingImages };
+    const frontImageUrl = data.imageUrls.front;
+
+    if (frontImageUrl) {
       try {
         const result = await callGateway({
           model: "google/gemini-2.5-flash-image-preview",
@@ -277,7 +288,7 @@ export const processWineImages = createServerFn({ method: "POST" })
                   type: "text",
                   text: "Remove the background from this wine bottle image and replace it with a clean, professional monochrome cream background. Keep the original framing and aspect ratio, and return the bottle upright and vertical in a portrait (taller than wide) image. Do not modify the wine bottle, and maintain all label details.",
                 },
-                { type: "image_url", image_url: { url: imageUrl } },
+                { type: "image_url", image_url: { url: frontImageUrl } },
               ] satisfies GatewayMessageContent,
             },
           ],
@@ -286,7 +297,7 @@ export const processWineImages = createServerFn({ method: "POST" })
 
         const processedUrl = result.choices?.[0]?.message?.images?.[0]
           ?.image_url?.url;
-        if (!processedUrl) continue;
+        if (!processedUrl) throw new Error("No visible front image returned");
 
         const base64 = processedUrl.slice(processedUrl.indexOf(",") + 1);
         const binary = atob(base64);
@@ -295,22 +306,21 @@ export const processWineImages = createServerFn({ method: "POST" })
           bytes[i] = binary.charCodeAt(i);
         }
 
-        const fileName = `${userId}/${type}_cleaned_${Date.now()}.png`;
+        const fileName = `${userId}/front_cleaned_${Date.now()}.png`;
         const { error: uploadError } = await supabase.storage
           .from("wine-images")
           .upload(fileName, bytes, { contentType: "image/png" });
 
         if (uploadError) {
-          console.error(`Failed to upload cleaned ${type}:`, uploadError);
-          continue;
+          throw new Error(uploadError.message);
         }
 
         const {
           data: { publicUrl },
         } = supabase.storage.from("wine-images").getPublicUrl(fileName);
-        cleanedImageUrls[type] = publicUrl;
+        cleanedImageUrls.front = publicUrl;
       } catch (error) {
-        console.error(`Error processing ${type}:`, error);
+        console.error("Error processing front image:", error);
       }
     }
 
