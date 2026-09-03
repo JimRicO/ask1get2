@@ -77,6 +77,7 @@ const AddWine = () => {
     notes: ""
   });
   const [useCustomGrape, setUseCustomGrape] = useState(false);
+  const [descriptionSources, setDescriptionSources] = useState<string[]>([]);
   const [storageLocations, setStorageLocations] = useState<Array<{
     location: string;
     quantity: string;
@@ -218,7 +219,10 @@ const AddWine = () => {
                 country: data.extracted.country ?? null,
                 grape_varietals: data.extracted.grape_varietals ?? null
               }
-            })) as { description: string };
+            })) as { description: string; sources?: string[] };
+            if (Array.isArray(described?.sources)) {
+              setDescriptionSources(described.sources);
+            }
             if (described?.description) {
               setFormData(prev => ({
                 ...prev,
@@ -331,6 +335,7 @@ const AddWine = () => {
         grape_varietals: allGrapes.length > 0 ? allGrapes : null,
         images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
         description: formData.description || null,
+        description_sources: descriptionSources.length > 0 ? descriptionSources : null,
         notes: formData.notes || null
       };
       if (updateExisting && existingWine) {
@@ -364,7 +369,8 @@ const AddWine = () => {
           images: mergedImages,
           current_stock: newTotalStock,
           storage_locations: mergedLocations,
-          description: formData.description || existingWine.description
+          description: formData.description || existingWine.description,
+          description_sources: descriptionSources.length > 0 ? descriptionSources : existingWine.description_sources
         };
 
         // Only update fields that are currently null/empty

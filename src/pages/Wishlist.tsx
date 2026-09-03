@@ -81,6 +81,7 @@ const Wishlist = () => {
     overall: null
   });
 
+  const [descriptionSources, setDescriptionSources] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     wine_name: "",
     producer: "",
@@ -207,7 +208,10 @@ const Wishlist = () => {
                 ? wineData.grape_varietals.join(", ")
                 : wineData.grape_varietals ?? null
             }
-          })) as { description: string };
+          })) as { description: string; sources?: string[] };
+          if (Array.isArray(described?.sources)) {
+            setDescriptionSources(described.sources);
+          }
           if (described?.description) {
             setFormData(prev => ({ ...prev, description: described.description }));
           }
@@ -270,6 +274,7 @@ const Wishlist = () => {
         grape_varietals: normalizeGrapeList(formData.grape_varietals.split(',')).join(', ') || null,
         images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
         description: formData.description || null,
+        description_sources: descriptionSources.length > 0 ? descriptionSources : null,
         notes: formData.notes || null
       };
 
