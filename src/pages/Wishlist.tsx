@@ -372,9 +372,10 @@ const Wishlist = () => {
                 >
                   {/* Wine image */}
                   <div className="bg-[#d4c4a8] rounded-xl w-20 h-20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {item.images?.front ? (
+                    {item.images?.overall ? (
                       <img
-                        src={item.images.front}
+                        src={item.images.overall}
+
                         alt={item.wine_name}
                         className="w-full h-full object-contain"
                         onError={(e) => {
