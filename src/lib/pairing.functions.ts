@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { callGateway } from "./wine-ai.functions";
 import { MODELS } from "./ai-models";
 import { matchesCountry, countryName } from "./countryMatch";
@@ -122,19 +123,20 @@ export const pairFromCellar = createServerFn({ method: "POST" })
     let candidates = (wines ?? []).filter((w) => inBand(w.price_per_bottle));
     if (data.localMode === "only") candidates = candidates.filter((w) => isLocal(w.country));
 
-    // Mirrors the columns selected below, with the nullability of the generated
-    // Supabase types. A Record<string, unknown> here is not provably
-    // serializable, which makes the whole server function's return type fail.
-    type WishlistRow = {
-      id: string;
-      wine_name: string;
-      producer: string | null;
-      vintage_year: number | null;
-      wine_type: string | null;
-      country: string | null;
-      region: string | null;
-      grape_varietals: string | null;
-    };
+    // Derived from the generated types rather than restated, so a schema change
+    // surfaces here instead of drifting. A Record<string, unknown> is not
+    // provably serializable and makes the whole return type fail.
+    type WishlistRow = Pick<
+      Database["public"]["Tables"]["wishlist"]["Row"],
+      | "id"
+      | "wine_name"
+      | "producer"
+      | "vintage_year"
+      | "wine_type"
+      | "country"
+      | "region"
+      | "grape_varietals"
+    >;
 
     let wishlist: WishlistRow[] = [];
     if (includeWishlist) {
