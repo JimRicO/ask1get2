@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { UtensilsCrossed, Loader2, Heart, Grape, AlertTriangle, MapPin, Plus } from "lucide-react";
 import { pairFromCellar, discoverBottles } from "@/lib/pairing.functions";
+import { wishlistKey } from "@/lib/wishlistKey";
 
 /* ------------------------------------------------------------------ market */
 /* Seeded silently from the browser locale, editable from the line under the
@@ -40,12 +41,6 @@ function detectCountry(): string | null {
   }
   return null;
 }
-
-/* A discovered bottle and a wishlist row are the same bottle when name and
-   producer match once trimmed and lowercased. Used for both the pre-insert
-   guard and the button's saved state. */
-const wishlistKey = (name: string | null, producer: string | null) =>
-  `${(name ?? "").trim().toLowerCase()}|${(producer ?? "").trim().toLowerCase()}`;
 
 const bandLabel = (symbol: string, [min, max]: Band) =>
   min === null ? `Under ${symbol}${max}` : max === null ? `${symbol}${min}+` : `${symbol}${min} to ${symbol}${max}`;

@@ -628,3 +628,158 @@ Return ONLY valid JSON, no markdown fences:
       unreadable: parsed?.unreadable === true,
     };
   });
+
+/* ------------------------------------------------------------------------ */
+/* Restaurant mode, pass two: pick for the table from the list that was read. */
+/* No cellar access: this feature has nothing to do with what the user owns.  */
+/* ------------------------------------------------------------------------ */
+
+const listEntrySchema = z.object({
+  id: z.string().min(1).max(16),
+  name: z.string().min(1).max(200),
+  producer: z.string().max(200).nullable(),
+  vintage: z.number().nullable(),
+  region: z.string().max(200).nullable(),
+  // The same union extractWineList normalises to, so an entry survives the
+  // round trip from extraction into the pairing call with its type intact.
+  colour: z.enum(LIST_COLOURS),
+  price: z.string().max(80).nullable(),
+  byTheGlass: z.boolean(),
+});
+
+export const pairFromList = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        entries: z.array(listEntrySchema).min(1).max(MAX_LIST_ENTRIES),
+        dishes: z.string().trim().min(3).max(600),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const byId = new Map(data.entries.map((e) => [e.id, e]));
+
+    const listRows = data.entries.map((e) => ({
+      id: e.id,
+      name: e.name,
+      producer: e.producer,
+      vintage: e.vintage,
+      region: e.region,
+      colour: e.colour,
+      price: e.price,
+      by_the_glass: e.byTheGlass,
+    }));
+
+    const monthYear = new Date().toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+
+    const prompt = `You are the sommelier at this restaurant, advising one table.
+
+The table is eating: ${data.dishes}
+
+THE WINE LIST (everything available, nothing else exists):
+${JSON.stringify(listRows)}
+
+Choose ONLY from the entries above, identified ONLY by their exact "id" string. Never name a wine that is not on this list.
+
+With several dishes the job is not the best match for any one plate but the wine that serves the whole table with the least compromise. High acidity, moderate body and soft tannin usually flatter the widest range. Name the compromise honestly rather than claiming a perfect fit for everything.
+
+Prefer entries with "by_the_glass": true when the dishes are irreconcilable and a split would need more than two bottles.
+
+Answer entirely in the language of the dishes.
+
+Return ONLY valid JSON, no markdown fences:
+{
+  "table_read": "one sentence on what these dishes have in common and where they conflict",
+  "single": {"id": "", "why": "why this bottle serves the table best", "compromise": "which dish it serves least well and why, or null when it genuinely suits everything"},
+  "split": {"bottles": [{"id": "", "serves": "which dishes this one is for", "why": ""}], "rationale": "one sentence on why two bottles beat one here"},
+  "verdict": "one honest sentence about this list for this food. If the list is genuinely poor for what the table ordered, say so.",
+  "save_label": "short button label meaning \\"we liked it\\", e.g. \\"on a aimé\\"",
+  "saved_label": "the same button once saved, e.g. \\"déjà dans ma liste\\"",
+  "save_note_with_place": "a line recording the occasion, meaning \\"Drunk with <the dishes>, at {restaurant}, ${monthYear}\\". Keep the literal token {restaurant} exactly as written. Render the month and year in the language of the dishes.",
+  "save_note_plain": "the same line without the restaurant, meaning \\"Drunk with <the dishes>, ${monthYear}\\""
+}
+
+"split" must be null when one bottle genuinely does the job. When present it must contain exactly 2 bottles.`;
+
+    const result = await callGateway({
+      model: MODELS.FAST,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const text = result.choices?.[0]?.message?.content?.trim();
+    if (!text) throw new Error("No recommendation returned by AI");
+    const parsed = parseJsonBlock(text);
+
+    // Every id is checked against the list we sent, exactly as the cellar picks
+    // are. A wine that was never on the list is dropped rather than shown to
+    // someone sitting in the restaurant holding the real thing.
+    const singleRaw = (parsed?.single ?? null) as Record<string, unknown> | null;
+    const singleEntry =
+      singleRaw && typeof singleRaw.id === "string" ? byId.get(singleRaw.id) : undefined;
+    const single = singleEntry
+      ? {
+          entry: singleEntry,
+          why: String(singleRaw?.why ?? "").slice(0, 300),
+          compromise:
+            typeof singleRaw?.compromise === "string" && singleRaw.compromise.trim()
+              ? singleRaw.compromise.trim().slice(0, 300)
+              : null,
+        }
+      : null;
+
+    const splitRaw = (parsed?.split ?? null) as Record<string, unknown> | null;
+    const splitBottles = (Array.isArray(splitRaw?.bottles) ? splitRaw!.bottles : [])
+      .filter((b: Record<string, unknown>) => typeof b?.id === "string" && byId.has(b.id as string))
+      .slice(0, 2)
+      .map((b: Record<string, unknown>) => ({
+        entry: byId.get(b.id as string)!,
+        serves: String(b.serves ?? "").slice(0, 200),
+        why: String(b.why ?? "").slice(0, 300),
+      }));
+    // One bottle is not a split, it is the single pick again.
+    const split =
+      splitBottles.length === 2
+        ? {
+            bottles: splitBottles,
+            rationale:
+              typeof splitRaw?.rationale === "string" && splitRaw.rationale.trim()
+                ? splitRaw.rationale.trim().slice(0, 300)
+                : null,
+          }
+        : null;
+
+    return {
+      tableRead:
+        typeof parsed?.table_read === "string" && parsed.table_read.trim()
+          ? parsed.table_read.trim().slice(0, 400)
+          : null,
+      single,
+      split,
+      verdict:
+        typeof parsed?.verdict === "string" && parsed.verdict.trim()
+          ? parsed.verdict.trim().slice(0, 400)
+          : null,
+      saveLabel:
+        typeof parsed?.save_label === "string" && parsed.save_label.trim()
+          ? parsed.save_label.trim().slice(0, 40)
+          : "We liked it",
+      savedLabel:
+        typeof parsed?.saved_label === "string" && parsed.saved_label.trim()
+          ? parsed.saved_label.trim().slice(0, 40)
+          : "Already on your list",
+      // Two complete sentences rather than one with a stitched-in connector:
+      // "chez" and its equivalents do not compose the same way across languages.
+      saveNoteWithPlace:
+        typeof parsed?.save_note_with_place === "string" && parsed.save_note_with_place.trim()
+          ? parsed.save_note_with_place.trim().slice(0, 240)
+          : `Drunk with ${data.dishes}, at {restaurant}, ${monthYear}`,
+      saveNotePlain:
+        typeof parsed?.save_note_plain === "string" && parsed.save_note_plain.trim()
+          ? parsed.save_note_plain.trim().slice(0, 240)
+          : `Drunk with ${data.dishes}, ${monthYear}`,
+    };
+  });
