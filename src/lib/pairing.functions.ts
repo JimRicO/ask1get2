@@ -199,11 +199,15 @@ ${includeWishlist ? `WISHLIST (bottles they want but do NOT own):\n${JSON.string
 
 Answer in layers, from general to specific.
 
-1. "profile": what this dish asks of a wine, in wine terms and with no bottle named. Give {"headline": at most 8 words, e.g. "High acid, light body, no oak", "detail": one or two sentences explaining which parts of the dish drive that, naming fat, acid, sweetness, heat, smoke or texture}. Always fill this in, even when the cellar has nothing suitable. This is the part the user learns from.
+1. "profile": what this dish asks of a wine, described only through what the food does and with no bottle named. Give {"headline": at most 8 words, e.g. "Rich lactic fat, gentle salt, soft texture", "detail": one or two sentences explaining which parts of the dish drive that, naming fat, acid, sweetness, heat, smoke or texture}. Speak in terms of fat to cut, salt to balance, sweetness to match, heat to soften, texture to carry, aromas to echo.
+   Do NOT name a wine type, colour, grape or category in "profile". No "effervescent", no "blanc", no "rouge léger", no appellation. Describe only what the dish asks a wine to do. Which wines answer that comes later, and naming one here forecloses the rest of the answer.
+   Always fill this in, even when the cellar has nothing suitable. This is the part the user learns from.
 
-2. "avoid": one sentence naming what actively ruins this dish and why, in wine terms. Be specific about the mechanism, not just the category. Return null only if nothing is genuinely worth warning about.
+2. "avoid": one sentence naming what actively ruins this dish and why. Name the mechanism, not the category. If a lighter or different expression of the same category does work, say so in the same sentence. "Tannin hardens against lactic fat, so avoid tannic reds, though a light low-tannin red is a different matter" is right. "Avoid reds" is wrong and closes off a legitimate pairing. Return null only if nothing is genuinely worth warning about.
 
-3. "grapes": 1 to 3 grape varieties or styles that express that profile. Each: {"grape", "why" (max 20 words), "region" (one or two regions known for it), "cellar_ids": ids from the CELLAR list above that are made from this grape or style, empty array if none}. Only use exact id strings from the list. This layer is about the kind of wine, not a specific bottle.
+3. "grapes": 1 to 3 grape varieties or styles that answer that profile. Each: {"grape", "why" (max 20 words), "region" (one or two regions known for it), "cellar_ids": ids from the CELLAR list above that are made from this grape or style, empty array if none}. Only use exact id strings from the list. This layer is about the kind of wine, not a specific bottle.
+   Where the dish admits more than one legitimate approach, cover at least two DISTINCT ones, and say what each trades off rather than ranking them. Bubbles that cut through fat and a light low-tannin red that carries alongside it are two different answers to the same cheese, and a sommelier offers both with the reason to choose each. Only return three variations on one idea when the dish genuinely admits only one approach, which is rarer than it looks.
+   Each "why" must say what that approach does that the others do not.
 
 4. "picks": up to 3 bottles from CELLAR, ranked best first, identified ONLY by their exact "id" string. Never invent a bottle. Fewer than 3 is better than a weak third.
    Each: {"id", "rank", "why" (max 25 words, name the actual mechanism: acid, tannin, weight, sweetness, fat, smoke, spice), "serve" (Celsius range), "decant_minutes" (integer, 0 if none), "caution" (one short sentence or null)}.
@@ -410,6 +414,7 @@ Rules:
 - Never invent a price. If search gives no price, set "price_estimate" to null.
 - If search turns up nothing solid, return an empty "bottles" array. That is an acceptable and correct answer. Do not fall back on wines you remember.
 - Cite the pages you actually used, at most 3 full URLs. Never invent a URL.
+- Do not return three variations on one idea. Where the profile and grapes admit more than one approach, spread the bottles across them so the user sees real alternatives rather than the same recommendation at three price points.
 
 Return ONLY valid JSON, no markdown fences:
 {"bottles":[{"name":"","producer":"","origin":"","price_estimate":"","why":"max 25 words"}],"sources":[]}`;
