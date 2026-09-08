@@ -825,7 +825,7 @@ Extract the restaurant name if it appears anywhere, otherwise null.
 Answer in the language of the menu.
 
 Return ONLY valid JSON, no markdown fences:
-{"restaurant_name": null, "unreadable": false, "dishes": [{"name": "the dish with its full printed ingredient line", "section": "the heading it sits under as printed, or null"}]}`;
+{"restaurant_name": null, "unreadable": false, "selection_prompt": "a short question asking which dishes the table ordered, e.g. \\"Quels plats avez-vous commandés ?\\"", "dishes": [{"name": "the dish with its full printed ingredient line", "section": "the heading it sits under as printed, or null"}]}`;
 
     const content: Array<
       { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
@@ -868,6 +868,12 @@ Return ONLY valid JSON, no markdown fences:
         typeof parsed?.restaurant_name === "string" && parsed.restaurant_name.trim()
           ? parsed.restaurant_name.trim().slice(0, 120)
           : null,
+      // The screen has to ask a question, not present a list. English fallback
+      // so the step is never unlabelled.
+      selectionPrompt:
+        typeof parsed?.selection_prompt === "string" && parsed.selection_prompt.trim()
+          ? parsed.selection_prompt.trim().slice(0, 120)
+          : "Which dishes did the table order?",
       unreadable: parsed?.unreadable === true,
     };
   });

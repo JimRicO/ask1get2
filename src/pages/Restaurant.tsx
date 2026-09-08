@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Minus,
   Plus,
+  Check,
 } from "lucide-react";
 import { extractWineList, extractMenu, pairFromList } from "@/lib/pairing.functions";
 import { wishlistKey } from "@/lib/wishlistKey";
@@ -72,10 +73,11 @@ const Restaurant = () => {
   // Dish id -> how many of that plate the table ordered. Five guests often means
   // two of the same thing, and that weighting changes which wine serves them.
   const [selected, setSelected] = useState<Record<string, number>>({});
-  const [touchedSelection, setTouchedSelection] = useState(false);
 
   const [dishes, setDishes] = useState("");
   const [place, setPlace] = useState("");
+  // Once the field has been corrected by hand, no extraction may write to it.
+  const [placeTouched, setPlaceTouched] = useState(false);
   const [pairing, setPairing] = useState(false);
   const [table, setTable] = useState<TableResult | null>(null);
 
@@ -96,25 +98,54 @@ const Restaurant = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Whichever extraction found a name, preferring the menu. Still editable:
-  // without a name the saved note is worthless a year later.
+  // Whichever extraction found a name, preferring the menu. Never once the user
+  // has corrected it: reading the second photo must not undo their edit.
   useEffect(() => {
+    if (placeTouched) return;
     const name = menuResult?.restaurantName ?? listResult?.restaurantName;
     if (name) setPlace(name);
-  }, [menuResult, listResult]);
+  }, [menuResult, listResult, placeTouched]);
+
+  const composeFrom = (sel: Record<string, number>) =>
+    menuResult
+      ? menuResult.dishes
+          .filter((d) => (sel[d.id] ?? 0) > 0)
+          .map((d) => `${sel[d.id]} x ${d.name}`)
+          .join("; ")
+      : "";
+
+  /* The composed half and the manual half both have to survive. Rather than
+     rewriting the whole string, the previous composed run is located inside
+     whatever the user currently has and swapped for the new one, leaving
+     anything they typed around it untouched. If they have edited the composed
+     run beyond recognition, the new one is prepended rather than lost. */
+  const mergeComposed = (text: string, prev: string, next: string) => {
+    const current = text.trim();
+    if (prev && current.includes(prev)) {
+      return current
+        .replace(prev, () => next)
+        .replace(/^\s*;\s*/, "")
+        .replace(/\s*;\s*$/, "")
+        .replace(/;\s*;/g, ";")
+        .trim();
+    }
+    if (!next) return current;
+    return current ? `${next}; ${current}` : next;
+  };
 
   // Selection composes into the textarea rather than bypassing it, so what the
-  // model receives is exactly what the user can see and correct. Guarded on
-  // first interaction so it never wipes text typed with no menu photographed.
-  useEffect(() => {
-    if (!touchedSelection || !menuResult) return;
-    setDishes(
-      menuResult.dishes
-        .filter((d) => (selected[d.id] ?? 0) > 0)
-        .map((d) => `${selected[d.id]} x ${d.name}`)
-        .join("; "),
-    );
-  }, [selected, touchedSelection, menuResult]);
+  // model receives is exactly what the user can see and correct.
+  const applySelection = (next: Record<string, number>) => {
+    const prevComposed = composeFrom(selected);
+    const nextComposed = composeFrom(next);
+    setSelected(next);
+    setDishes((text) => mergeComposed(text, prevComposed, nextComposed));
+  };
+
+  const selectedCount = Object.keys(selected).length;
+  /* The gate exists only when a menu was photographed. Typing dishes by hand
+     with no menu is the original path and stays ungated. */
+  const awaitingDish = !!menuResult && menuResult.dishes.length > 0 && selectedCount === 0;
 
   const grouped = useMemo(() => {
     if (!menuResult) return [] as { section: string | null; dishes: Dish[] }[];
@@ -159,9 +190,13 @@ const Restaurant = () => {
       return;
     }
     setReadingMenu(true);
+    // The old ids point at dishes that will not exist after this call, so the
+    // selection goes — and its composed run comes out of the text with it,
+    // leaving anything typed by hand in place.
+    const staleComposed = composeFrom(selected);
+    setDishes((text) => mergeComposed(text, staleComposed, ""));
     setMenuResult(null);
     setSelected({});
-    setTouchedSelection(false);
     setTable(null);
     try {
       const data = (await extractMenuFn({ data: { images: menuImages } })) as MenuResult;
@@ -223,22 +258,16 @@ const Restaurant = () => {
   };
 
   const toggleDish = (id: string) => {
-    setTouchedSelection(true);
-    setSelected((prev) => {
-      const next = { ...prev };
-      if (next[id]) delete next[id];
-      else next[id] = 1;
-      return next;
-    });
+    const next = { ...selected };
+    if (next[id]) delete next[id];
+    else next[id] = 1;
+    applySelection(next);
   };
 
   const stepQty = (id: string, delta: number) => {
-    setTouchedSelection(true);
-    setSelected((prev) => {
-      const q = (prev[id] ?? 1) + delta;
-      if (q < 1) return prev;
-      return { ...prev, [id]: Math.min(q, 20) };
-    });
+    const q = (selected[id] ?? 1) + delta;
+    if (q < 1) return;
+    applySelection({ ...selected, [id]: Math.min(q, 20) });
   };
 
   const noteFor = (t: TableResult) => {
@@ -456,6 +485,17 @@ const Restaurant = () => {
 
             {menuResult.unreadable && <Unreadable what="menu" />}
 
+            {/* The step has to read as a question. Without this the rows look
+                like a list the app is showing you, and people sit there. */}
+            {menuResult.dishes.length > 0 && (
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-sm text-foreground">{menuResult.selectionPrompt}</p>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">
+                  {selectedCount} selected
+                </p>
+              </div>
+            )}
+
             {menuOpen &&
               grouped.map((group, gi) => (
                 <div key={gi} className="space-y-1">
@@ -478,8 +518,20 @@ const Restaurant = () => {
                         <button
                           type="button"
                           onClick={() => toggleDish(d.id)}
-                          className="flex-1 text-left text-xs text-foreground"
+                          aria-pressed={qty > 0}
+                          className="flex-1 flex items-start gap-2 text-left text-xs text-foreground"
                         >
+                          {/* On every row, not only selected ones: the box is
+                              what tells the user these are tappable. */}
+                          <span
+                            className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded border flex items-center justify-center ${
+                              qty > 0
+                                ? "bg-primary border-primary text-primary-foreground"
+                                : "border-border"
+                            }`}
+                          >
+                            {qty > 0 && <Check className="h-2.5 w-2.5" />}
+                          </span>
                           {d.name}
                         </button>
                         {qty > 0 && (
@@ -526,7 +578,10 @@ const Restaurant = () => {
           />
           <input
             value={place}
-            onChange={(e) => setPlace(e.target.value)}
+            onChange={(e) => {
+              setPlaceTouched(true);
+              setPlace(e.target.value);
+            }}
             placeholder="Restaurant name, for your notes later"
             className="w-full bg-card/60 border border-border/50 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
           />
@@ -612,17 +667,30 @@ const Restaurant = () => {
           </div>
         )}
 
+        {/* Kept visible while inactive: hiding it removes the cue about what
+            comes next. */}
         {listResult && listResult.entries.length > 0 && (
-          <Button onClick={() => void pair()} disabled={pairing} className="w-full mt-6">
-            {pairing ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Choosing...
-              </>
-            ) : (
-              "Pick for the table"
+          <div className="mt-6">
+            <Button
+              onClick={() => void pair()}
+              disabled={pairing || awaitingDish}
+              className="w-full"
+            >
+              {pairing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Choosing...
+                </>
+              ) : (
+                "Pick for the table"
+              )}
+            </Button>
+            {awaitingDish && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Choose at least one dish above first.
+              </p>
             )}
-          </Button>
+          </div>
         )}
 
         {table && (
