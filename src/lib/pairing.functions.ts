@@ -416,8 +416,13 @@ Rules:
 - Cite the pages you actually used, at most 3 full URLs. Never invent a URL.
 - Do not return three variations on one idea. Where the profile and grapes admit more than one approach, spread the bottles across them so the user sees real alternatives rather than the same recommendation at three price points.
 
+Also return, in the same language as the dish:
+- "save_label": a short call to action for adding a bottle to the user's wishlist, e.g. "Ajouter à ma liste".
+- "saved_label": the same button once the bottle is already on the list, e.g. "Déjà dans ma liste".
+- "save_note": a short line meaning "Saved for <the dish>", built from the dish text, e.g. "Ajouté pour un lapin aux pruneaux". One line, no punctuation at the end.
+
 Return ONLY valid JSON, no markdown fences:
-{"bottles":[{"name":"","producer":"","origin":"","price_estimate":"","why":"max 25 words"}],"sources":[]}`;
+{"bottles":[{"name":"","producer":"","origin":"","price_estimate":"","why":"max 25 words"}],"sources":[],"save_label":"","saved_label":"","save_note":""}`;
 
     const result = await callGateway({
       model: MODELS.GROUNDED,
@@ -426,7 +431,19 @@ Return ONLY valid JSON, no markdown fences:
     });
 
     const text = result.choices?.[0]?.message?.content?.trim();
-    if (!text) return { bottles: [], sources: [] };
+    // English defaults throughout: the button has to be usable even when the
+    // model omits the labels entirely.
+    const SAVE_LABEL = "Add to my list";
+    const SAVED_LABEL = "Already on your list";
+    if (!text) {
+      return {
+        bottles: [],
+        sources: [],
+        saveLabel: SAVE_LABEL,
+        savedLabel: SAVED_LABEL,
+        saveNote: `Saved for ${data.dish}`,
+      };
+    }
     const parsed = parseJsonBlock(text);
 
     const bottles = (Array.isArray(parsed?.bottles) ? parsed!.bottles : [])
@@ -481,5 +498,20 @@ Return ONLY valid JSON, no markdown fences:
       if (sources.length >= 3) break;
     }
 
-    return { bottles, sources };
+    return {
+      bottles,
+      sources,
+      saveLabel:
+        typeof parsed?.save_label === "string" && parsed.save_label.trim()
+          ? parsed.save_label.trim().slice(0, 40)
+          : SAVE_LABEL,
+      savedLabel:
+        typeof parsed?.saved_label === "string" && parsed.saved_label.trim()
+          ? parsed.saved_label.trim().slice(0, 40)
+          : SAVED_LABEL,
+      saveNote:
+        typeof parsed?.save_note === "string" && parsed.save_note.trim()
+          ? parsed.save_note.trim().slice(0, 160)
+          : `Saved for ${data.dish}`,
+    };
   });

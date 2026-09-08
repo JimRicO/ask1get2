@@ -7,7 +7,7 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { UtensilsCrossed, Loader2, Heart, Grape, AlertTriangle, MapPin } from "lucide-react";
+import { UtensilsCrossed, Loader2, Heart, Grape, AlertTriangle, MapPin, Plus } from "lucide-react";
 import { pairFromCellar, discoverBottles } from "@/lib/pairing.functions";
 
 /* ------------------------------------------------------------------ market */
@@ -40,6 +40,12 @@ function detectCountry(): string | null {
   }
   return null;
 }
+
+/* A discovered bottle and a wishlist row are the same bottle when name and
+   producer match once trimmed and lowercased. Used for both the pre-insert
+   guard and the button's saved state. */
+const wishlistKey = (name: string | null, producer: string | null) =>
+  `${(name ?? "").trim().toLowerCase()}|${(producer ?? "").trim().toLowerCase()}`;
 
 const bandLabel = (symbol: string, [min, max]: Band) =>
   min === null ? `Under ${symbol}${max}` : max === null ? `${symbol}${min}+` : `${symbol}${min} to ${symbol}${max}`;
@@ -101,6 +107,10 @@ const Pairing = () => {
   // Chosen follow-up options, keyed by question text: an answered question is
   // settled and must not come back as an open pair of choices.
   const [answered, setAnswered] = useState<Record<string, string>>({});
+  // Bottles already on the wishlist, keyed by name+producer. Seeded from the
+  // table when results render, so a bottle saved last week shows as saved.
+  const [savedBottles, setSavedBottles] = useState<Record<string, boolean>>({});
+  const [savingBottle, setSavingBottle] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -138,6 +148,33 @@ const Pairing = () => {
         }
       });
   }, [session]);
+
+  // One query for the whole discovery block rather than one per bottle. The
+  // wishlist is a personal-scale list, so name+producer are compared here
+  // instead of building a filter that would have to escape ilike wildcards.
+  useEffect(() => {
+    if (!session || !discovery || discovery.bottles.length === 0) return;
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from("wishlist")
+        .select("wine_name, producer")
+        .eq("user_id", session.user.id);
+      if (cancelled || error || !data) return;
+      const existing = new Set(data.map((r) => wishlistKey(r.wine_name, r.producer)));
+      setSavedBottles((prev) => {
+        const next = { ...prev };
+        for (const b of discovery.bottles) {
+          const key = wishlistKey(b.name, b.producer);
+          if (existing.has(key)) next[key] = true;
+        }
+        return next;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session, discovery]);
 
   const money = useMemo(() => (market && CURRENCY[market]) || DEFAULT_MARKET, [market]);
   const isProducing = !!market && PRODUCING.has(market);
@@ -236,6 +273,56 @@ const Pairing = () => {
     setDish(next);
     setAnswered((prev) => ({ ...prev, [question]: option }));
     void run(next, true);
+  };
+
+  const saveBottle = async (bottle: Discovery["bottles"][number]) => {
+    if (!session || !discovery) return;
+    const key = wishlistKey(bottle.name, bottle.producer);
+    if (savedBottles[key] || savingBottle) return;
+
+    setSavingBottle(key);
+    try {
+      // Guarded again here, not just on render: the same dish run twice brings
+      // the same bottle back, and the list may have moved on another device.
+      const { data: rows, error: checkError } = await supabase
+        .from("wishlist")
+        .select("wine_name, producer")
+        .eq("user_id", session.user.id);
+      if (checkError) throw checkError;
+
+      if ((rows ?? []).some((r) => wishlistKey(r.wine_name, r.producer) === key)) {
+        setSavedBottles((prev) => ({ ...prev, [key]: true }));
+        toast(discovery.savedLabel);
+        return;
+      }
+
+      // The price estimate is free text from a grounded model ("25 € - 33 €",
+      // "37,40 €"). There is no price column on wishlist and no reliable parse,
+      // so it rides along in the description verbatim.
+      const description = bottle.priceEstimate
+        ? `${bottle.why} (${bottle.priceEstimate})`
+        : bottle.why || null;
+
+      const { error: insertError } = await supabase.from("wishlist").insert({
+        user_id: session.user.id,
+        wine_name: bottle.name,
+        producer: bottle.producer,
+        region: bottle.origin,
+        description,
+        // Turns the wishlist into a record of decisions rather than a pile of
+        // names. Country, type, vintage and grapes stay unset: guessing them
+        // from the origin string would be inventing data.
+        notes: discovery.saveNote,
+      });
+      if (insertError) throw insertError;
+
+      setSavedBottles((prev) => ({ ...prev, [key]: true }));
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Could not add to your list");
+    } finally {
+      setSavingBottle(null);
+    }
   };
 
   return (
@@ -506,15 +593,40 @@ const Pairing = () => {
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   {discoveryFromEmptyCellar ? "Not in your cave, but worth buying" : "Worth buying"}
                 </p>
-                {discovery.bottles.map((b, i) => (
-                  <div key={i} className="bg-card/60 rounded-xl p-4 border border-border/50">
-                    <p className="text-foreground font-medium">{b.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {[b.producer, b.origin, b.priceEstimate].filter(Boolean).join(" · ")}
-                    </p>
-                    <p className="text-sm text-foreground/80 mt-1">{b.why}</p>
-                  </div>
-                ))}
+                {discovery.bottles.map((b, i) => {
+                  const key = wishlistKey(b.name, b.producer);
+                  const isSaved = !!savedBottles[key];
+                  const isSaving = savingBottle === key;
+                  return (
+                    <div key={i} className="bg-card/60 rounded-xl p-4 border border-border/50">
+                      <p className="text-foreground font-medium">{b.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {[b.producer, b.origin, b.priceEstimate].filter(Boolean).join(" · ")}
+                      </p>
+                      <p className="text-sm text-foreground/80 mt-1">{b.why}</p>
+
+                      {/* Only on bottles to buy: the cave picks are already
+                          owned and the wishlist picks are already here. */}
+                      <div className="flex justify-end mt-2">
+                        <button
+                          type="button"
+                          onClick={() => void saveBottle(b)}
+                          disabled={isSaved || isSaving}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] border border-border/50 text-muted-foreground transition-colors hover:text-foreground hover:border-border disabled:hover:text-muted-foreground disabled:hover:border-border/50"
+                        >
+                          {isSaving ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : isSaved ? (
+                            <Heart className="h-3 w-3 fill-accent text-accent" />
+                          ) : (
+                            <Plus className="h-3 w-3" />
+                          )}
+                          {isSaved ? discovery.savedLabel : discovery.saveLabel}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
                 {discovery.sources.length > 0 && (
                   <div className="flex flex-wrap gap-3 pt-1">
                     {discovery.sources.map((s, i) => (
