@@ -783,3 +783,91 @@ Return ONLY valid JSON, no markdown fences:
           : `Drunk with ${data.dishes}, ${monthYear}`,
     };
   });
+
+/* ------------------------------------------------------------------------ */
+/* Restaurant mode, pass three: read the food menu so the table can tap what  */
+/* it ordered. pairFromList is untouched: the selection composes into the     */
+/* same free-text dishes string it already takes.                             */
+/* ------------------------------------------------------------------------ */
+
+const MAX_MENU_DISHES = 120;
+
+export type MenuDish = {
+  id: string;
+  name: string;
+  section: string | null;
+};
+
+export const extractMenu = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        images: z.array(z.string().min(1)).min(1).max(4),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const prompt = `You are reading a restaurant food menu from photographs.
+
+Transcribe only what is printed. Never invent a dish, and never expand an ingredient list from your own knowledge of the recipe.
+
+Keep the full descriptive line together with the dish name. Menus write "Pork schnitzel, maxibel beans, cucumber and buttermilk", and every one of those words decides the pairing. Do not shorten that to "Pork schnitzel".
+
+Include every section, in printed order, under the heading the menu itself uses.
+
+Ignore prices entirely. They are not needed here.
+
+If a page is too blurred or cropped to read, set "unreadable" to true and still return whatever you did read.
+
+Extract the restaurant name if it appears anywhere, otherwise null.
+
+Answer in the language of the menu.
+
+Return ONLY valid JSON, no markdown fences:
+{"restaurant_name": null, "unreadable": false, "dishes": [{"name": "the dish with its full printed ingredient line", "section": "the heading it sits under as printed, or null"}]}`;
+
+    const content: Array<
+      { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
+    > = [{ type: "text", text: prompt }];
+
+    for (const image of data.images) {
+      const base64 = image.includes(",") ? image.slice(image.indexOf(",") + 1) : image;
+      content.push({
+        type: "image_url",
+        image_url: { url: `data:image/jpeg;base64,${base64}` },
+      });
+    }
+
+    const result = await callGateway({
+      model: MODELS.FAST,
+      messages: [{ role: "user", content }],
+    });
+
+    const text = result.choices?.[0]?.message?.content?.trim();
+    if (!text) throw new Error("Could not read that menu");
+    const parsed = parseJsonBlock(text);
+
+    // Ids assigned here, after parsing, for the same reason as the wine list:
+    // the model never gets to mint a reference to something it invented.
+    const dishes: MenuDish[] = (Array.isArray(parsed?.dishes) ? parsed!.dishes : [])
+      .filter((d: Record<string, unknown>) => typeof d?.name === "string" && d.name.trim())
+      .slice(0, MAX_MENU_DISHES)
+      .map((d: Record<string, unknown>, i: number) => ({
+        id: `d${i}`,
+        // Generous cap: the ingredient line is the part that matters and it can
+        // run long.
+        name: String(d.name).trim().slice(0, 300),
+        section:
+          typeof d.section === "string" && d.section.trim() ? d.section.trim().slice(0, 80) : null,
+      }));
+
+    return {
+      dishes,
+      restaurantName:
+        typeof parsed?.restaurant_name === "string" && parsed.restaurant_name.trim()
+          ? parsed.restaurant_name.trim().slice(0, 120)
+          : null,
+      unreadable: parsed?.unreadable === true,
+    };
+  });
