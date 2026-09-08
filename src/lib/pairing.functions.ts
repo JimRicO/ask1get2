@@ -209,11 +209,16 @@ Answer in layers, from general to specific.
    Each: {"id", "rank", "why" (max 25 words, name the actual mechanism: acid, tannin, weight, sweetness, fat, smoke, spice), "serve" (Celsius range), "decant_minutes" (integer, 0 if none), "caution" (one short sentence or null)}.
    Use "caution" when the bottle looks too young to drink well (the current year is ${currentYear}, judge from vintage, type and origin) or when its price makes it extravagant for this dish.
 
-${includeWishlist ? `5. "wishlist_picks": up to 2 entries from WISHLIST that suit this dish, as {"id", "why"}. They do not own these. Empty array if none fit.` : `5. "wishlist_picks": []`}
+5. "reference": the classic pairing for this dish, whether or not the user owns anything like it, as {"heading": at most 3 words naming this section, "pairing": the canonical style or appellation, "why": one sentence on why it is the reference, "versus_yours": one sentence comparing it honestly to the top pick, or null if there are no picks}. Be candid in "versus_yours": if the user's bottle is a genuine equal, say so; if it is close but misses something the reference has, name what it misses. Do not flatter. Return null only if the dish has no established reference pairing.
 
-6. "gap": if the cellar genuinely does not serve this dish, one or two sentences on what is missing, in ${money}. Otherwise null.
+${includeWishlist ? `6. "wishlist_picks": up to 2 entries from WISHLIST that suit this dish, as {"id", "why"}. They do not own these. Empty array if none fit.` : `6. "wishlist_picks": []`}
 
-7. "follow_ups": 2 or 3 short questions a sommelier would actually ask about THIS dish to sharpen the recommendation, each with 2 options. Derive them from the dish, never generic. For a blue cheese: how strong is it, young or piquant. For a curry: how hot. For a roast: what sauce. Shape: [{"question": "...", "options": ["...", "..."]}]. Each option must be a short phrase that reads naturally when appended to the dish description. Return an empty array only if the dish is already fully specified.
+7. "gap": if the cellar genuinely does not serve this dish, one or two sentences on what is missing, in ${money}. Otherwise null.
+
+8. "follow_ups": 2 or 3 short questions a sommelier would actually ask about THIS dish to sharpen the recommendation, each with 2 options. Derive them from the dish, never generic. For a blue cheese: how strong is it, young or piquant. For a curry: how hot. For a roast: what sauce. Shape: [{"question": "...", "options": ["...", "..."]}]. Each option must be a short phrase that reads naturally when appended to the dish description. Return an empty array only if the dish is already fully specified.
+   Also return "follow_ups_intro": a heading of at most 3 words and a single short sentence telling the user that tapping an option refines the recommendation. Shape: {"heading": "...", "hint": "..."}. Same language as the rest.
+
+9. "discover_label": a short call to action, at most 6 words, meaning roughly "see other bottles worth buying". Same language as the rest.
 
 Never pad a list to fill a slot. An empty "picks" with a clear "profile" and "gap" is the right answer when the cellar does not suit the meal.
 
@@ -299,6 +304,43 @@ Return ONLY valid JSON, no markdown fences.`;
         options: (f.options as string[]).map((o) => o.trim().slice(0, 60)),
       }));
 
+    const introRaw = (parsed?.follow_ups_intro ?? null) as Record<string, unknown> | null;
+    const followUpsIntro =
+      introRaw && (typeof introRaw.heading === "string" || typeof introRaw.hint === "string")
+        ? {
+            heading:
+              typeof introRaw.heading === "string" && introRaw.heading.trim()
+                ? introRaw.heading.trim().slice(0, 60)
+                : null,
+            hint:
+              typeof introRaw.hint === "string" && introRaw.hint.trim()
+                ? introRaw.hint.trim().slice(0, 200)
+                : null,
+          }
+        : null;
+
+    // "pairing" is the one field the block cannot render without, so it gates
+    // the whole thing. The rest degrade to null independently.
+    const referenceRaw = (parsed?.reference ?? null) as Record<string, unknown> | null;
+    const reference =
+      referenceRaw && typeof referenceRaw.pairing === "string" && referenceRaw.pairing.trim()
+        ? {
+            heading:
+              typeof referenceRaw.heading === "string" && referenceRaw.heading.trim()
+                ? referenceRaw.heading.trim().slice(0, 60)
+                : null,
+            pairing: referenceRaw.pairing.trim().slice(0, 160),
+            why:
+              typeof referenceRaw.why === "string" && referenceRaw.why.trim()
+                ? referenceRaw.why.trim().slice(0, 300)
+                : null,
+            versusYours:
+              typeof referenceRaw.versus_yours === "string" && referenceRaw.versus_yours.trim()
+                ? referenceRaw.versus_yours.trim().slice(0, 300)
+                : null,
+          }
+        : null;
+
     return {
       profile,
       avoid:
@@ -307,9 +349,17 @@ Return ONLY valid JSON, no markdown fences.`;
           : null,
       grapes,
       picks,
+      reference,
       wishlistPicks,
       gap: typeof parsed?.gap === "string" && parsed.gap.trim() ? parsed.gap : null,
       followUps,
+      followUpsIntro,
+      // English fallback: the row still has to be tappable when the model
+      // omits the label.
+      discoverLabel:
+        typeof parsed?.discover_label === "string" && parsed.discover_label.trim()
+          ? parsed.discover_label.trim().slice(0, 60)
+          : "See other bottles worth buying",
       cellarSize: candidates.length,
     };
   });

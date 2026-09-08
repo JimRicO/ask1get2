@@ -62,6 +62,19 @@ type Scope = "cellar" | "cellar_wishlist" | "anything";
 type PairResult = Awaited<ReturnType<typeof pairFromCellar>>;
 type Discovery = Awaited<ReturnType<typeof discoverBottles>>;
 
+/* Mirrors discoverBottles' input validator. Held in state so the opt-in row can
+   fire the same call the automatic path fires, with the same arguments. */
+type DiscoverPayload = {
+  dish: string;
+  profile: string;
+  grapes: string[];
+  localMode: "only" | "preferred" | "off";
+  marketCountry: string | null;
+  currency: string;
+  priceMin: number | null;
+  priceMax: number | null;
+};
+
 const Pairing = () => {
   const navigate = useNavigate();
   const pairFn = useServerFn(pairFromCellar);
@@ -82,6 +95,12 @@ const Pairing = () => {
   // Distinguishes "the user asked to look anywhere" from "the cave had nothing",
   // which are the same call but not the same answer to the user.
   const [discoveryFromEmptyCellar, setDiscoveryFromEmptyCellar] = useState(false);
+  const [discoverPayload, setDiscoverPayload] = useState<DiscoverPayload | null>(null);
+  // A refine keeps the previous answer on screen, dimmed, instead of blanking it.
+  const [refining, setRefining] = useState(false);
+  // Chosen follow-up options, keyed by question text: an answered question is
+  // settled and must not come back as an open pair of choices.
+  const [answered, setAnswered] = useState<Record<string, string>>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -137,9 +156,19 @@ const Pairing = () => {
     if (error) toast.error("Could not save your market");
   };
 
+  const runDiscovery = (payload: DiscoverPayload, fromEmptyCellar: boolean) => {
+    setDiscoveryFromEmptyCellar(fromEmptyCellar);
+    setDiscovering(true);
+    discoverFn({ data: payload })
+      .then((d) => setDiscovery(d as Discovery))
+      .catch((e) => console.error("discovery failed", e))
+      .finally(() => setDiscovering(false));
+  };
+
   // Follow-up chips re-run immediately, before the dish state has committed, so
-  // the text is passed in rather than read back out of state.
-  const run = async (dishOverride?: string) => {
+  // the text is passed in rather than read back out of state. A refine leaves
+  // the current answer up until the new one lands.
+  const run = async (dishOverride?: string, refine = false) => {
     const dishText = (dishOverride ?? dish).trim();
     if (dishText.length < 3) {
       toast.error("Tell me what you are cooking first");
@@ -157,46 +186,56 @@ const Pairing = () => {
     };
 
     setLoading(true);
-    setResult(null);
-    setDiscovery(null);
+    if (refine) {
+      setRefining(true);
+    } else {
+      setResult(null);
+      setDiscovery(null);
+      setDiscoverPayload(null);
+      setAnswered({});
+    }
 
     try {
       const data = (await pairFn({ data: { ...shared, scope } })) as PairResult;
       setResult(data);
+      setDiscovery(null);
 
-      // Grounded search is the slow layer, so it runs after the fast one has
-      // painted rather than holding the whole response back. It also fires when
-      // the cave came back empty, whatever the scope: the profile is already
-      // computed, so "nothing fits" would be a dead end for no reason.
-      const cellarEmpty = data.picks.length === 0;
-      if ((scope === "anything" || cellarEmpty) && data.profile) {
-        setDiscoveryFromEmptyCellar(scope !== "anything" && cellarEmpty);
-        setDiscovering(true);
-        discoverFn({
-          data: {
+      const payload: DiscoverPayload | null = data.profile
+        ? {
             ...shared,
             profile: `${data.profile.headline}. ${data.profile.detail}`,
             grapes: data.grapes.map((g) => g.grape),
-          },
-        })
-          .then((d) => setDiscovery(d as Discovery))
-          .catch((e) => console.error("discovery failed", e))
-          .finally(() => setDiscovering(false));
+          }
+        : null;
+      setDiscoverPayload(payload);
+
+      // Grounded search is the slow layer, so it runs after the fast one has
+      // painted rather than holding the whole response back. It fires on its own
+      // only when the cave came back empty, or when the user asked to look
+      // anywhere. With good picks on screen it waits to be asked: three more
+      // bottles under three good ones turns a decision back into a shop.
+      const cellarEmpty = data.picks.length === 0;
+      if (payload && (scope === "anything" || cellarEmpty)) {
+        runDiscovery(payload, scope !== "anything" && cellarEmpty);
       }
     } catch (e) {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Pairing failed");
     } finally {
       setLoading(false);
+      // A failed refine restores the previous answer at full opacity rather
+      // than costing the user what they already had.
+      setRefining(false);
     }
   };
 
   // The appended text lands in the textarea so the user can see and edit what
   // the chip added, rather than it happening invisibly.
-  const applyFollowUp = (option: string) => {
+  const applyFollowUp = (question: string, option: string) => {
     const next = `${dish.trim()}, ${option}`;
     setDish(next);
-    void run(next);
+    setAnswered((prev) => ({ ...prev, [question]: option }));
+    void run(next, true);
   };
 
   return (
@@ -264,7 +303,11 @@ const Pairing = () => {
         </div>
 
         {result && (
-          <div className="mt-8 space-y-6">
+          <div
+            className={`mt-8 space-y-6 transition-opacity duration-200 ${
+              refining ? "opacity-40 pointer-events-none" : "opacity-100"
+            }`}
+          >
             {/* Layer one. Renders on every search, including cave-only, because it
                 explains why the picks below were chosen. */}
             {result.profile && (
@@ -282,6 +325,53 @@ const Pairing = () => {
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                 {result.avoid}
               </p>
+            )}
+
+            {/* The ambiguity these resolve belongs next to the claim it
+                qualifies, not four scrolls below it. */}
+            {result.followUps.length > 0 && (
+              <div className="space-y-3">
+                {(result.followUpsIntro?.heading || result.followUpsIntro?.hint) && (
+                  <div>
+                    {result.followUpsIntro.heading && (
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        {result.followUpsIntro.heading}
+                      </p>
+                    )}
+                    {result.followUpsIntro.hint && (
+                      <p className="text-xs text-muted-foreground/80 mt-0.5">
+                        {result.followUpsIntro.hint}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {result.followUps.map((f, i) => {
+                  const chosen = answered[f.question];
+                  return (
+                    <div key={i} className="space-y-2">
+                      <p className="text-xs text-muted-foreground">{f.question}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {chosen ? (
+                          // Settled: the choice stands, the road not taken is gone.
+                          <Chip active onClick={() => {}}>
+                            {chosen}
+                          </Chip>
+                        ) : (
+                          f.options.map((option, j) => (
+                            <Chip
+                              key={j}
+                              active={false}
+                              onClick={() => applyFollowUp(f.question, option)}
+                            >
+                              {option}
+                            </Chip>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
 
             {/* Layer two. */}
@@ -354,6 +444,40 @@ const Pairing = () => {
               </p>
             )}
 
+            {/* Context, not another recommendation: prose in one bordered block,
+                deliberately not a card like the picks above. */}
+            {result.reference && (
+              <div className="rounded-xl p-4 border border-border/50">
+                {result.reference.heading && (
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                    {result.reference.heading}
+                  </p>
+                )}
+                <p className="text-foreground font-medium">{result.reference.pairing}</p>
+                {result.reference.why && (
+                  <p className="text-sm text-foreground/80 mt-1">{result.reference.why}</p>
+                )}
+                {result.reference.versusYours && (
+                  <p className="text-sm text-foreground/80 mt-2">{result.reference.versusYours}</p>
+                )}
+              </div>
+            )}
+
+            {/* Opt-in. The cave already answered, so buying is a second question
+                the user has to actually ask. */}
+            {result.picks.length > 0 &&
+              scope !== "anything" &&
+              discoverPayload &&
+              !discovery &&
+              !discovering && (
+                <button
+                  onClick={() => runDiscovery(discoverPayload, false)}
+                  className="w-full text-left text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+                >
+                  {result.discoverLabel}
+                </button>
+              )}
+
             {result.wishlistPicks.length > 0 && (
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">On your wishlist, not in the cave</p>
@@ -416,24 +540,6 @@ const Pairing = () => {
               </div>
             )}
 
-            {/* Always the last thing on the screen: whatever the answer was,
-                there is somewhere to tap next. */}
-            {result.followUps.length > 0 && (
-              <div className="space-y-3 pt-2">
-                {result.followUps.map((f, i) => (
-                  <div key={i} className="space-y-2">
-                    <p className="text-xs text-muted-foreground">{f.question}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {f.options.map((option, j) => (
-                        <Chip key={j} active={false} onClick={() => applyFollowUp(option)}>
-                          {option}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
