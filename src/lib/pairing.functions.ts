@@ -52,6 +52,21 @@ function isGroundingRedirect(value: string): boolean {
   }
 }
 
+const MAX_LIST_ENTRIES = 200;
+const LIST_COLOURS = ["red", "white", "rose", "sparkling", "sweet", "fortified", "unknown"] as const;
+type ListColour = (typeof LIST_COLOURS)[number];
+
+export type WineListEntry = {
+  id: string;
+  name: string;
+  producer: string | null;
+  vintage: number | null;
+  region: string | null;
+  colour: ListColour;
+  price: string | null;
+  byTheGlass: boolean;
+};
+
 const scopeSchema = z.enum(["cellar", "cellar_wishlist", "anything"]);
 const localSchema = z.enum(["off", "preferred", "only"]);
 
@@ -513,5 +528,103 @@ Return ONLY valid JSON, no markdown fences:
         typeof parsed?.save_note === "string" && parsed.save_note.trim()
           ? parsed.save_note.trim().slice(0, 160)
           : `Saved for ${data.dish}`,
+    };
+  });
+
+/* ------------------------------------------------------------------------ */
+/* Restaurant mode, pass one: read a photographed wine list into rows. The    */
+/* cellar plays no part in this feature and is never queried here.            */
+/* ------------------------------------------------------------------------ */
+
+export const extractWineList = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        // Restaurant lists run to several pages, so multiple photos are the
+        // normal case rather than the exception.
+        images: z.array(z.string().min(1)).min(1).max(6),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const prompt = `You are reading a restaurant wine list from photographs.
+
+Transcribe only what is printed. Never complete a partial name from your own knowledge, never infer a producer that is not shown, never guess a vintage. A wine you can only half read is transcribed as far as it is legible, with the rest null.
+
+Return every wine you can read, in the order printed, including house wines and by-the-glass sections. Several photographs are pages of the same list: read them all and return one continuous list.
+
+If a page is too blurred, dark or cropped to read, set "unreadable" to true and still return whatever entries you did manage. Do not silently return a short list as if it were complete.
+
+Extract the restaurant name if it appears anywhere on the page, otherwise null.
+
+Answer in the language of the list.
+
+Return ONLY valid JSON, no markdown fences:
+{"restaurant_name": null, "unreadable": false, "entries": [{"name": "as printed", "producer": null, "vintage": null, "region": "as printed or null", "colour": "red|white|rose|sparkling|sweet|fortified|unknown", "price": "the price exactly as printed, as a string, e.g. \\"48\\" or \\"48 €\\" or \\"€48 / 9.5 glass\\". Never convert it to a number.", "by_the_glass": false}]}`;
+
+    const content: Array<
+      { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
+    > = [{ type: "text", text: prompt }];
+
+    for (const image of data.images) {
+      const base64 = image.includes(",") ? image.slice(image.indexOf(",") + 1) : image;
+      content.push({
+        type: "image_url",
+        image_url: { url: `data:image/jpeg;base64,${base64}` },
+      });
+    }
+
+    const result = await callGateway({
+      // MODELS.VISION was removed as dead code before this feature existed.
+      model: MODELS.FAST,
+      messages: [{ role: "user", content }],
+    });
+
+    const text = result.choices?.[0]?.message?.content?.trim();
+    if (!text) throw new Error("Could not read that wine list");
+    const parsed = parseJsonBlock(text);
+
+    // Ids are assigned here, after parsing, so the model cannot invent one and
+    // pass two cannot be handed a reference to a wine that was never on the list.
+    const entries: WineListEntry[] = (Array.isArray(parsed?.entries) ? parsed!.entries : [])
+      .filter((e: Record<string, unknown>) => typeof e?.name === "string" && e.name.trim())
+      .slice(0, MAX_LIST_ENTRIES)
+      .map((e: Record<string, unknown>, i: number) => {
+        // Vintages come back as 2019 or "2019" depending on the page.
+        const rawVintage =
+          typeof e.vintage === "number"
+            ? e.vintage
+            : typeof e.vintage === "string"
+              ? Number.parseInt(e.vintage, 10)
+              : NaN;
+        return {
+          id: `w${i}`,
+          name: String(e.name).trim().slice(0, 160),
+          producer:
+            typeof e.producer === "string" && e.producer.trim()
+              ? e.producer.trim().slice(0, 120)
+              : null,
+          vintage: Number.isFinite(rawVintage) ? Math.trunc(rawVintage) : null,
+          region:
+            typeof e.region === "string" && e.region.trim() ? e.region.trim().slice(0, 120) : null,
+          colour: (typeof e.colour === "string" &&
+          (LIST_COLOURS as readonly string[]).includes(e.colour)
+            ? e.colour
+            : "unknown") as ListColour,
+          price: typeof e.price === "string" && e.price.trim() ? e.price.trim().slice(0, 60) : null,
+          byTheGlass: e.by_the_glass === true,
+        };
+      });
+
+    return {
+      entries,
+      restaurantName:
+        typeof parsed?.restaurant_name === "string" && parsed.restaurant_name.trim()
+          ? parsed.restaurant_name.trim().slice(0, 120)
+          : null,
+      // A short list that claims to be complete is the failure mode that makes
+      // the whole feature untrustworthy, so this is surfaced, not swallowed.
+      unreadable: parsed?.unreadable === true,
     };
   });

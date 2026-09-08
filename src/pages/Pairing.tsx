@@ -332,7 +332,16 @@ const Pairing = () => {
           <UtensilsCrossed className="h-5 w-5 text-accent" />
           <h1 className="text-2xl font-semibold text-foreground">What are you cooking?</h1>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">The cave answers first.</p>
+        <div className="flex items-baseline justify-between gap-3 mb-4">
+          <p className="text-sm text-muted-foreground">The cave answers first.</p>
+          {/* The bottom bar is full at five, so restaurant mode lives here. */}
+          <button
+            onClick={() => navigate("/restaurant")}
+            className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors whitespace-nowrap"
+          >
+            At a restaurant?
+          </button>
+        </div>
 
         <Textarea
           value={dish}

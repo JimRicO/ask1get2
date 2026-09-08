@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CellarRouteImport } from './routes/cellar'
 import { Route as PairRouteImport } from './routes/pair'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RestaurantRouteImport } from './routes/restaurant'
 import { Route as UploadLogoRouteImport } from './routes/upload-logo'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as WineIdRouteImport } from './routes/wine/$id'
@@ -49,6 +50,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RestaurantRoute = RestaurantRouteImport.update({
+  id: '/restaurant',
+  path: '/restaurant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UploadLogoRoute = UploadLogoRouteImport.update({
   id: '/upload-logo',
   path: '/upload-logo',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/cellar': typeof CellarRoute
   '/pair': typeof PairRoute
   '/profile': typeof ProfileRoute
+  '/restaurant': typeof RestaurantRoute
   '/upload-logo': typeof UploadLogoRoute
   '/wishlist': typeof WishlistRoute
   '/wine/$id': typeof WineIdRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/cellar': typeof CellarRoute
   '/pair': typeof PairRoute
   '/profile': typeof ProfileRoute
+  '/restaurant': typeof RestaurantRoute
   '/upload-logo': typeof UploadLogoRoute
   '/wishlist': typeof WishlistRoute
   '/wine/$id': typeof WineIdRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/cellar': typeof CellarRoute
   '/pair': typeof PairRoute
   '/profile': typeof ProfileRoute
+  '/restaurant': typeof RestaurantRoute
   '/upload-logo': typeof UploadLogoRoute
   '/wishlist': typeof WishlistRoute
   '/wine/$id': typeof WineIdRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/cellar'
     | '/pair'
     | '/profile'
+    | '/restaurant'
     | '/upload-logo'
     | '/wishlist'
     | '/wine/$id'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/cellar'
     | '/pair'
     | '/profile'
+    | '/restaurant'
     | '/upload-logo'
     | '/wishlist'
     | '/wine/$id'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/cellar'
     | '/pair'
     | '/profile'
+    | '/restaurant'
     | '/upload-logo'
     | '/wishlist'
     | '/wine/$id'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   CellarRoute: typeof CellarRoute
   PairRoute: typeof PairRoute
   ProfileRoute: typeof ProfileRoute
+  RestaurantRoute: typeof RestaurantRoute
   UploadLogoRoute: typeof UploadLogoRoute
   WishlistRoute: typeof WishlistRoute
   WineIdRoute: typeof WineIdRoute
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/restaurant': {
+      id: '/restaurant'
+      path: '/restaurant'
+      fullPath: '/restaurant'
+      preLoaderRoute: typeof RestaurantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/upload-logo': {
       id: '/upload-logo'
       path: '/upload-logo'
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   CellarRoute: CellarRoute,
   PairRoute: PairRoute,
   ProfileRoute: ProfileRoute,
+  RestaurantRoute: RestaurantRoute,
   UploadLogoRoute: UploadLogoRoute,
   WishlistRoute: WishlistRoute,
   WineIdRoute: WineIdRoute,
