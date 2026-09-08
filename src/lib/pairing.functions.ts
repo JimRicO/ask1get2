@@ -187,6 +187,8 @@ export const pairFromCellar = createServerFn({ method: "POST" })
 
 They are cooking: ${data.dish}
 
+Write every piece of prose you return in the same language the dish is written in. If the dish is in French, answer entirely in French. Wine terms, appellations and producer names keep their own spelling. This applies to profile.headline, profile.detail, every "why", "avoid", "gap", "region" and every follow-up question and option.
+
 ${band}
 ${localLine(data.localMode, market)}
 
@@ -195,19 +197,23 @@ ${JSON.stringify(cellarRows)}
 
 ${includeWishlist ? `WISHLIST (bottles they want but do NOT own):\n${JSON.stringify(wishlistRows)}` : ""}
 
-Answer in three layers, from general to specific.
+Answer in layers, from general to specific.
 
 1. "profile": what this dish asks of a wine, in wine terms and with no bottle named. Give {"headline": at most 8 words, e.g. "High acid, light body, no oak", "detail": one or two sentences explaining which parts of the dish drive that, naming fat, acid, sweetness, heat, smoke or texture}. Always fill this in, even when the cellar has nothing suitable. This is the part the user learns from.
 
-2. "grapes": 1 to 3 grape varieties or styles that express that profile. Each: {"grape", "why" (max 20 words), "region" (one or two regions known for it), "cellar_ids": ids from the CELLAR list above that are made from this grape or style, empty array if none}. Only use exact id strings from the list. This layer is about the kind of wine, not a specific bottle.
+2. "avoid": one sentence naming what actively ruins this dish and why, in wine terms. Be specific about the mechanism, not just the category. Return null only if nothing is genuinely worth warning about.
 
-3. "picks": up to 3 bottles from CELLAR, ranked best first, identified ONLY by their exact "id" string. Never invent a bottle. Fewer than 3 is better than a weak third.
+3. "grapes": 1 to 3 grape varieties or styles that express that profile. Each: {"grape", "why" (max 20 words), "region" (one or two regions known for it), "cellar_ids": ids from the CELLAR list above that are made from this grape or style, empty array if none}. Only use exact id strings from the list. This layer is about the kind of wine, not a specific bottle.
+
+4. "picks": up to 3 bottles from CELLAR, ranked best first, identified ONLY by their exact "id" string. Never invent a bottle. Fewer than 3 is better than a weak third.
    Each: {"id", "rank", "why" (max 25 words, name the actual mechanism: acid, tannin, weight, sweetness, fat, smoke, spice), "serve" (Celsius range), "decant_minutes" (integer, 0 if none), "caution" (one short sentence or null)}.
    Use "caution" when the bottle looks too young to drink well (the current year is ${currentYear}, judge from vintage, type and origin) or when its price makes it extravagant for this dish.
 
-${includeWishlist ? `4. "wishlist_picks": up to 2 entries from WISHLIST that suit this dish, as {"id", "why"}. They do not own these. Empty array if none fit.` : `4. "wishlist_picks": []`}
+${includeWishlist ? `5. "wishlist_picks": up to 2 entries from WISHLIST that suit this dish, as {"id", "why"}. They do not own these. Empty array if none fit.` : `5. "wishlist_picks": []`}
 
-5. "gap": if the cellar genuinely does not serve this dish, one or two sentences on what is missing, in ${money}. Otherwise null.
+6. "gap": if the cellar genuinely does not serve this dish, one or two sentences on what is missing, in ${money}. Otherwise null.
+
+7. "follow_ups": 2 or 3 short questions a sommelier would actually ask about THIS dish to sharpen the recommendation, each with 2 options. Derive them from the dish, never generic. For a blue cheese: how strong is it, young or piquant. For a curry: how hot. For a roast: what sauce. Shape: [{"question": "...", "options": ["...", "..."]}]. Each option must be a short phrase that reads naturally when appended to the dish description. Return an empty array only if the dish is already fully specified.
 
 Never pad a list to fill a slot. An empty "picks" with a clear "profile" and "gap" is the right answer when the cellar does not suit the meal.
 
@@ -276,12 +282,34 @@ Return ONLY valid JSON, no markdown fences.`;
         why: String(p.why ?? "").slice(0, 240),
       }));
 
+    // Two options exactly, both non-empty strings, or the entry is dropped: a
+    // half-formed chip row is worse than none.
+    const followUps = (Array.isArray(parsed?.follow_ups) ? parsed!.follow_ups : [])
+      .filter(
+        (f: Record<string, unknown>) =>
+          typeof f?.question === "string" &&
+          f.question.trim().length > 0 &&
+          Array.isArray(f.options) &&
+          f.options.length === 2 &&
+          f.options.every((o: unknown) => typeof o === "string" && o.trim().length > 0),
+      )
+      .slice(0, 3)
+      .map((f: Record<string, unknown>) => ({
+        question: String(f.question).trim().slice(0, 160),
+        options: (f.options as string[]).map((o) => o.trim().slice(0, 60)),
+      }));
+
     return {
       profile,
+      avoid:
+        typeof parsed?.avoid === "string" && parsed.avoid.trim()
+          ? parsed.avoid.trim().slice(0, 240)
+          : null,
       grapes,
       picks,
       wishlistPicks,
       gap: typeof parsed?.gap === "string" && parsed.gap.trim() ? parsed.gap : null,
+      followUps,
       cellarSize: candidates.length,
     };
   });
@@ -322,6 +350,8 @@ Wine profile that suits it: ${data.profile}
 ${data.grapes.length ? `Grapes or styles already identified: ${data.grapes.join(", ")}` : ""}
 ${band}
 ${localLine(data.localMode, market)}
+
+Write every piece of prose you return in the same language the dish is written in. If the dish is in French, answer entirely in French. Wine terms, appellations and producer names keep their own spelling. This applies to every "why".
 
 Use Google Search. Name at most 3 bottles, and only bottles you actually found evidence for, sold in ${market ?? "the user's market"}.
 

@@ -79,6 +79,9 @@ const Pairing = () => {
   const [result, setResult] = useState<PairResult | null>(null);
   const [discovery, setDiscovery] = useState<Discovery | null>(null);
   const [discovering, setDiscovering] = useState(false);
+  // Distinguishes "the user asked to look anywhere" from "the cave had nothing",
+  // which are the same call but not the same answer to the user.
+  const [discoveryFromEmptyCellar, setDiscoveryFromEmptyCellar] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -134,15 +137,18 @@ const Pairing = () => {
     if (error) toast.error("Could not save your market");
   };
 
-  const run = async () => {
-    if (dish.trim().length < 3) {
+  // Follow-up chips re-run immediately, before the dish state has committed, so
+  // the text is passed in rather than read back out of state.
+  const run = async (dishOverride?: string) => {
+    const dishText = (dishOverride ?? dish).trim();
+    if (dishText.length < 3) {
       toast.error("Tell me what you are cooking first");
       return;
     }
 
     const band = bandIndex === null ? null : money.bands[bandIndex];
     const shared = {
-      dish: dish.trim(),
+      dish: dishText,
       localMode: (localOnly ? "only" : isProducing ? "preferred" : "off") as "only" | "preferred" | "off",
       marketCountry: market,
       currency: money.code,
@@ -159,8 +165,12 @@ const Pairing = () => {
       setResult(data);
 
       // Grounded search is the slow layer, so it runs after the fast one has
-      // painted rather than holding the whole response back.
-      if (scope === "anything" && data.profile) {
+      // painted rather than holding the whole response back. It also fires when
+      // the cave came back empty, whatever the scope: the profile is already
+      // computed, so "nothing fits" would be a dead end for no reason.
+      const cellarEmpty = data.picks.length === 0;
+      if ((scope === "anything" || cellarEmpty) && data.profile) {
+        setDiscoveryFromEmptyCellar(scope !== "anything" && cellarEmpty);
         setDiscovering(true);
         discoverFn({
           data: {
@@ -179,6 +189,14 @@ const Pairing = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // The appended text lands in the textarea so the user can see and edit what
+  // the chip added, rather than it happening invisibly.
+  const applyFollowUp = (option: string) => {
+    const next = `${dish.trim()}, ${option}`;
+    setDish(next);
+    void run(next);
   };
 
   return (
@@ -223,7 +241,7 @@ const Pairing = () => {
           )}
         </div>
 
-        <Button onClick={run} disabled={loading} className="w-full">
+        <Button onClick={() => run()} disabled={loading} className="w-full">
           {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Pouring...</> : "Find a bottle"}
         </Button>
 
@@ -255,6 +273,15 @@ const Pairing = () => {
                 <p className="text-foreground font-medium">{result.profile.headline}</p>
                 <p className="text-sm text-foreground/80 mt-1">{result.profile.detail}</p>
               </div>
+            )}
+
+            {/* One line, no card: it qualifies the profile above rather than
+                standing on its own. */}
+            {result.avoid && (
+              <p className="flex items-start gap-1.5 text-xs text-accent -mt-3">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                {result.avoid}
+              </p>
             )}
 
             {/* Layer two. */}
@@ -352,7 +379,9 @@ const Pairing = () => {
 
             {discovery && discovery.bottles.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Worth buying</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {discoveryFromEmptyCellar ? "Not in your cave, but worth buying" : "Worth buying"}
+                </p>
                 {discovery.bottles.map((b, i) => (
                   <div key={i} className="bg-card/60 rounded-xl p-4 border border-border/50">
                     <p className="text-foreground font-medium">{b.name}</p>
@@ -384,6 +413,25 @@ const Pairing = () => {
               <div className="bg-card/40 rounded-xl p-4 border border-dashed border-border/50">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">What is missing</p>
                 <p className="text-sm text-foreground/80">{result.gap}</p>
+              </div>
+            )}
+
+            {/* Always the last thing on the screen: whatever the answer was,
+                there is somewhere to tap next. */}
+            {result.followUps.length > 0 && (
+              <div className="space-y-3 pt-2">
+                {result.followUps.map((f, i) => (
+                  <div key={i} className="space-y-2">
+                    <p className="text-xs text-muted-foreground">{f.question}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {f.options.map((option, j) => (
+                        <Chip key={j} active={false} onClick={() => applyFollowUp(option)}>
+                          {option}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
