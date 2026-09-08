@@ -20,6 +20,7 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          market_country: string | null
           updated_at: string | null
         }
         Insert: {
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          market_country?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -34,6 +36,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          market_country?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -100,6 +103,7 @@ export type Database = {
           images: Json | null
           notes: string | null
           optimal_drinking_window: string | null
+          price_currency: string | null
           price_per_bottle: number | null
           producer: string | null
           region: string | null
@@ -128,6 +132,7 @@ export type Database = {
           images?: Json | null
           notes?: string | null
           optimal_drinking_window?: string | null
+          price_currency?: string | null
           price_per_bottle?: number | null
           producer?: string | null
           region?: string | null
@@ -156,6 +161,7 @@ export type Database = {
           images?: Json | null
           notes?: string | null
           optimal_drinking_window?: string | null
+          price_currency?: string | null
           price_per_bottle?: number | null
           producer?: string | null
           region?: string | null

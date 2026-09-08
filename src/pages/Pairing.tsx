@@ -110,7 +110,7 @@ const Pairing = () => {
           setMarket(guess);
           const { error } = await supabase
             .from("profiles")
-            .update({ market_country: guess } as never)
+            .update({ market_country: guess })
             .eq("id", session.user.id);
           if (error) toast.error("Could not save your market");
         }
@@ -129,7 +129,7 @@ const Pairing = () => {
     setBandIndex(null);
     const { error } = await supabase
       .from("profiles")
-      .update({ market_country: code } as never)
+      .update({ market_country: code })
       .eq("id", session.user.id);
     if (error) toast.error("Could not save your market");
   };
