@@ -9,7 +9,7 @@ type GatewayMessageContent = Array<
   | { type: "image_url"; image_url: { url: string } }
 >;
 
-async function callGateway(body: Record<string, unknown>) {
+export async function callGateway(body: Record<string, unknown>) {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
 

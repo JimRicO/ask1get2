@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CellarRouteImport } from './routes/cellar'
+import { Route as PairRouteImport } from './routes/pair'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as UploadLogoRouteImport } from './routes/upload-logo'
 import { Route as WishlistRouteImport } from './routes/wishlist'
@@ -36,6 +37,11 @@ const AuthRoute = AuthRouteImport.update({
 const CellarRoute = CellarRouteImport.update({
   id: '/cellar',
   path: '/cellar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PairRoute = PairRouteImport.update({
+  id: '/pair',
+  path: '/pair',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
   '/cellar': typeof CellarRoute
+  '/pair': typeof PairRoute
   '/profile': typeof ProfileRoute
   '/upload-logo': typeof UploadLogoRoute
   '/wishlist': typeof WishlistRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
   '/cellar': typeof CellarRoute
+  '/pair': typeof PairRoute
   '/profile': typeof ProfileRoute
   '/upload-logo': typeof UploadLogoRoute
   '/wishlist': typeof WishlistRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
   '/cellar': typeof CellarRoute
+  '/pair': typeof PairRoute
   '/profile': typeof ProfileRoute
   '/upload-logo': typeof UploadLogoRoute
   '/wishlist': typeof WishlistRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/auth'
     | '/cellar'
+    | '/pair'
     | '/profile'
     | '/upload-logo'
     | '/wishlist'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/auth'
     | '/cellar'
+    | '/pair'
     | '/profile'
     | '/upload-logo'
     | '/wishlist'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/auth'
     | '/cellar'
+    | '/pair'
     | '/profile'
     | '/upload-logo'
     | '/wishlist'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   AddRoute: typeof AddRoute
   AuthRoute: typeof AuthRoute
   CellarRoute: typeof CellarRoute
+  PairRoute: typeof PairRoute
   ProfileRoute: typeof ProfileRoute
   UploadLogoRoute: typeof UploadLogoRoute
   WishlistRoute: typeof WishlistRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/cellar'
       fullPath: '/cellar'
       preLoaderRoute: typeof CellarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pair': {
+      id: '/pair'
+      path: '/pair'
+      fullPath: '/pair'
+      preLoaderRoute: typeof PairRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   AddRoute: AddRoute,
   AuthRoute: AuthRoute,
   CellarRoute: CellarRoute,
+  PairRoute: PairRoute,
   ProfileRoute: ProfileRoute,
   UploadLogoRoute: UploadLogoRoute,
   WishlistRoute: WishlistRoute,
