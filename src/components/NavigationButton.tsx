@@ -8,6 +8,7 @@ interface NavigationButtonProps {
   onClick?: () => void;
 }
 
+/* The five shipped pictograms, unchanged. Only the tile around them is Cave. */
 const BUTTON_PRESETS = {
   cellar: {
     icon: Wine,
@@ -45,20 +46,31 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
     <button
       onClick={onClick}
       aria-label={config.label}
-      // 52px, down from 60px: five buttons plus four gaps now fits a 320px screen
-      // with room to spare. At 60px the row overflowed on an SE-class phone.
-      className="flex flex-col items-center justify-center gap-1.5 w-[52px] h-[52px] rounded-2xl transition-all duration-300 bg-card border border-border/50"
+      aria-current={isActive ? "page" : undefined}
+      /* 52px seated square. Five tiles plus four gaps fit a 320px screen, and
+         52px clears the 44px touch floor. The active tile is a raised ground
+         with a gold bottom rule; nothing scales, nothing glows. */
+      className={`relative flex flex-col items-center justify-center w-[52px] h-[52px] rounded-none transition-colors duration-[320ms] ease-[var(--ease-cave)] ${
+        isActive ? "bg-secondary/90" : "bg-transparent hover:bg-secondary/40"
+      }`}
     >
       {isCenter ? (
-        <div className="relative text-muted-foreground">
-          <Icon className="h-9 w-9" strokeWidth={2} />
-          {/* The Plus sits outside the icon box. With five buttons the gaps are
-              tighter, so it is pulled in to stop it landing on the next button. */}
-          <Plus className="h-5 w-5 absolute -top-1.5 -right-4" strokeWidth={2} />
+        <div className={`relative ${isActive ? "text-foreground" : "text-wine-champagne"}`}>
+          <Icon className="h-7 w-7" strokeWidth={isActive ? 2.4 : 1.8} />
+          {/* The Plus sits outside the icon box. With five tiles the gaps are
+              tight, so it is pulled in to stop it landing on the next one. */}
+          <Plus
+            className="h-4 w-4 absolute -top-1 -right-3"
+            strokeWidth={isActive ? 2.4 : 1.8}
+          />
         </div>
       ) : (
-        <Icon className={`h-8 w-8 text-muted-foreground ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
+        <Icon
+          className={`h-6 w-6 ${isActive ? "text-foreground" : "text-wine-champagne"}`}
+          strokeWidth={isActive ? 2.4 : 1.8}
+        />
       )}
+      {isActive && <span className="absolute bottom-0 left-0 right-0 h-px bg-primary" />}
     </button>
   );
 };

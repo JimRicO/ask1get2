@@ -310,3 +310,82 @@
     opacity: 0;
   }
 }
+
+@layer utilities {
+  /* Ambient cave light. Two blurred pools, 26-40s, opacity 0.26 -> 0.54. The
+     only motion that runs unprompted; data-frozen stops it with everything
+     else when the tab is hidden. */
+  .cave-glow {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(90px);
+    will-change: opacity, transform;
+  }
+
+  .cave-glow-a {
+    top: -12vh;
+    left: -10vw;
+    width: 62vw;
+    height: 62vw;
+    background: radial-gradient(circle, rgba(244, 168, 113, 0.1), transparent 70%);
+    animation: cave-drift-a 34s ease-in-out infinite;
+  }
+
+  .cave-glow-b {
+    bottom: -18vh;
+    right: -14vw;
+    width: 54vw;
+    height: 54vw;
+    background: radial-gradient(circle, rgba(74, 42, 42, 0.55), transparent 70%);
+    animation: cave-drift-b 26s ease-in-out infinite;
+  }
+
+  /* Entrance reveal. Authored VISIBLE and animated from a keyframe, never
+     parked at opacity 0 waiting for a callback: in a document where rAF and
+     IntersectionObserver never fire, opacity-0-until-told stays invisible for
+     good. Worst case here, the content is simply already there. */
+  .cave-reveal {
+    animation: cave-reveal 620ms var(--ease-cave) both;
+  }
+
+  /* Row and panel expand. */
+  .cave-expand {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 520ms var(--ease-cave);
+  }
+
+  .cave-expand[data-open="true"] {
+    grid-template-rows: 1fr;
+  }
+
+  .cave-expand > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* Ember pulse: ready-to-drink dots only. */
+  .cave-ember {
+    animation: cave-ember 3.4s ease-in-out infinite;
+  }
+}
+
+@keyframes cave-drift-a {
+  0%, 100% { opacity: 0.26; transform: translate3d(0, 0, 0); }
+  50% { opacity: 0.54; transform: translate3d(4vw, 3vh, 0); }
+}
+
+@keyframes cave-drift-b {
+  0%, 100% { opacity: 0.3; transform: translate3d(0, 0, 0); }
+  50% { opacity: 0.5; transform: translate3d(-3vw, -2vh, 0); }
+}
+
+@keyframes cave-reveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes cave-ember {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
