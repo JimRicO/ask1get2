@@ -403,12 +403,12 @@ const Wishlist = () => {
                       there is no photo the label is printed from the row's own
                       data on the parchment ground rather than showing a Heart.
                       The Heart in the nav bar stays; that is the tab glyph. */}
-                  <div className="aspect-3/4 w-[clamp(76px,15vw,108px)] shrink-0 overflow-hidden border border-border bg-parchment">
+                  <div className="aspect-3/4 w-[clamp(76px,15vw,108px)] shrink-0 overflow-hidden border border-border bg-parchment rounded-md">
                     {item.images?.overall ? (
                       <img
                         src={item.images.overall}
                         alt=""
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover rounded-md"
                       />
                     ) : (
                       <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-2 text-center">
@@ -508,7 +508,7 @@ const Wishlist = () => {
                   >
                     <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
                       {imagePreviews.front ? (
-                         <img src={imagePreviews.front} alt="Front" className="w-full h-full object-contain" />
+                         <img src={imagePreviews.front} alt="Front" className="w-full h-full object-contain rounded-md" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={frontLabelButtonImg} alt="Front Label" className="w-16 h-16 mb-2" />
@@ -543,7 +543,7 @@ const Wishlist = () => {
                   <label htmlFor="upload-back" className="block cursor-pointer">
                     <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
                       {imagePreviews.back ? (
-                         <img src={imagePreviews.back} alt="Back" className="w-full h-full object-contain" />
+                         <img src={imagePreviews.back} alt="Back" className="w-full h-full object-contain rounded-md" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={backLabelButtonImg} alt="Back Label" className="w-16 h-16 mb-2" />
@@ -578,7 +578,7 @@ const Wishlist = () => {
                   <label htmlFor="upload-neck" className="block cursor-pointer">
                     <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
                       {imagePreviews.neck ? (
-                         <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-contain" />
+                         <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-contain rounded-md" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={neckButtonImg} alt="Neck" className="w-16 h-16 mb-2" />
@@ -613,7 +613,7 @@ const Wishlist = () => {
                   <label htmlFor="upload-overall" className="block cursor-pointer">
                     <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
                       {imagePreviews.overall ? (
-                         <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-contain" />
+                         <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-contain rounded-md" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={fullBottleButtonImg} alt="Full Bottle" className="w-16 h-16 mb-2" />

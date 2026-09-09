@@ -124,7 +124,7 @@ But on what? Wine, poetry, or virtue, as you wish."
               <img src={wineVirtueLogo} alt="Wine & Virtue" className="h-auto w-48 opacity-90" />
             </div>
 
-            <div className="mt-8 border border-border bg-card p-6">
+            <div className="mt-8 border border-border bg-card p-6 rounded-md">
               <div className="flex items-center gap-4">
                 <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full border border-border">
                   <User className="h-7 w-7 text-wine-champagne" strokeWidth={1.6} />

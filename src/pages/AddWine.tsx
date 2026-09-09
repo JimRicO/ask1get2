@@ -441,7 +441,7 @@ const AddWine = () => {
 
         <div className="px-4 mt-6">
           {/* Image Upload */}
-          <div className="mb-6 border border-border bg-card p-6">
+          <div className="mb-6 border border-border bg-card p-6 rounded-md">
             <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">Take a picture of your wine labels</p>
             
             {/* Hairline dashed plates. The shipped textured button PNGs are
@@ -452,9 +452,9 @@ const AddWine = () => {
               const label = type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : 'Full bottle';
               return <div key={type}>
                   {imagePreviews[type] ? <div className="group">
-                      <div className="relative aspect-3/4 border border-primary bg-[rgba(244,168,113,0.08)]">
-                        <img src={imagePreviews[type]!} alt="" className="h-full w-full object-cover" />
-                        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center bg-primary text-primary-foreground">
+                      <div className="relative aspect-3/4 border border-primary bg-[rgba(244,168,113,0.08)] rounded-md">
+                        <img src={imagePreviews[type]!} alt="" className="h-full w-full object-cover rounded-md" />
+                        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center bg-primary text-primary-foreground rounded-md">
                           <Check className="h-3 w-3" />
                         </span>
                       </div>
@@ -472,7 +472,7 @@ const AddWine = () => {
                         Remove
                       </button>
                     </div> : <label className="block cursor-pointer">
-                      <span className="flex aspect-3/4 flex-col items-center justify-center gap-2 border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                      <span className="flex aspect-3/4 flex-col items-center justify-center gap-2 border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne rounded-md">
                         <Camera className="h-6 w-6 text-muted-foreground" strokeWidth={1.6} />
                       </span>
                       <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">{label}</span>
@@ -502,7 +502,7 @@ const AddWine = () => {
 
           {/* Form - Only show after Magic Scan is completed */}
           {magicScanCompleted && <form onSubmit={handleSubmit} className="space-y-4">
-            <div ref={formRef} className="space-y-4 border border-border bg-card p-6">
+            <div ref={formRef} className="space-y-4 border border-border bg-card p-6 rounded-md">
               <div className="mb-6 text-center">
                 <h2 className="text-xl font-semibold mb-1 text-foreground">Your wine details are ready.</h2>
                 <p className="text-sm text-muted-foreground">Verify and press "Add to Cellar" below</p>

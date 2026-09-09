@@ -636,7 +636,7 @@ const WineDetail = () => {
                   className={`w-full transition-all duration-[180ms] ease-[var(--ease-cave)] ${isFlipping ? "scale-[0.93] opacity-30" : ""}`}
                 >
                   {currentImage ? (
-                    <img src={currentImage} alt="" className="h-full w-full object-cover" />
+                    <img src={currentImage} alt="" className="h-full w-full object-cover rounded-md" />
                   ) : (
                     <span className="flex h-full w-full items-center justify-center">
                       <Wine className="h-10 w-10 text-muted-foreground" strokeWidth={1.2} />
@@ -744,7 +744,7 @@ const WineDetail = () => {
                   {wine.ai_food_pairings.map((pairing, index) => (
                     <span
                       key={index}
-                      className="border border-border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-wine-champagne transition-colors duration-[320ms] hover:border-primary hover:text-primary"
+                      className="border border-border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-wine-champagne transition-colors duration-[320ms] hover:border-primary hover:text-primary rounded-md"
                     >
                       {pairing}
                     </span>
@@ -920,7 +920,7 @@ const WineDetail = () => {
 
           {/* Stock Edit Dialog */}
           <Dialog open={editStockDialogOpen} onOpenChange={setEditStockDialogOpen}>
-            <DialogContent className="bg-popover text-foreground border-border">
+            <DialogContent className="bg-popover text-foreground border-border rounded-md">
               <DialogHeader>
                 <DialogTitle className="text-foreground">Update Stock</DialogTitle>
               </DialogHeader>
@@ -938,7 +938,7 @@ const WineDetail = () => {
 
           {/* Edit Wine Dialog */}
           <Dialog open={editWineDialogOpen} onOpenChange={setEditWineDialogOpen}>
-            <DialogContent className="bg-popover text-foreground border-border max-h-[90vh]">
+            <DialogContent className="bg-popover text-foreground border-border max-h-[90vh] rounded-md">
               <DialogHeader>
                 <DialogTitle className="text-foreground">Edit Wine Details</DialogTitle>
               </DialogHeader>
@@ -1367,7 +1367,7 @@ const WineDetail = () => {
 
           {/* Storage Location Dialog */}
           <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
-            <DialogContent className="bg-popover text-foreground border-border">
+            <DialogContent className="bg-popover text-foreground border-border rounded-md">
               <DialogHeader>
                 <DialogTitle className="text-foreground">
                   {editingLocationIndex !== null ? "Edit Storage Location" : "Add Storage Location"}

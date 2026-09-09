@@ -344,7 +344,7 @@ const Restaurant = () => {
               <img
                 src={src}
                 alt={`Page ${i + 1}`}
-                className="h-[82px] w-[64px] object-cover border border-border"
+                className="h-[82px] w-[64px] object-cover border border-border rounded-md"
               />
               <button
                 type="button"
@@ -359,7 +359,7 @@ const Restaurant = () => {
         </div>
       )}
       {images.length < max && (
-        <label className="mb-3 flex w-full cursor-pointer items-center justify-center gap-2 border border-dashed border-border py-4 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground transition-colors duration-[320ms] hover:border-wine-champagne hover:text-foreground">
+        <label className="mb-3 flex w-full cursor-pointer items-center justify-center gap-2 border border-dashed border-border py-4 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground transition-colors duration-[320ms] hover:border-wine-champagne hover:text-foreground rounded-md">
           {preparing ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -540,7 +540,7 @@ const Restaurant = () => {
                               type="button"
                               onClick={() => stepQty(d.id, -1)}
                               aria-label="One fewer"
-                              className="border border-border p-0.5 text-muted-foreground transition-colors duration-[320ms] hover:text-foreground"
+                              className="border border-border p-0.5 text-muted-foreground transition-colors duration-[320ms] hover:text-foreground rounded-md"
                             >
                               <Minus className="h-3 w-3" />
                             </button>
@@ -549,7 +549,7 @@ const Restaurant = () => {
                               type="button"
                               onClick={() => stepQty(d.id, 1)}
                               aria-label="One more"
-                              className="border border-border p-0.5 text-muted-foreground transition-colors duration-[320ms] hover:text-foreground"
+                              className="border border-border p-0.5 text-muted-foreground transition-colors duration-[320ms] hover:text-foreground rounded-md"
                             >
                               <Plus className="h-3 w-3" />
                             </button>
@@ -634,7 +634,7 @@ const Restaurant = () => {
             {listResult.unreadable && <Unreadable what="list" />}
 
             {listOpen && listResult.entries.length > 0 && (
-              <div className="overflow-x-auto border border-border">
+              <div className="overflow-x-auto border border-border rounded-md">
                 <table className="w-full text-xs">
                   <tbody>
                     {listResult.entries.map((e) => (
@@ -694,7 +694,7 @@ const Restaurant = () => {
         {table && (
           <div className="mt-8 space-y-6">
             {table.tableRead && (
-              <div className="border border-border bg-card p-5">
+              <div className="border border-border bg-card p-5 rounded-md">
                 <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
                   This table
                 </p>
@@ -705,7 +705,7 @@ const Restaurant = () => {
             {table.single && (
               <div className="space-y-2">
                 <p className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">One bottle</p>
-                <div className="border border-border bg-card p-5">
+                <div className="border border-border bg-card p-5 rounded-md">
                   <BottleLine entry={table.single.entry} />
                   <p className="text-sm text-foreground/90 mt-2">{table.single.why}</p>
                   {table.single.compromise && (
@@ -728,7 +728,7 @@ const Restaurant = () => {
                   <p className="text-xs text-muted-foreground">{table.split.rationale}</p>
                 )}
                 {table.split.bottles.map((b, i) => (
-                  <div key={i} className="border border-border bg-card/60 p-5">
+                  <div key={i} className="border border-border bg-card/60 p-5 rounded-md">
                     <BottleLine entry={b.entry} />
                     {b.serves && <p className="text-xs text-accent mt-1">{b.serves}</p>}
                     <p className="text-sm text-foreground/80 mt-1">{b.why}</p>
@@ -739,7 +739,7 @@ const Restaurant = () => {
             )}
 
             {table.verdict && (
-              <div className="border border-dashed border-border bg-card/40 p-5">
+              <div className="border border-dashed border-border bg-card/40 p-5 rounded-md">
                 <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
                   The list
                 </p>

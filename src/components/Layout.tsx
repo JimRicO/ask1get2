@@ -33,7 +33,7 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Centred and inset rather than edge to edge: the bar is a seated panel
           on the canvas, not a strip welded to the bottom of the glass. */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 px-7 pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto max-w-[1180px] border border-b-0 border-border bg-[rgba(43,22,22,0.94)] backdrop-blur-[10px]">
+        <div className="mx-auto max-w-[1180px] rounded-t-md border border-b-0 border-border bg-[rgba(43,22,22,0.94)] backdrop-blur-[10px]">
           <div className="flex items-center justify-around gap-1.5 px-4 py-2">
             {navItems.map(({ preset, path }) => (
               <NavigationButton

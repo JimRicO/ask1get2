@@ -86,7 +86,7 @@ export function CaveSheet({
         role="dialog"
         aria-modal={open}
         aria-labelledby={labelledBy}
-        className={`relative w-full max-w-[640px] max-h-[94vh] overflow-y-auto border border-b-0 border-border bg-card transition-transform duration-[420ms] ease-[var(--ease-cave)] ${
+        className={`relative w-full max-w-[640px] max-h-[94vh] overflow-y-auto rounded-t-md border border-b-0 border-border bg-card transition-transform duration-[420ms] ease-[var(--ease-cave)] ${
           open ? "translate-y-0" : "translate-y-[102%]"
         }`}
       >
@@ -122,7 +122,7 @@ export function Plate({
 }) {
   return (
     <div
-      className={`aspect-3/4 shrink-0 overflow-hidden border border-border bg-card ${className}`}
+      className={`aspect-3/4 shrink-0 overflow-hidden rounded-md border border-border bg-card ${className}`}
       style={style}
     >
       {children}

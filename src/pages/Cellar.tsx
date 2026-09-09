@@ -613,7 +613,7 @@ const Cellar = () => {
                             <img
                               src={wine.images.overall}
                               alt=""
-                              className="h-full w-full object-cover transition-transform duration-[900ms] ease-[var(--ease-cave)] hover:scale-105"
+                              className="h-full w-full object-cover transition-transform duration-[900ms] ease-[var(--ease-cave)] hover:scale-105 rounded-md"
                             />
                           ) : (
                             <span className="flex h-full w-full items-center justify-center">
@@ -686,12 +686,12 @@ const Cellar = () => {
                             )}
                             <div className="mt-4 flex flex-wrap gap-2">
                               {wine.optimal_drinking_window && (
-                                <span className="border border-border bg-secondary px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-wine-champagne">
+                                <span className="border border-border bg-secondary px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-wine-champagne rounded-md">
                                   Window {wine.optimal_drinking_window}
                                 </span>
                               )}
                               {wine.wine_type && (
-                                <span className="border border-border bg-secondary px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-wine-champagne">
+                                <span className="border border-border bg-secondary px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-wine-champagne rounded-md">
                                   {wine.wine_type}
                                 </span>
                               )}

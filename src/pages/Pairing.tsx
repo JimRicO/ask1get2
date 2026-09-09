@@ -383,7 +383,7 @@ const Pairing = () => {
               maxLength={2}
               onBlur={(e) => saveMarket(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && saveMarket((e.target as HTMLInputElement).value)}
-              className="w-14 border border-border bg-card px-2 py-1 text-center font-mono uppercase"
+              className="w-14 border border-border bg-card px-2 py-1 text-center font-mono uppercase rounded-md"
             />
           ) : (
             <button onClick={() => setEditingMarket(true)} className="inline-flex items-center gap-1 hover:text-foreground">
@@ -402,7 +402,7 @@ const Pairing = () => {
             {/* Layer one. Renders on every search, including cave-only, because it
                 explains why the picks below were chosen. */}
             {result.profile && (
-              <div className="border border-border bg-card p-5">
+              <div className="border border-border bg-card p-5 rounded-md">
                 <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">What this dish wants</p>
                 <p className="font-serif text-[25px] leading-[1.25] text-foreground">{result.profile.headline}</p>
                 <p className="text-sm text-foreground/80 mt-1">{result.profile.detail}</p>
@@ -473,7 +473,7 @@ const Pairing = () => {
                   Grapes that do this
                 </p>
                 {result.grapes.map((g, i) => (
-                  <div key={i} className="border border-border bg-card/60 p-5">
+                  <div key={i} className="border border-border bg-card/60 p-5 rounded-md">
                     <div className="flex justify-between items-baseline gap-3">
                       <p className="text-foreground font-medium">{g.grape}</p>
                       <span className="text-[10px] text-accent whitespace-nowrap">
@@ -496,7 +496,7 @@ const Pairing = () => {
                   <button
                     key={wine.id}
                     onClick={() => navigate(`/wine/${wine.id}`)}
-                    className="w-full border border-border bg-card p-5 text-left transition-colors duration-[420ms] ease-[var(--ease-cave)] hover:bg-secondary/50"
+                    className="w-full border border-border bg-card p-5 text-left transition-colors duration-[420ms] ease-[var(--ease-cave)] hover:bg-secondary/50 rounded-md"
                   >
                     <div className="flex justify-between items-start gap-3">
                       <div>
@@ -513,9 +513,9 @@ const Pairing = () => {
                     <p className="text-sm text-foreground/90 mt-2">{why}</p>
 
                     <div className="flex flex-wrap gap-2 mt-3 text-[10px]">
-                      {serve && <span className="border border-border bg-secondary px-2 py-1 font-mono uppercase tracking-[0.07em] text-primary">Serve {serve}</span>}
-                      {!!decantMinutes && <span className="border border-border bg-secondary px-2 py-1 font-mono uppercase tracking-[0.07em] text-primary">Decant {decantMinutes} min</span>}
-                      {priceUnknown && <span className="border border-border bg-secondary px-2 py-1 font-mono uppercase tracking-[0.07em] text-muted-foreground">No price on file</span>}
+                      {serve && <span className="border border-border bg-secondary px-2 py-1 font-mono uppercase tracking-[0.07em] text-primary rounded-md">Serve {serve}</span>}
+                      {!!decantMinutes && <span className="border border-border bg-secondary px-2 py-1 font-mono uppercase tracking-[0.07em] text-primary rounded-md">Decant {decantMinutes} min</span>}
+                      {priceUnknown && <span className="border border-border bg-secondary px-2 py-1 font-mono uppercase tracking-[0.07em] text-muted-foreground rounded-md">No price on file</span>}
                     </div>
 
                     {caution && (
@@ -538,7 +538,7 @@ const Pairing = () => {
             {/* Context, not another recommendation: prose in one bordered block,
                 deliberately not a card like the picks above. */}
             {result.reference && (
-              <div className="border border-border p-5">
+              <div className="border border-border p-5 rounded-md">
                 {result.reference.heading && (
                   <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
                     {result.reference.heading}
@@ -573,7 +573,7 @@ const Pairing = () => {
               <div className="space-y-2">
                 <p className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">On your wishlist, not in the cave</p>
                 {result.wishlistPicks.map(({ wine, why }, i) => (
-                  <div key={i} className="border border-border bg-card/60 p-5">
+                  <div key={i} className="border border-border bg-card/60 p-5 rounded-md">
                     <p className="flex items-center gap-2 text-foreground font-medium">
                       <Heart className="h-3.5 w-3.5 text-accent" />
                       {String(wine.wine_name)}
@@ -602,7 +602,7 @@ const Pairing = () => {
                   const isSaved = !!savedBottles[key];
                   const isSaving = savingBottle === key;
                   return (
-                    <div key={i} className="border border-border bg-card/60 p-5">
+                    <div key={i} className="border border-border bg-card/60 p-5 rounded-md">
                       <p className="text-foreground font-medium">{b.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {[b.producer, b.origin, b.priceEstimate].filter(Boolean).join(" · ")}
@@ -650,7 +650,7 @@ const Pairing = () => {
             )}
 
             {result.gap && (
-              <div className="border border-dashed border-border bg-card/40 p-5">
+              <div className="border border-dashed border-border bg-card/40 p-5 rounded-md">
                 <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">What is missing</p>
                 <p className="text-sm text-foreground/80">{result.gap}</p>
               </div>

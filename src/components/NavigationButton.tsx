@@ -50,7 +50,7 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
       /* 52px seated square. Five tiles plus four gaps fit a 320px screen, and
          52px clears the 44px touch floor. The active tile is a raised ground
          with a gold bottom rule; nothing scales, nothing glows. */
-      className={`relative flex flex-col items-center justify-center w-[52px] h-[52px] rounded-none transition-colors duration-[320ms] ease-[var(--ease-cave)] ${
+      className={`relative flex flex-col items-center justify-center w-[52px] h-[52px] rounded-md transition-colors duration-[320ms] ease-[var(--ease-cave)] ${
         isActive ? "bg-secondary/90" : "bg-transparent hover:bg-secondary/40"
       }`}
     >
