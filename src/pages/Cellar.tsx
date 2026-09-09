@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@/lib/router-compat";
 import Layout from "@/components/Layout";
-import { Wine, Plus, Search, Filter, SlidersHorizontal, Pencil, Check, X } from "lucide-react";
+import { Wine, Plus, Search, Pencil, Check, X } from "lucide-react";
 import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrape } from "@/lib/normalizeGrape";
 import { Session } from "@supabase/supabase-js";
+import { CaveStickyHeader, Eyebrow, Plate } from "@/components/CaveChrome";
+import { revealDelay } from "@/lib/cave-motion";
+
 interface WineData {
   id: string;
   wine_name: string;
@@ -24,11 +25,105 @@ interface WineData {
   region: string | null;
   appellation: string | null;
   storage_location: string | null;
+  description?: string | null;
+  ai_tasting_notes?: string | null;
+  optimal_drinking_window?: string | null;
   storage_locations?: Array<{
     location: string;
     quantity: number;
   }>;
 }
+
+/* The window is free text ("2024-2030", "Drink 2026 to 2032"). Read the two
+   years out of it and say nothing at all when it cannot be read: a confident
+   "Ready" over an unparsed string is worse than no marker. */
+function drinkStatus(
+  window: string | null | undefined,
+  archived: boolean,
+): "ready" | "hold" | "archived" | null {
+  if (archived) return "archived";
+  if (!window) return null;
+  const years = window.match(/\d{4}/g);
+  if (!years || years.length === 0) return null;
+  const now = new Date().getFullYear();
+  const from = Number(years[0]);
+  const to = years.length > 1 ? Number(years[1]) : from;
+  if (now < from) return "hold";
+  if (now <= to) return "ready";
+  return null;
+}
+
+const grapeNames = (raw: unknown): string[] =>
+  Array.isArray(raw)
+    ? raw
+        .map((g: any) => (typeof g === "string" ? g : g?.name))
+        .filter((n: unknown): n is string => typeof n === "string" && !!n.trim())
+    : [];
+
+/** A filter group in the rail: mono header showing its value, ruled options. */
+const FilterGroup = ({
+  label,
+  value,
+  options,
+  onPick,
+  open,
+  onToggle,
+}: {
+  label: string;
+  value: string;
+  options: Array<{ value: string; label: string; count: number }>;
+  onPick: (v: string) => void;
+  open: boolean;
+  onToggle: () => void;
+}) => (
+  <div className="border-t border-muted">
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-baseline justify-between gap-3 py-3 text-left"
+    >
+      <span className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
+        {label}
+      </span>
+      <span className="font-mono text-[10px] tracking-[0.05em] text-wine-champagne">
+        {value === "all" ? "All" : value}
+      </span>
+    </button>
+    <div className="cave-expand" data-open={open}>
+      <div>
+        <div className="pb-3">
+          {[{ value: "all", label: "All", count: options.reduce((n, o) => n + o.count, 0) }, ...options].map(
+            (o) => {
+              const selected = value === o.value;
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => onPick(o.value)}
+                  className={`flex w-full items-baseline justify-between gap-3 border-t border-muted py-2 text-left transition-[color,padding] duration-[320ms] ease-[var(--ease-cave)] ${
+                    selected ? "pl-1.5 text-primary" : "text-wine-champagne hover:text-foreground"
+                  }`}
+                >
+                  <span className="truncate text-[13px]">{o.label}</span>
+                  <span className="font-mono text-[10px] text-muted-foreground">{o.count}</span>
+                </button>
+              );
+            },
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const SORTS = [
+  { value: "recent", label: "Recent" },
+  { value: "name", label: "Name A-Z" },
+  { value: "year-new", label: "Newest Year" },
+  { value: "year-old", label: "Oldest Year" },
+  { value: "stock", label: "Stock" },
+];
+
 const Cellar = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
@@ -42,27 +137,29 @@ const Cellar = () => {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [showArchive, setShowArchive] = useState<boolean>(false);
-  
+  const [openGroup, setOpenGroup] = useState<string | null>("type");
+  // A preview without leaving the list. Opening the bottle page stays primary.
+  const [openRow, setOpenRow] = useState<string | null>(null);
+
   // Editable subtitle states
-  const [cellarSubtitle, setCellarSubtitle] = useState<string>("To taste is to feel. To collect is to remember");
-  const [archiveSubtitle, setArchiveSubtitle] = useState<string>("Archive - All wines including out of stock");
+  const [cellarSubtitle, setCellarSubtitle] = useState<string>(
+    "To taste is to feel. To collect is to remember",
+  );
+  const [archiveSubtitle, setArchiveSubtitle] = useState<string>(
+    "Archive - All wines including out of stock",
+  );
   const [isEditingSubtitle, setIsEditingSubtitle] = useState(false);
   const [tempSubtitle, setTempSubtitle] = useState("");
+
   useEffect(() => {
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (!session) {
         navigate("/auth");
       }
     });
     const {
-      data: {
-        subscription
-      }
+      data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session) {
@@ -71,37 +168,51 @@ const Cellar = () => {
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
+
   useEffect(() => {
     if (session) {
       fetchWines();
 
       // Set up realtime subscription for wine updates
-      const channel = supabase.channel('wines-updates').on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'wines',
-        filter: `user_id=eq.${session.user.id}`
-      }, payload => {
-        // Update the wine in the list
-        setWines(currentWines => currentWines.map(wine => wine.id === payload.new.id ? {
-          ...wine,
-          ...payload.new
-        } : wine));
-        toast.success("Wine images processed!");
-      }).on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'wines',
-        filter: `user_id=eq.${session.user.id}`
-      }, payload => {
-        setWines(currentWines => [payload.new as WineData, ...currentWines]);
-      }).subscribe();
+      const channel = supabase
+        .channel("wines-updates")
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "wines",
+            filter: `user_id=eq.${session.user.id}`,
+          },
+          (payload) => {
+            setWines((currentWines) =>
+              currentWines.map((wine) =>
+                wine.id === payload.new.id ? { ...wine, ...payload.new } : wine,
+              ),
+            );
+            toast.success("Wine images processed!");
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "wines",
+            filter: `user_id=eq.${session.user.id}`,
+          },
+          (payload) => {
+            setWines((currentWines) => [payload.new as WineData, ...currentWines]);
+          },
+        )
+        .subscribe();
       return () => {
         supabase.removeChannel(channel);
       };
     }
     return undefined;
   }, [session]);
+
   const fetchWines = async () => {
     try {
       if (!session?.user?.id) {
@@ -109,24 +220,18 @@ const Cellar = () => {
         setLoading(false);
         return;
       }
-      const {
-        data,
-        error,
-        count
-      } = await supabase.from("wines").select("*", {
-        count: 'exact'
-      }).eq("user_id", session.user.id).order("created_at", {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from("wines")
+        .select("*", { count: "exact" })
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
 
-      // Transform storage_locations from Json to proper type
-      const transformedWines = (data || []).map(wine => ({
+      const transformedWines = (data || []).map((wine) => ({
         ...wine,
-        storage_locations: Array.isArray(wine.storage_locations) ? wine.storage_locations as Array<{
-          location: string;
-          quantity: number;
-        }> : []
+        storage_locations: Array.isArray(wine.storage_locations)
+          ? (wine.storage_locations as Array<{ location: string; quantity: number }>)
+          : [],
       })) as unknown as WineData[];
       setWines(transformedWines);
     } catch (error: any) {
@@ -136,300 +241,487 @@ const Cellar = () => {
       setLoading(false);
     }
   };
-  const filteredWines = wines.filter(wine => {
-    // Archive filter - use archived_at field if available, fallback to stock
-    const isArchived = wine.current_stock === 0;
-    if (!showArchive && isArchived) return false;
 
-    // Search filter - search across all wine fields
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = searchQuery === "" || wine.wine_name.toLowerCase().includes(searchLower) || wine.producer?.toLowerCase().includes(searchLower) || wine.vintage_year?.toString().includes(searchQuery) || wine.country?.toLowerCase().includes(searchLower) || wine.wine_type?.toLowerCase().includes(searchLower) || wine.region?.toLowerCase().includes(searchLower) || wine.appellation?.toLowerCase().includes(searchLower) || wine.storage_location?.toLowerCase().includes(searchLower) || wine.storage_locations && wine.storage_locations.some(loc => loc.location.toLowerCase().includes(searchLower)) || Array.isArray(wine.grape_varietals) && wine.grape_varietals.some((g: any) => {
-      const grapeName = typeof g === 'string' ? g : g?.name;
-      return grapeName?.toLowerCase().includes(searchLower);
+  const filteredWines = wines
+    .filter((wine) => {
+      const isArchived = wine.current_stock === 0;
+      if (!showArchive && isArchived) return false;
+
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        searchQuery === "" ||
+        wine.wine_name.toLowerCase().includes(searchLower) ||
+        wine.producer?.toLowerCase().includes(searchLower) ||
+        wine.vintage_year?.toString().includes(searchQuery) ||
+        wine.country?.toLowerCase().includes(searchLower) ||
+        wine.wine_type?.toLowerCase().includes(searchLower) ||
+        wine.region?.toLowerCase().includes(searchLower) ||
+        wine.appellation?.toLowerCase().includes(searchLower) ||
+        wine.storage_location?.toLowerCase().includes(searchLower) ||
+        (wine.storage_locations &&
+          wine.storage_locations.some((loc) => loc.location.toLowerCase().includes(searchLower))) ||
+        grapeNames(wine.grape_varietals).some((g) => g.toLowerCase().includes(searchLower));
+
+      const matchesType = filterType === "all" || wine.wine_type === filterType;
+      const matchesYear = filterYear === "all" || wine.vintage_year?.toString() === filterYear;
+      const matchesGrape =
+        filterGrape === "all" ||
+        grapeNames(wine.grape_varietals).some(
+          (name) => name.trim().toLowerCase() === filterGrape.trim().toLowerCase(),
+        );
+      const matchesCountry =
+        filterCountry === "all" ||
+        (wine.country ?? "").trim().toLowerCase() === filterCountry.toLowerCase();
+      const matchesLocation =
+        filterLocation === "all" ||
+        wine.storage_location === filterLocation ||
+        (wine.storage_locations &&
+          wine.storage_locations.some((loc) => loc.location === filterLocation));
+      return (
+        matchesSearch &&
+        matchesType &&
+        matchesYear &&
+        matchesGrape &&
+        matchesCountry &&
+        matchesLocation
+      );
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.wine_name.localeCompare(b.wine_name);
+        case "year-new":
+          return (b.vintage_year || 0) - (a.vintage_year || 0);
+        case "year-old":
+          return (a.vintage_year || 0) - (b.vintage_year || 0);
+        case "stock":
+          return b.current_stock - a.current_stock;
+        default:
+          return 0;
+      }
     });
 
-    // Type filter
-    const matchesType = filterType === "all" || wine.wine_type === filterType;
+  const activeWines = wines.filter((w) => w.current_stock > 0);
+  const archivedWines = wines.filter((w) => w.current_stock === 0);
 
-    // Year filter
-    const matchesYear = filterYear === "all" || wine.vintage_year?.toString() === filterYear;
+  /* Options carry a live count, so the rail says how much a filter would
+     leave behind before it is tapped. Counted over the archive-visible set,
+     which is what the list is drawn from. */
+  const inScope = wines.filter((w) => showArchive || w.current_stock > 0);
+  const countBy = (pred: (w: WineData) => boolean) => inScope.filter(pred).length;
 
-    // Grape filter
-    const matchesGrape = filterGrape === "all" || Array.isArray(wine.grape_varietals) && wine.grape_varietals.some((g: any) => {
-      const name = typeof g === 'string' ? g : g?.name;
-      return typeof name === 'string' && name.trim().toLowerCase() === filterGrape.trim().toLowerCase();
-    });
+  const uniqueTypes = Array.from(
+    new Set(wines.map((w) => w.wine_type).filter((v): v is string => Boolean(v))),
+  );
+  const uniqueYears = Array.from(
+    new Set(wines.map((w) => w.vintage_year).filter((v): v is number => v !== null && v !== undefined)),
+  ).sort((a, b) => b - a);
+  const uniqueGrapes = Array.from(
+    wines
+      .flatMap((wine) => grapeNames(wine.grape_varietals))
+      .reduce((map: Map<string, string>, raw: string) => {
+        const normalized = normalizeGrape(raw);
+        if (normalized && !map.has(normalized.toLowerCase())) map.set(normalized.toLowerCase(), normalized);
+        return map;
+      }, new Map<string, string>())
+      .values(),
+  ).sort();
+  const uniqueCountries = Array.from(
+    wines
+      .reduce((map, w) => {
+        const normalized = normalizeCountry(w.country);
+        if (normalized && !map.has(normalized.toLowerCase())) map.set(normalized.toLowerCase(), normalized);
+        return map;
+      }, new Map<string, string>())
+      .values(),
+  ).sort();
+  const uniqueLocations = Array.from(
+    new Set(
+      wines
+        .flatMap((w) => {
+          if (w.storage_locations && w.storage_locations.length > 0) {
+            return w.storage_locations.map((loc) => loc.location);
+          }
+          return w.storage_location ? [w.storage_location] : [];
+        })
+        .filter(Boolean),
+    ),
+  ).sort();
 
-    // Country filter
-    const matchesCountry = filterCountry === "all" || (wine.country ?? "").trim().toLowerCase() === filterCountry.toLowerCase();
-
-    // Location filter
-    const matchesLocation = filterLocation === "all" || wine.storage_location === filterLocation || wine.storage_locations && wine.storage_locations.some(loc => loc.location === filterLocation);
-    return matchesSearch && matchesType && matchesYear && matchesGrape && matchesCountry && matchesLocation;
-  }).sort((a, b) => {
-    switch (sortBy) {
-      case "name":
-        return a.wine_name.localeCompare(b.wine_name);
-      case "year-new":
-        return (b.vintage_year || 0) - (a.vintage_year || 0);
-      case "year-old":
-        return (a.vintage_year || 0) - (b.vintage_year || 0);
-      case "stock":
-        return b.current_stock - a.current_stock;
-      default:
-        // "recent"
-        return 0;
-      // Keep original order (by created_at DESC)
-    }
-  });
-  const activeWines = wines.filter(w => w.current_stock > 0);
-  const archivedWines = wines.filter(w => w.current_stock === 0);
-  const uniqueTypes = Array.from(new Set(wines.map(w => w.wine_type).filter((v): v is NonNullable<typeof v> => Boolean(v))));
-  const uniqueYears = Array.from(new Set(wines.map(w => w.vintage_year).filter((v): v is number => v !== null && v !== undefined))).sort((a, b) => b - a);
-
-  // Extract unique grape varietals from all wines
-  const uniqueGrapes = Array.from(wines.flatMap(wine => Array.isArray(wine.grape_varietals) ? wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name) : []).reduce((map: Map<string, string>, raw: any) => {
-    const normalized = normalizeGrape(typeof raw === 'string' ? raw : null);
-    if (normalized && !map.has(normalized.toLowerCase())) map.set(normalized.toLowerCase(), normalized);
-    return map;
-  }, new Map<string, string>()).values()).sort();
-  const uniqueCountries = Array.from(wines.reduce((map, w) => {
-    const normalized = normalizeCountry(w.country);
-    if (normalized && !map.has(normalized.toLowerCase())) map.set(normalized.toLowerCase(), normalized);
-    return map;
-  }, new Map<string, string>()).values()).sort();
-  const uniqueLocations = Array.from(new Set(wines.flatMap(w => {
-    if (w.storage_locations && w.storage_locations.length > 0) {
-      return w.storage_locations.map(loc => loc.location);
-    }
-    return w.storage_location ? [w.storage_location] : [];
-  }).filter(Boolean))).sort();
   const totalBottles = activeWines.reduce((sum, wine) => sum + wine.current_stock, 0);
-  const totalValue = activeWines.length;
-  return <Layout>
-      <div className="min-h-screen bg-[#211111]">
-        {/* Modern Header with Gradient */}
-        <div className="bg-[#211111] text-primary-foreground px-6 pt-12 pb-8 relative overflow-hidden">
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#211111] rounded-full blur-2xl"></div>
-          
-          <div className="relative">
-            <h1 className="text-4xl font-serif font-bold mb-2 tracking-tight text-white">No wine, no sex</h1>
-            
-            {isEditingSubtitle ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={tempSubtitle}
-                  onChange={(e) => setTempSubtitle(e.target.value)}
-                  className="bg-white/10 text-white/90 text-sm font-medium px-3 py-1 rounded-lg border border-white/20 focus:outline-none focus:border-white/40 flex-1"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      if (showArchive) {
-                        setArchiveSubtitle(tempSubtitle);
-                      } else {
-                        setCellarSubtitle(tempSubtitle);
-                      }
-                      setIsEditingSubtitle(false);
-                    } else if (e.key === 'Escape') {
-                      setIsEditingSubtitle(false);
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    if (showArchive) {
-                      setArchiveSubtitle(tempSubtitle);
-                    } else {
-                      setCellarSubtitle(tempSubtitle);
-                    }
-                    setIsEditingSubtitle(false);
-                  }}
-                  className="p-1 hover:bg-white/10 rounded transition-colors"
-                >
-                  <Check className="h-4 w-4 text-white" />
-                </button>
-                <button
-                  onClick={() => setIsEditingSubtitle(false)}
-                  className="p-1 hover:bg-white/10 rounded transition-colors"
-                >
-                  <X className="h-4 w-4 text-white" />
-                </button>
+
+  const subtitle = showArchive ? archiveSubtitle : cellarSubtitle;
+  const commitSubtitle = () => {
+    if (showArchive) setArchiveSubtitle(tempSubtitle);
+    else setCellarSubtitle(tempSubtitle);
+    setIsEditingSubtitle(false);
+  };
+
+  const stats = [
+    { label: "Bottles", value: totalBottles },
+    { label: "Active", value: activeWines.length },
+    { label: "Archived", value: archivedWines.length },
+  ];
+
+  return (
+    <Layout>
+      <CaveStickyHeader
+        title="No wine, no sex"
+        status={`${filteredWines.length} shown`}
+      />
+
+      <div className="mx-auto max-w-[1180px] px-7 pt-12">
+        <Eyebrow>The cellar</Eyebrow>
+        <h1 className="mt-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">
+          No wine, no sex
+        </h1>
+
+        {isEditingSubtitle ? (
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              type="text"
+              value={tempSubtitle}
+              onChange={(e) => setTempSubtitle(e.target.value)}
+              className="flex-1 border-b border-border bg-transparent py-1 text-[15px] text-foreground focus:border-primary focus:outline-none"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitSubtitle();
+                else if (e.key === "Escape") setIsEditingSubtitle(false);
+              }}
+            />
+            <button onClick={commitSubtitle} aria-label="Save" className="p-1 text-primary">
+              <Check className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setIsEditingSubtitle(false)}
+              aria-label="Cancel"
+              className="p-1 text-muted-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <button
+            className="group mt-3 flex items-center gap-2 text-left"
+            onClick={() => {
+              setTempSubtitle(subtitle);
+              setIsEditingSubtitle(true);
+            }}
+          >
+            <span className="text-[15px] text-wine-champagne">{subtitle}</span>
+            <Pencil className="h-3 w-3 text-muted-foreground opacity-[0.42] transition-opacity duration-[320ms] group-hover:opacity-100" />
+          </button>
+        )}
+
+        {/* Stats: ruled top and bottom, all three derived from the collection. */}
+        <div className="mt-9 flex flex-wrap border-y border-border py-6">
+          {stats.map((s) => (
+            <div key={s.label} className="flex-[1_1_150px]">
+              <div className="font-serif text-[36px] font-semibold leading-none text-foreground">
+                {s.value}
+              </div>
+              <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-9 flex flex-wrap items-start gap-x-10 gap-y-8 pb-8">
+          {/* Filter rail. Stacks above the list on phone with no media query. */}
+          <aside className="flex-[1_1_210px] max-w-[250px] lg:sticky lg:top-[92px]">
+            <div className="flex items-center gap-2 border-b border-border pb-2">
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search your collection…"
+                className="w-full bg-transparent py-1 text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+            </div>
+
+            <div className="mt-5">
+              <FilterGroup
+                label="Type"
+                value={filterType}
+                open={openGroup === "type"}
+                onToggle={() => setOpenGroup(openGroup === "type" ? null : "type")}
+                onPick={setFilterType}
+                options={uniqueTypes.map((t) => ({
+                  value: t,
+                  label: t,
+                  count: countBy((w) => w.wine_type === t),
+                }))}
+              />
+              <FilterGroup
+                label="Country"
+                value={filterCountry}
+                open={openGroup === "country"}
+                onToggle={() => setOpenGroup(openGroup === "country" ? null : "country")}
+                onPick={setFilterCountry}
+                options={uniqueCountries.map((c) => ({
+                  value: c,
+                  label: c,
+                  count: countBy((w) => (w.country ?? "").trim().toLowerCase() === c.toLowerCase()),
+                }))}
+              />
+              <FilterGroup
+                label="Grape"
+                value={filterGrape}
+                open={openGroup === "grape"}
+                onToggle={() => setOpenGroup(openGroup === "grape" ? null : "grape")}
+                onPick={setFilterGrape}
+                options={uniqueGrapes.map((g) => ({
+                  value: g,
+                  label: g,
+                  count: countBy((w) =>
+                    grapeNames(w.grape_varietals).some(
+                      (n) => n.trim().toLowerCase() === g.trim().toLowerCase(),
+                    ),
+                  ),
+                }))}
+              />
+              {/* Kept from the shipped screen: the spec's rail lists four groups,
+                  but dropping Year would remove a filter the app already has. */}
+              <FilterGroup
+                label="Vintage"
+                value={filterYear}
+                open={openGroup === "year"}
+                onToggle={() => setOpenGroup(openGroup === "year" ? null : "year")}
+                onPick={setFilterYear}
+                options={uniqueYears.map((y) => ({
+                  value: y.toString(),
+                  label: y.toString(),
+                  count: countBy((w) => w.vintage_year === y),
+                }))}
+              />
+              <FilterGroup
+                label="Location"
+                value={filterLocation}
+                open={openGroup === "location"}
+                onToggle={() => setOpenGroup(openGroup === "location" ? null : "location")}
+                onPick={setFilterLocation}
+                options={uniqueLocations.map((l) => ({
+                  value: l,
+                  label: l,
+                  count: countBy(
+                    (w) =>
+                      w.storage_location === l ||
+                      !!w.storage_locations?.some((loc) => loc.location === l),
+                  ),
+                }))}
+              />
+            </div>
+
+            <div className="mt-7 border-t border-border pt-4">
+              <Eyebrow className="text-[9px]">Sort</Eyebrow>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
+                {SORTS.map((s) => (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => setSortBy(s.value)}
+                    className={`font-mono text-[10px] uppercase tracking-[0.07em] transition-colors duration-[320ms] ${
+                      sortBy === s.value
+                        ? "border-b border-primary text-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowArchive(!showArchive)}
+              className={`mt-6 w-full border px-3 py-2.5 font-mono text-[10px] uppercase tracking-[0.09em] transition-colors duration-[320ms] ${
+                showArchive
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {showArchive ? "Hide archive" : `View archive (${archivedWines.length})`}
+            </button>
+          </aside>
+
+          {/* The list. */}
+          <div className="flex-[3_1_460px]">
+            {loading ? (
+              <p className="py-16 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
+                Reading the cellar…
+              </p>
+            ) : filteredWines.length === 0 ? (
+              <div className="border-t border-muted py-16">
+                {wines.length === 0 ? (
+                  <>
+                    <p className="font-serif text-[26px] text-foreground">Nothing in here yet.</p>
+                    <p className="mt-2 text-[15px] text-wine-champagne">
+                      Start building your collection by adding your first bottle
+                    </p>
+                    <Button onClick={() => navigate("/add")} className="mt-6">
+                      <Plus className="h-4 w-4" />
+                      Add your first wine
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-serif text-[26px] text-foreground">Nothing matches that.</p>
+                    <p className="mt-2 text-[15px] text-wine-champagne">
+                      Clear the search, or widen a filter.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
-              <div 
-                className="flex items-center gap-2 group cursor-pointer"
-                onClick={() => {
-                  setTempSubtitle(showArchive ? archiveSubtitle : cellarSubtitle);
-                  setIsEditingSubtitle(true);
-                }}
-              >
-                <p className="text-white/90 text-sm font-medium">
-                  {showArchive ? archiveSubtitle : cellarSubtitle}
-                </p>
-                <Pencil className="h-3 w-3 text-white/60 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div>
+                {filteredWines.map((wine, index) => {
+                  const displayQuantity =
+                    filterLocation !== "all" && wine.storage_locations
+                      ? wine.storage_locations.find((loc) => loc.location === filterLocation)
+                          ?.quantity || 0
+                      : wine.current_stock;
+                  const status = drinkStatus(
+                    wine.optimal_drinking_window,
+                    wine.current_stock === 0,
+                  );
+                  const isOpen = openRow === wine.id;
+                  const grapes = grapeNames(wine.grape_varietals);
+                  const note = wine.ai_tasting_notes || wine.description;
+
+                  return (
+                    <div
+                      key={wine.id}
+                      className={`cave-reveal border-t border-muted transition-colors duration-[420ms] ease-[var(--ease-cave)] ${
+                        isOpen ? "bg-secondary/50" : "hover:bg-secondary/50"
+                      }`}
+                      style={{ animationDelay: revealDelay(index) }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setOpenRow(isOpen ? null : wine.id)}
+                        aria-expanded={isOpen}
+                        className="flex w-full items-start gap-5 px-2 py-5 text-left"
+                      >
+                        <Plate
+                          className={`w-[clamp(76px,15vw,108px)] transition-colors duration-[420ms] ${
+                            isOpen ? "border-wine-champagne" : ""
+                          }`}
+                        >
+                          {wine.images?.overall ? (
+                            <img
+                              src={wine.images.overall}
+                              alt=""
+                              className="h-full w-full object-cover transition-transform duration-[900ms] ease-[var(--ease-cave)] hover:scale-105"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center">
+                              <Wine className="h-7 w-7 text-muted-foreground" strokeWidth={1.4} />
+                            </span>
+                          )}
+                        </Plate>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <h3
+                              className={`font-serif text-[21px] leading-tight tracking-[-0.005em] transition-colors duration-[420ms] ${
+                                isOpen ? "text-primary" : "text-foreground"
+                              }`}
+                            >
+                              {wine.wine_name}
+                            </h3>
+                            {status === "ready" && (
+                              <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.09em] text-primary">
+                                <span className="cave-ember inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+                                Ready
+                              </span>
+                            )}
+                            {status === "hold" && (
+                              <span className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                                Hold
+                              </span>
+                            )}
+                            {status === "archived" && (
+                              <span className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                                Archived
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="mt-1.5 font-mono text-[11px] tracking-[0.05em] text-wine-champagne">
+                            {[
+                              wine.producer,
+                              wine.vintage_year,
+                              [wine.region, wine.country].filter(Boolean).join(", "),
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                          {(grapes.length > 0 || wine.storage_location) && (
+                            <p className="mt-1 font-mono text-[10px] tracking-[0.05em] text-muted-foreground">
+                              {[grapes.join(", "), wine.storage_location].filter(Boolean).join(" · ")}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="shrink-0 text-right">
+                          <div className="font-serif text-[26px] leading-none text-foreground">
+                            {displayQuantity}
+                          </div>
+                          <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">
+                            in stock
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Opens in place. Navigation stays the primary path. */}
+                      <div className="cave-expand" data-open={isOpen}>
+                        <div>
+                          <div className="px-2 pb-6 pl-[calc(clamp(76px,15vw,108px)+1.25rem+0.5rem)]">
+                            {note && (
+                              <p className="max-w-[62ch] text-[15px] leading-[1.6] text-wine-champagne">
+                                {note}
+                              </p>
+                            )}
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {wine.optimal_drinking_window && (
+                                <span className="border border-border bg-secondary px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-wine-champagne">
+                                  Window {wine.optimal_drinking_window}
+                                </span>
+                              )}
+                              {wine.wine_type && (
+                                <span className="border border-border bg-secondary px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-wine-champagne">
+                                  {wine.wine_type}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-5 flex flex-wrap gap-3">
+                              <Button onClick={() => navigate(`/wine/${wine.id}`)}>
+                                Open the bottle page
+                              </Button>
+                              <Button variant="outline" onClick={() => navigate("/pair")}>
+                                Pair with dinner
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="border-t border-muted" />
               </div>
             )}
           </div>
         </div>
 
-        {/* Modern Stats Cards */}
-        <div className="grid grid-cols-3 gap-3 px-6 -mt-6 relative z-10">
-          <div className="bg-card rounded-2xl p-5 transition-all duration-300 border border-border/50">
-            <div className="text-3xl font-bold text-white mb-1">{totalBottles}</div>
-            <div className="text-xs text-muted-foreground font-medium">Bottles</div>
-          </div>
-          <div className="bg-card rounded-2xl p-5 transition-all duration-300 border border-border/50">
-            <div className="text-3xl font-bold text-white mb-1">{totalValue}</div>
-            <div className="text-xs text-muted-foreground font-medium">Active</div>
-          </div>
-          <div className="bg-card rounded-2xl p-5 transition-all duration-300 border border-border/50">
-            <div className="text-3xl font-bold text-white mb-1">{archivedWines.length}</div>
-            <div className="text-xs text-muted-foreground font-medium">Archived</div>
-          </div>
-        </div>
-
-
-        {/* Modern Search & Filters */}
-        <div className="px-6 mt-8 space-y-3">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input placeholder="Search your collection..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-12 h-12 rounded-xl border-border/50 bg-card shadow-sm transition-all" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">All Types</SelectItem>
-                {uniqueTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterYear} onValueChange={setFilterYear}>
-              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
-                <SelectValue placeholder="Year" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">All Years</SelectItem>
-                {uniqueYears.map(year => <SelectItem key={year} value={year.toString()}>{year}</SelectItem>)}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterGrape} onValueChange={setFilterGrape}>
-              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
-                <SelectValue placeholder="Grape" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">All Grapes</SelectItem>
-                {uniqueGrapes.map(grape => <SelectItem key={grape} value={grape}>{grape}</SelectItem>)}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterCountry} onValueChange={setFilterCountry}>
-              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
-                <SelectValue placeholder="Country" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">All Countries</SelectItem>
-                {uniqueCountries.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterLocation} onValueChange={setFilterLocation}>
-              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
-                <SelectValue placeholder="Location" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="all">All Locations</SelectItem>
-                {uniqueLocations.map(location => <SelectItem key={location} value={location}>{location}</SelectItem>)}
-              </SelectContent>
-            </Select>
-
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="text-sm h-11 rounded-xl border-border/50 bg-card">
-                <SelectValue placeholder="Sort" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="recent">Recent</SelectItem>
-                <SelectItem value="name">Name A-Z</SelectItem>
-                <SelectItem value="year-new">Newest Year</SelectItem>
-                <SelectItem value="year-old">Oldest Year</SelectItem>
-                <SelectItem value="stock">Stock</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Modern Wine Grid */}
-        <div className="px-6 mt-6 pb-4">
-          {loading ? <div className="text-center py-16">
-              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-              <p className="text-muted-foreground mt-4 text-sm">Loading your collection...</p>
-            </div> : filteredWines.length === 0 ? <div className="text-center py-16">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
-                <Wine className="h-10 w-10 text-white" />
-              </div>
-              <h3 className="text-xl font-serif font-semibold mb-2 text-white">No wines yet</h3>
-              <p className="text-white/70 mb-8 max-w-sm mx-auto">
-                Start building your collection by adding your first bottle
-              </p>
-              <Button onClick={() => navigate("/add")} className="bg-gradient-primary hover:opacity-90 transition-all h-12 px-8 rounded-xl font-semibold">
-                <Plus className="h-5 w-5 mr-2" />
-                Add Your First Wine
-              </Button>
-            </div> : <div className="space-y-3">
-              {filteredWines.map((wine, index) => {
-            // Calculate quantity for filtered location
-            const displayQuantity = filterLocation !== "all" && wine.storage_locations ? wine.storage_locations.find(loc => loc.location === filterLocation)?.quantity || 0 : wine.current_stock;
-            return <div key={wine.id} onClick={() => navigate(`/wine/${wine.id}`)} className="group bg-card rounded-2xl p-5 flex items-center justify-between cursor-pointer transition-all duration-300 border border-border/50 hover:border-primary/30 animate-fade-in" style={{
-              animationDelay: `${index * 0.05}s`
-            }}>
-                    <div className="flex items-center gap-4 flex-1">
-                      {/* Modern wine bottle image */}
-                      <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl w-14 h-[76px] flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50 shadow-sm transition-all">
-                        {wine.images?.overall ? <img src={wine.images.overall} alt={wine.wine_name} className="w-full h-full object-contain" /> : <Wine className="h-8 w-8 text-white/60" />}
-                      </div>
-                      
-                      {/* Wine info */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-white text-base line-clamp-1 group-hover:text-white/90 transition-colors">
-                          {wine.wine_name}
-                        </h3>
-                        <p className="text-sm text-white/70 font-medium mt-0.5">
-                          {wine.vintage_year || "N/A"}
-                        </p>
-                        {wine.current_stock === 0 && <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-muted text-white/60 italic">Archived</span>}
-                      </div>
-                    </div>
-                    
-                    {/* Stock count with modern design */}
-                    <div className="text-right flex-shrink-0 ml-4">
-                      <div className="text-3xl font-bold text-white">
-                        {displayQuantity}
-                      </div>
-                    </div>
-                  </div>;
-          })}
-            </div>}
-        </div>
-
-        {/* Modern Archive Toggle */}
-        <div className="px-6 pb-8 mt-6">
-          <Button onClick={() => setShowArchive(!showArchive)} variant={showArchive ? "default" : "outline"} className={`w-full h-12 rounded-xl font-semibold transition-all ${showArchive ? "bg-gradient-primary hover:opacity-90" : "hover:bg-muted/80 hover:border-primary/50"}`}>
-            {showArchive ? "Hide Archive" : `View Archive (${archivedWines.length})`}
-          </Button>
-          
-          {/* Wine & Virtue Logo */}
-          <div className="flex justify-center mt-8">
-            <img src={wineVirtueLogo} alt="Wine & Virtue" className="w-64 h-auto opacity-90" />
-          </div>
+        <div className="flex justify-center pb-10">
+          <img src={wineVirtueLogo} alt="Wine & Virtue" className="h-auto w-[240px] opacity-90" />
         </div>
       </div>
-    </Layout>;
+    </Layout>
+  );
 };
+
 export default Cellar;
