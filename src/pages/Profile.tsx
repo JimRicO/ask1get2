@@ -61,14 +61,14 @@ But on what? Wine, poetry, or virtue, as you wish."
   return (
     <Layout>
       <div className="min-h-screen bg-[#211111]">
-        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
+        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6">
           <h1 className="text-3xl font-serif font-bold mb-2">Profile</h1>
           <p className="text-primary-foreground/80">Manage your account</p>
         </div>
 
         <div className="px-4 mt-6 space-y-4">
           {/* Manifesto Section */}
-          <div className="bg-card rounded-2xl p-6 shadow-elegant border border-border/50">
+          <div className="bg-card rounded-2xl p-6 border border-border/50">
             <h2 className="text-xl font-serif font-semibold text-white mb-4">No Wine No Sex — The Manifesto</h2>
             <p className="text-white/70 text-sm leading-relaxed italic whitespace-pre-line">
               {manifesto}
@@ -81,7 +81,7 @@ But on what? Wine, poetry, or virtue, as you wish."
           </div>
 
           {/* User Profile Section */}
-          <div className="bg-card rounded-2xl p-6 shadow-elegant">
+          <div className="bg-card rounded-2xl p-6">
             <div className="flex items-center gap-4 mb-6">
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="h-8 w-8 text-primary" />

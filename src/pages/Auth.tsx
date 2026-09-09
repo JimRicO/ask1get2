@@ -101,7 +101,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#211111] p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4 shadow-wine">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4">
             <Wine className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-4xl font-serif font-bold text-primary mb-2">
@@ -112,7 +112,7 @@ const Auth = () => {
           </p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-elegant p-6 space-y-6">
+        <div className="bg-card rounded-2xl p-6 space-y-6">
           {isForgotPassword ? (
             <form onSubmit={handlePasswordReset} className="space-y-4">
               <div className="space-y-2">

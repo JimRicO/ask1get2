@@ -358,7 +358,7 @@ const Wishlist = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-[#211111]">
-        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
+        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6">
           <h1 className="text-3xl font-serif font-bold mb-2">Wishlist</h1>
           <p className="text-primary-foreground/80">Wines you want to try, to remember, to buy</p>
         </div>

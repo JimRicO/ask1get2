@@ -417,29 +417,29 @@ const AddWine = () => {
             <AlertDialogAction onClick={() => {
             setShowDuplicateDialog(false);
             submitWine(false);
-          }} className="w-full hover:scale-105 active:scale-95 transition-all">
+          }} className="w-full transition-all">
               Create New Entry
             </AlertDialogAction>
             <AlertDialogAction onClick={() => {
             setShowDuplicateDialog(false);
             submitWine(true);
-          }} className="w-full hover:scale-105 active:scale-95 transition-all">
+          }} className="w-full transition-all">
               Add Photos to Existing
             </AlertDialogAction>
-            <AlertDialogCancel className="w-full mt-0 hover:scale-105 active:scale-95 transition-all">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="w-full mt-0 transition-all">Cancel</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <div className="min-h-screen bg-[#211111] pb-8">
-        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6 shadow-wine">
+        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6">
           <h1 className="text-3xl font-serif font-bold mb-2">Add your bottle</h1>
           <p className="text-white/90">Snap a photo to fill details automatically.</p>
         </div>
 
         <div className="px-4 mt-6">
           {/* Image Upload */}
-          <div className="bg-card rounded-2xl p-6 shadow-elegant mb-6 border border-border/50">
+          <div className="bg-card rounded-2xl p-6 mb-6 border border-border/50">
             <Label className="text-base font-serif font-semibold mb-4 block text-white">Take a picture of your wine labels </Label>
             
             <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
@@ -461,7 +461,7 @@ const AddWine = () => {
                       <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-medium capitalize">
                         {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
                       </div>
-                    </div> : <label className="relative flex flex-col items-center justify-center h-32 w-32 cursor-pointer overflow-hidden rounded-xl shadow-wine hover:shadow-glow transition-all duration-300 hover:scale-110 active:scale-95">
+                    </div> : <label className="relative flex flex-col items-center justify-center h-32 w-32 cursor-pointer overflow-hidden rounded-xl transition-all duration-300">
                       <img src={type === 'neck' ? neckButtonImg : type === 'front' ? frontLabelButtonImg : type === 'back' ? backLabelButtonImg : type === 'overall' ? fullBottleButtonImg : uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
                       <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4 drop-shadow-md">
                         <Camera className="h-8 w-8 text-white/70 mb-2" />
@@ -474,7 +474,7 @@ const AddWine = () => {
                 </div>)}
             </div>
 
-            {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-gradient-primary hover:opacity-90 text-white flex justify-center items-center shadow-wine hover:scale-110 active:scale-95 transition-all">
+            {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-gradient-primary hover:opacity-90 text-white flex justify-center items-center transition-all">
                 {aiProcessing ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   </> : "Magic Scan"}
@@ -488,7 +488,7 @@ const AddWine = () => {
 
           {/* Form - Only show after Magic Scan is completed */}
           {magicScanCompleted && <form onSubmit={handleSubmit} className="space-y-4">
-            <div ref={formRef} className="bg-card rounded-2xl p-6 shadow-elegant space-y-4 border border-border/50">
+            <div ref={formRef} className="bg-card rounded-2xl p-6 space-y-4 border border-border/50">
               <div className="mb-6 text-center">
                 <h2 className="text-xl font-semibold mb-1 text-white">Your wine details are ready.</h2>
                 <p className="text-sm text-white/60">Verify and press "Add to Cellar" below</p>
@@ -652,7 +652,7 @@ const AddWine = () => {
                   <Button type="button" variant="outline" size="sm" onClick={() => setStorageLocations([...storageLocations, {
                   location: "",
                   quantity: "1"
-                }])} className="text-xs hover:scale-110 active:scale-95 transition-all">
+                }])} className="text-xs transition-all">
                     + Add Location
                   </Button>
                 </div>
@@ -713,7 +713,7 @@ const AddWine = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 h-12 hover:scale-105 active:scale-95 transition-all" disabled={loading}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 h-12 transition-all" disabled={loading}>
               {loading ? <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Adding Wine...

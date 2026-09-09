@@ -696,7 +696,7 @@ const Restaurant = () => {
         {table && (
           <div className="mt-8 space-y-6">
             {table.tableRead && (
-              <div className="bg-card rounded-xl p-4 border border-border/50 shadow-elegant">
+              <div className="bg-card rounded-xl p-4 border border-border/50">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
                   This table
                 </p>
@@ -707,7 +707,7 @@ const Restaurant = () => {
             {table.single && (
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">One bottle</p>
-                <div className="bg-card rounded-xl p-4 border border-border/50 shadow-elegant">
+                <div className="bg-card rounded-xl p-4 border border-border/50">
                   <BottleLine entry={table.single.entry} />
                   <p className="text-sm text-foreground/90 mt-2">{table.single.why}</p>
                   {table.single.compromise && (

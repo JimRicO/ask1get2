@@ -47,7 +47,7 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
       aria-label={config.label}
       // 52px, down from 60px: five buttons plus four gaps now fits a 320px screen
       // with room to spare. At 60px the row overflowed on an SE-class phone.
-      className="flex flex-col items-center justify-center gap-1.5 w-[52px] h-[52px] rounded-2xl transition-all duration-300 hover:scale-110 active:scale-95 bg-card shadow-elegant hover:shadow-wine border border-border/50"
+      className="flex flex-col items-center justify-center gap-1.5 w-[52px] h-[52px] rounded-2xl transition-all duration-300 bg-card border border-border/50"
     >
       {isCenter ? (
         <div className="relative text-muted-foreground">

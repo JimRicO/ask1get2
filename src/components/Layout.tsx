@@ -23,7 +23,7 @@ const Layout = ({ children }: LayoutProps) => {
       <main className="flex-1 pb-20">{children}</main>
       
       {/* Modern Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border/50 safe-area-inset-bottom shadow-elegant">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border/50 safe-area-inset-bottom">
         <div className="max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center justify-around gap-1.5">
             {navItems.map(({ preset, path }) => {

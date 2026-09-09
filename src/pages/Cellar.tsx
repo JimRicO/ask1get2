@@ -209,7 +209,7 @@ const Cellar = () => {
   return <Layout>
       <div className="min-h-screen bg-[#211111]">
         {/* Modern Header with Gradient */}
-        <div className="bg-[#211111] text-primary-foreground px-6 pt-12 pb-8 shadow-wine relative overflow-hidden">
+        <div className="bg-[#211111] text-primary-foreground px-6 pt-12 pb-8 relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#211111] rounded-full blur-2xl"></div>
@@ -277,15 +277,15 @@ const Cellar = () => {
 
         {/* Modern Stats Cards */}
         <div className="grid grid-cols-3 gap-3 px-6 -mt-6 relative z-10">
-          <div className="bg-card rounded-2xl p-5 shadow-elegant hover:shadow-wine transition-all duration-300 border border-border/50">
+          <div className="bg-card rounded-2xl p-5 transition-all duration-300 border border-border/50">
             <div className="text-3xl font-bold text-white mb-1">{totalBottles}</div>
             <div className="text-xs text-muted-foreground font-medium">Bottles</div>
           </div>
-          <div className="bg-card rounded-2xl p-5 shadow-elegant hover:shadow-wine transition-all duration-300 border border-border/50">
+          <div className="bg-card rounded-2xl p-5 transition-all duration-300 border border-border/50">
             <div className="text-3xl font-bold text-white mb-1">{totalValue}</div>
             <div className="text-xs text-muted-foreground font-medium">Active</div>
           </div>
-          <div className="bg-card rounded-2xl p-5 shadow-elegant hover:shadow-wine transition-all duration-300 border border-border/50">
+          <div className="bg-card rounded-2xl p-5 transition-all duration-300 border border-border/50">
             <div className="text-3xl font-bold text-white mb-1">{archivedWines.length}</div>
             <div className="text-xs text-muted-foreground font-medium">Archived</div>
           </div>
@@ -296,7 +296,7 @@ const Cellar = () => {
         <div className="px-6 mt-8 space-y-3">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input placeholder="Search your collection..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-12 h-12 rounded-xl border-border/50 bg-card shadow-sm focus:shadow-md transition-all" />
+            <Input placeholder="Search your collection..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-12 h-12 rounded-xl border-border/50 bg-card shadow-sm transition-all" />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -378,7 +378,7 @@ const Cellar = () => {
               <p className="text-white/70 mb-8 max-w-sm mx-auto">
                 Start building your collection by adding your first bottle
               </p>
-              <Button onClick={() => navigate("/add")} className="bg-gradient-primary hover:opacity-90 transition-all shadow-wine h-12 px-8 rounded-xl font-semibold hover:scale-105 active:scale-95">
+              <Button onClick={() => navigate("/add")} className="bg-gradient-primary hover:opacity-90 transition-all h-12 px-8 rounded-xl font-semibold">
                 <Plus className="h-5 w-5 mr-2" />
                 Add Your First Wine
               </Button>
@@ -386,12 +386,12 @@ const Cellar = () => {
               {filteredWines.map((wine, index) => {
             // Calculate quantity for filtered location
             const displayQuantity = filterLocation !== "all" && wine.storage_locations ? wine.storage_locations.find(loc => loc.location === filterLocation)?.quantity || 0 : wine.current_stock;
-            return <div key={wine.id} onClick={() => navigate(`/wine/${wine.id}`)} className="group bg-card rounded-2xl p-5 flex items-center justify-between cursor-pointer hover:shadow-wine transition-all duration-300 border border-border/50 hover:border-primary/30 animate-fade-in" style={{
+            return <div key={wine.id} onClick={() => navigate(`/wine/${wine.id}`)} className="group bg-card rounded-2xl p-5 flex items-center justify-between cursor-pointer transition-all duration-300 border border-border/50 hover:border-primary/30 animate-fade-in" style={{
               animationDelay: `${index * 0.05}s`
             }}>
                     <div className="flex items-center gap-4 flex-1">
                       {/* Modern wine bottle image */}
-                      <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl w-14 h-[76px] flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50 shadow-sm group-hover:shadow-md transition-all">
+                      <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl w-14 h-[76px] flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/50 shadow-sm transition-all">
                         {wine.images?.overall ? <img src={wine.images.overall} alt={wine.wine_name} className="w-full h-full object-contain" /> : <Wine className="h-8 w-8 text-white/60" />}
                       </div>
                       
@@ -420,7 +420,7 @@ const Cellar = () => {
 
         {/* Modern Archive Toggle */}
         <div className="px-6 pb-8 mt-6">
-          <Button onClick={() => setShowArchive(!showArchive)} variant={showArchive ? "default" : "outline"} className={`w-full h-12 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 ${showArchive ? "bg-gradient-primary hover:opacity-90 shadow-wine" : "hover:bg-muted/80 hover:border-primary/50"}`}>
+          <Button onClick={() => setShowArchive(!showArchive)} variant={showArchive ? "default" : "outline"} className={`w-full h-12 rounded-xl font-semibold transition-all ${showArchive ? "bg-gradient-primary hover:opacity-90" : "hover:bg-muted/80 hover:border-primary/50"}`}>
             {showArchive ? "Hide Archive" : `View Archive (${archivedWines.length})`}
           </Button>
           

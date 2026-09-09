@@ -60,7 +60,7 @@ const UploadLogo = () => {
 
   return (
     <div className="min-h-screen bg-gradient-elegant flex items-center justify-center p-6">
-      <div className="bg-card rounded-2xl p-8 max-w-md w-full shadow-elegant border border-border/50">
+      <div className="bg-card rounded-2xl p-8 max-w-md w-full border border-border/50">
         <div className="text-center">
           {uploading && (
             <>

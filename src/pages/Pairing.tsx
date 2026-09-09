@@ -51,7 +51,7 @@ const Chip = ({ active, onClick, children }: { active: boolean; onClick: () => v
     onClick={onClick}
     className={`px-3 py-1.5 rounded-full text-xs transition-all border ${
       active
-        ? "bg-primary text-primary-foreground border-primary shadow-elegant"
+        ? "bg-primary text-primary-foreground border-primary"
         : "bg-card/60 text-muted-foreground border-border/50 hover:border-border"
     }`}
   >
@@ -402,7 +402,7 @@ const Pairing = () => {
             {/* Layer one. Renders on every search, including cave-only, because it
                 explains why the picks below were chosen. */}
             {result.profile && (
-              <div className="bg-card rounded-xl p-4 border border-border/50 shadow-elegant">
+              <div className="bg-card rounded-xl p-4 border border-border/50">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">What this dish wants</p>
                 <p className="text-foreground font-medium">{result.profile.headline}</p>
                 <p className="text-sm text-foreground/80 mt-1">{result.profile.detail}</p>
@@ -496,7 +496,7 @@ const Pairing = () => {
                   <button
                     key={wine.id}
                     onClick={() => navigate(`/wine/${wine.id}`)}
-                    className="w-full text-left bg-card rounded-xl p-4 border border-border/50 shadow-elegant hover:shadow-wine transition-all"
+                    className="w-full text-left bg-card rounded-xl p-4 border border-border/50 transition-all"
                   >
                     <div className="flex justify-between items-start gap-3">
                       <div>
