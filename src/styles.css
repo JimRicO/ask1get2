@@ -51,6 +51,7 @@
   --color-wine-rose-gold: var(--wine-rose-gold);
   --color-wine-champagne: var(--wine-champagne);
   --color-wine-deep: var(--wine-deep);
+  --color-parchment: var(--parchment);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -142,6 +143,14 @@
   --shadow-wine-value: none;
   --shadow-elegant-value: none;
   --shadow-glow-value: none;
+
+  /* ---- Parchment. The wine-label plate the wishlist thumb prints on,
+       carried over from the shipped thumbnail's ground. Ink values are for
+       printing ON parchment, so they are dark by design. ---- */
+  --parchment: hsl(37 33% 75%);        /* #D4C4A8 */
+  --label-ink: hsl(35 26% 11%);        /* #241C14 */
+  --label-ink-dim: hsl(41 37% 21%);    /* #4A3A22 */
+  --label-rule: hsl(38 25% 54%);       /* #A8906A */
 
   /* ---- Motion: one easing for everything. ---- */
   --ease-cave: cubic-bezier(0.22, 1, 0.36, 1);

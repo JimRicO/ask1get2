@@ -357,9 +357,9 @@ const Wishlist = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#211111]">
-        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6">
-          <h1 className="text-3xl font-serif font-bold mb-2">Wishlist</h1>
+      <div className="min-h-screen bg-background">
+        <div className="bg-background text-primary-foreground px-4 pt-8 pb-6">
+          <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Wishlist</h1>
           <p className="text-primary-foreground/80">Wines you want to try, to remember, to buy</p>
         </div>
 
@@ -383,7 +383,7 @@ const Wishlist = () => {
           ) : wishlistItems.length === 0 ? (
             <div className="text-center py-12">
               <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-white">No wines yet</h3>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">No wines yet</h3>
               <p className="text-muted-foreground">
                 Take a photo of a wine label to add it to your wishlist
               </p>
@@ -393,39 +393,54 @@ const Wishlist = () => {
               {wishlistItems.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-[#2a2420] rounded-2xl p-4 flex items-start gap-4 cursor-pointer hover:bg-[#3a3430] transition-colors"
+                  className="flex cursor-pointer items-start gap-5 border-t border-muted px-2 py-5 transition-colors duration-[420ms] ease-[var(--ease-cave)] hover:bg-secondary/50"
                   onClick={() => {
                     setSelectedItem(item);
                     setDetailDialogOpen(true);
                   }}
                 >
-                  {/* Wine image */}
-                  <div className="bg-[#d4c4a8] rounded-xl w-20 h-20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {/* The thumbnail's job is a glimpse of the bottle, so where
+                      there is no photo the label is printed from the row's own
+                      data on the parchment ground rather than showing a Heart.
+                      The Heart in the nav bar stays; that is the tab glyph. */}
+                  <div className="aspect-3/4 w-[clamp(76px,15vw,108px)] shrink-0 overflow-hidden border border-border bg-parchment">
                     {item.images?.overall ? (
                       <img
                         src={item.images.overall}
-
-                        alt={item.wine_name}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="h-8 w-8 text-[#1a1410]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>';
-                        }}
+                        alt=""
+                        className="h-full w-full object-cover"
                       />
                     ) : (
-                      <Heart className="h-8 w-8 text-[#1a1410]" />
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-2 text-center">
+                        {(item.region || item.country) && (
+                          <span className="font-mono text-[8px] uppercase tracking-[0.08em] text-[color:var(--label-ink-dim)]">
+                            {[item.region, item.country].filter(Boolean).join(" · ")}
+                          </span>
+                        )}
+                        {item.producer && (
+                          <span className="font-serif font-semibold leading-tight text-[color:var(--label-ink)] text-[clamp(9px,1.8vw,12px)]">
+                            {item.producer}
+                          </span>
+                        )}
+                        <span className="my-0.5 h-px w-[56%] bg-[color:var(--label-rule)]" />
+                        {item.vintage_year && (
+                          <span className="font-mono text-[9px] tracking-[0.06em] text-[color:var(--label-ink-dim)]">
+                            {item.vintage_year}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
 
                   {/* Wine details */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white text-lg mb-1">
+                    <h3 className="mb-1 font-serif text-[21px] leading-tight tracking-[-0.005em] text-foreground">
                       {item.wine_name}
                     </h3>
                     {item.producer && (
-                      <p className="text-sm text-white/80 mb-1">{item.producer}</p>
+                      <p className="text-sm text-foreground/80 mb-1">{item.producer}</p>
                     )}
-                    <div className="flex flex-wrap items-center gap-2 text-sm text-white/70 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-wine-champagne mb-2">
                       {item.vintage_year && <span>{item.vintage_year}</span>}
                       {item.wine_type && (
                         <span className="capitalize">{item.wine_type}</span>
@@ -434,12 +449,12 @@ const Wishlist = () => {
                       {item.country && <span>{item.country}</span>}
                     </div>
                     {item.grape_varietals && (
-                      <p className="text-sm text-white/60 mb-2">
+                      <p className="text-sm text-muted-foreground mb-2">
                         {item.grape_varietals}
                       </p>
                     )}
                     {item.description && (
-                      <p className="text-sm text-white/60 line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         {item.description}
                       </p>
                     )}
@@ -450,7 +465,7 @@ const Wishlist = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-white/60 hover:text-red-400 hover:bg-white/10"
+                      className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-secondary"
                       onClick={(e) => {
                         e.stopPropagation();
                         confirmDelete(item.id, item.wine_name);
@@ -468,15 +483,15 @@ const Wishlist = () => {
 
       {/* Add Wine Dialog */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#211111] border-[#3a3430]">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="text-white">Add Wine to Wishlist</DialogTitle>
+            <DialogTitle className="text-foreground">Add Wine to Wishlist</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* Image Upload Section */}
             <div className="space-y-4">
-              <Label className="text-white">Upload Wine Photos</Label>
+              <Label className="text-foreground">Upload Wine Photos</Label>
               <div className="grid grid-cols-2 gap-4">
                 {/* Front Label */}
                 <div className="space-y-2">
@@ -491,13 +506,13 @@ const Wishlist = () => {
                     htmlFor="upload-front"
                     className="block cursor-pointer"
                   >
-                    <div className="relative aspect-[3/4] bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
                       {imagePreviews.front ? (
                          <img src={imagePreviews.front} alt="Front" className="w-full h-full object-contain" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={frontLabelButtonImg} alt="Front Label" className="w-16 h-16 mb-2" />
-                          <span className="text-sm text-gray-400">Front Label</span>
+                          <span className="text-sm text-muted-foreground">Front Label</span>
                         </div>
                       )}
                     </div>
@@ -526,13 +541,13 @@ const Wishlist = () => {
                     id="upload-back"
                   />
                   <label htmlFor="upload-back" className="block cursor-pointer">
-                    <div className="relative aspect-[3/4] bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
                       {imagePreviews.back ? (
                          <img src={imagePreviews.back} alt="Back" className="w-full h-full object-contain" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={backLabelButtonImg} alt="Back Label" className="w-16 h-16 mb-2" />
-                          <span className="text-sm text-gray-400">Back Label</span>
+                          <span className="text-sm text-muted-foreground">Back Label</span>
                         </div>
                       )}
                     </div>
@@ -561,13 +576,13 @@ const Wishlist = () => {
                     id="upload-neck"
                   />
                   <label htmlFor="upload-neck" className="block cursor-pointer">
-                    <div className="relative aspect-[3/4] bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
                       {imagePreviews.neck ? (
                          <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-contain" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={neckButtonImg} alt="Neck" className="w-16 h-16 mb-2" />
-                          <span className="text-sm text-gray-400">Neck</span>
+                          <span className="text-sm text-muted-foreground">Neck</span>
                         </div>
                       )}
                     </div>
@@ -596,13 +611,13 @@ const Wishlist = () => {
                     id="upload-overall"
                   />
                   <label htmlFor="upload-overall" className="block cursor-pointer">
-                    <div className="relative aspect-[3/4] bg-[#2a2420] rounded-lg overflow-hidden border-2 border-dashed border-gray-700 hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
                       {imagePreviews.overall ? (
                          <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-contain" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <img src={fullBottleButtonImg} alt="Full Bottle" className="w-16 h-16 mb-2" />
-                          <span className="text-sm text-gray-400">Full Bottle</span>
+                          <span className="text-sm text-muted-foreground">Full Bottle</span>
                         </div>
                       )}
                     </div>
@@ -626,7 +641,7 @@ const Wishlist = () => {
               <Button
                 onClick={processImageWithAI}
                 disabled={aiProcessing || !Object.values(images).some(img => img !== null)}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="w-full"
               >
                 {aiProcessing ? (
                   <>
@@ -646,39 +661,39 @@ const Wishlist = () => {
             {magicScanCompleted && (
               <div ref={formSectionRef} className="space-y-4 scroll-mt-4">
                 <div className="space-y-2">
-                  <Label className="text-white">Wine Name *</Label>
+                  <Label className="text-foreground">Wine Name *</Label>
                   <Input
                     value={formData.wine_name}
                     onChange={(e) => setFormData({ ...formData, wine_name: e.target.value })}
-                    className="bg-[#2a2420] border-gray-700 text-white"
+                    className="bg-card border-border text-foreground"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-white">Producer</Label>
+                    <Label className="text-foreground">Producer</Label>
                     <Input
                       value={formData.producer}
                       onChange={(e) => setFormData({ ...formData, producer: e.target.value })}
-                      className="bg-[#2a2420] border-gray-700 text-white"
+                      className="bg-card border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-white">Vintage Year</Label>
+                    <Label className="text-foreground">Vintage Year</Label>
                     <Input
                       type="number"
                       value={formData.vintage_year}
                       onChange={(e) => setFormData({ ...formData, vintage_year: e.target.value })}
-                      className="bg-[#2a2420] border-gray-700 text-white"
+                      className="bg-card border-border text-foreground"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Wine Type</Label>
+                  <Label className="text-foreground">Wine Type</Label>
                   <Select value={formData.wine_type} onValueChange={(value) => setFormData({ ...formData, wine_type: value })}>
-                    <SelectTrigger className="bg-[#2a2420] border-gray-700 text-white">
+                    <SelectTrigger className="bg-card border-border text-foreground">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -694,50 +709,50 @@ const Wishlist = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-white">Country</Label>
+                    <Label className="text-foreground">Country</Label>
                     <Input
                       value={formData.country}
                       onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                      className="bg-[#2a2420] border-gray-700 text-white"
+                      className="bg-card border-border text-foreground"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-white">Region</Label>
+                    <Label className="text-foreground">Region</Label>
                     <Input
                       value={formData.region}
                       onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                      className="bg-[#2a2420] border-gray-700 text-white"
+                      className="bg-card border-border text-foreground"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Grape Varietals</Label>
+                  <Label className="text-foreground">Grape Varietals</Label>
                   <Input
                     value={formData.grape_varietals}
                     onChange={(e) => setFormData({ ...formData, grape_varietals: e.target.value })}
                     placeholder="e.g., Cabernet Sauvignon, Merlot"
-                    className="bg-[#2a2420] border-gray-700 text-white"
+                    className="bg-card border-border text-foreground"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Description</Label>
+                  <Label className="text-foreground">Description</Label>
                   <Textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="bg-[#2a2420] border-gray-700 text-white min-h-[100px]"
+                    className="bg-card border-border text-foreground min-h-[100px]"
                     placeholder="Wine description from the label..."
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Personal Notes</Label>
+                  <Label className="text-foreground">Why you want it</Label>
                   <Textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="bg-[#2a2420] border-gray-700 text-white min-h-[100px]"
+                    className="bg-card border-border text-foreground min-h-[100px]"
                     placeholder="Why do you want this wine? Where did you hear about it?"
                   />
                 </div>
@@ -764,9 +779,9 @@ const Wishlist = () => {
 
       {/* Wine Detail Dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#211111] border-[#3a3430]">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="text-white text-2xl">{selectedItem?.wine_name}</DialogTitle>
+            <DialogTitle className="text-foreground text-2xl">{selectedItem?.wine_name}</DialogTitle>
           </DialogHeader>
 
           {selectedItem && (
@@ -776,11 +791,11 @@ const Wishlist = () => {
                 <div className="grid grid-cols-2 gap-4">
                   {selectedItem.images.front && (
                     <div className="space-y-2">
-                      <Label className="text-white/70 text-xs">Front Label</Label>
+                      <Label className="text-wine-champagne text-xs">Front Label</Label>
                       <img
                         src={selectedItem.images.front}
                         alt="Front label"
-                        className="w-full rounded-lg border border-gray-700"
+                        className="w-full rounded-lg border border-border"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
@@ -789,11 +804,11 @@ const Wishlist = () => {
                   )}
                   {selectedItem.images.back && (
                     <div className="space-y-2">
-                      <Label className="text-white/70 text-xs">Back Label</Label>
+                      <Label className="text-wine-champagne text-xs">Back Label</Label>
                       <img
                         src={selectedItem.images.back}
                         alt="Back label"
-                        className="w-full rounded-lg border border-gray-700"
+                        className="w-full rounded-lg border border-border"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
@@ -802,11 +817,11 @@ const Wishlist = () => {
                   )}
                   {selectedItem.images.neck && (
                     <div className="space-y-2">
-                      <Label className="text-white/70 text-xs">Neck</Label>
+                      <Label className="text-wine-champagne text-xs">Neck</Label>
                       <img
                         src={selectedItem.images.neck}
                         alt="Neck"
-                        className="w-full rounded-lg border border-gray-700"
+                        className="w-full rounded-lg border border-border"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
@@ -815,11 +830,11 @@ const Wishlist = () => {
                   )}
                   {selectedItem.images.overall && (
                     <div className="space-y-2">
-                      <Label className="text-white/70 text-xs">Full Bottle</Label>
+                      <Label className="text-wine-champagne text-xs">Full Bottle</Label>
                       <img
                         src={selectedItem.images.overall}
                         alt="Full bottle"
-                        className="w-full rounded-lg border border-gray-700"
+                        className="w-full rounded-lg border border-border"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
@@ -833,22 +848,22 @@ const Wishlist = () => {
               <div className="space-y-4">
                 {selectedItem.producer && (
                   <div>
-                    <Label className="text-white/70 text-xs">Producer</Label>
-                    <p className="text-white text-lg">{selectedItem.producer}</p>
+                    <Label className="text-wine-champagne text-xs">Producer</Label>
+                    <p className="text-foreground text-lg">{selectedItem.producer}</p>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
                   {selectedItem.vintage_year && (
                     <div>
-                      <Label className="text-white/70 text-xs">Vintage</Label>
-                      <p className="text-white">{selectedItem.vintage_year}</p>
+                      <Label className="text-wine-champagne text-xs">Vintage</Label>
+                      <p className="text-foreground">{selectedItem.vintage_year}</p>
                     </div>
                   )}
                   {selectedItem.wine_type && (
                     <div>
-                      <Label className="text-white/70 text-xs">Type</Label>
-                      <p className="text-white capitalize">{selectedItem.wine_type}</p>
+                      <Label className="text-wine-champagne text-xs">Type</Label>
+                      <p className="text-foreground capitalize">{selectedItem.wine_type}</p>
                     </div>
                   )}
                 </div>
@@ -856,42 +871,42 @@ const Wishlist = () => {
                 <div className="grid grid-cols-2 gap-4">
                   {selectedItem.country && (
                     <div>
-                      <Label className="text-white/70 text-xs">Country</Label>
-                      <p className="text-white">{selectedItem.country}</p>
+                      <Label className="text-wine-champagne text-xs">Country</Label>
+                      <p className="text-foreground">{selectedItem.country}</p>
                     </div>
                   )}
                   {selectedItem.region && (
                     <div>
-                      <Label className="text-white/70 text-xs">Region</Label>
-                      <p className="text-white">{selectedItem.region}</p>
+                      <Label className="text-wine-champagne text-xs">Region</Label>
+                      <p className="text-foreground">{selectedItem.region}</p>
                     </div>
                   )}
                 </div>
 
                 {selectedItem.grape_varietals && (
                   <div>
-                    <Label className="text-white/70 text-xs">Grape Varietals</Label>
-                    <p className="text-white">{selectedItem.grape_varietals}</p>
+                    <Label className="text-wine-champagne text-xs">Grape Varietals</Label>
+                    <p className="text-foreground">{selectedItem.grape_varietals}</p>
                   </div>
                 )}
 
                 {selectedItem.description && (
                   <div>
-                    <Label className="text-white/70 text-xs">Description</Label>
-                    <p className="text-white/90 whitespace-pre-wrap">{selectedItem.description}</p>
+                    <Label className="text-wine-champagne text-xs">Description</Label>
+                    <p className="text-foreground/90 whitespace-pre-wrap">{selectedItem.description}</p>
                   </div>
                 )}
 
                 {selectedItem.notes && (
                   <div>
-                    <Label className="text-white/70 text-xs">Personal Notes</Label>
-                    <p className="text-white/90 whitespace-pre-wrap">{selectedItem.notes}</p>
+                    <Label className="text-wine-champagne text-xs">Why you want it</Label>
+                    <p className="text-foreground/90 whitespace-pre-wrap">{selectedItem.notes}</p>
                   </div>
                 )}
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 pt-4 border-t border-gray-700">
+              <div className="flex gap-2 pt-4 border-t border-border">
                 <Button
                   variant="destructive"
                   onClick={() => {
@@ -911,20 +926,20 @@ const Wishlist = () => {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#211111] border-[#3a3430]">
+        <AlertDialogContent className="bg-background border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Remove from Wishlist?</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/70">
+            <AlertDialogTitle className="text-foreground">Remove from Wishlist?</AlertDialogTitle>
+            <AlertDialogDescription className="text-wine-champagne">
               Are you sure you want to remove this wine from your wishlist? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-[#2a2420] text-white hover:bg-[#3a3430] border-[#3a3430]">
+            <AlertDialogCancel className="bg-card text-foreground hover:bg-secondary border-border">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-foreground"
             >
               Remove
             </AlertDialogAction>
