@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { removeWineBackground, describeWine } from "@/lib/wine-ai.functions";
 
 import Layout from "@/components/Layout";
+import { CaveStickyHeader, CaveSheet, Eyebrow, Plate } from "@/components/CaveChrome";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Trash2, Plus, Sparkles, Upload, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +19,15 @@ import { validateWineData } from "@/lib/wineValidation";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
 import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
+
+/* The four views a bottle has. Fixed order, so the plate can report "3 of 4"
+   and name the one that has no photo yet. */
+const IMAGE_SLOTS = [
+  { key: "front", label: "Front label" },
+  { key: "back", label: "Back label" },
+  { key: "neck", label: "Neck" },
+  { key: "overall", label: "Full bottle" },
+] as const;
 
 interface WineData {
   id: string;
@@ -110,15 +120,16 @@ const WineDetail = () => {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [newImages, setNewImages] = useState<{[key: string]: File}>({});
   const [additionalImageKeys, setAdditionalImageKeys] = useState<string[]>([]);
+  /* Cycles the four label slots rather than only the photos that exist, so the
+     caption can say which view is missing. The shipped 300ms flip, quieted to
+     the 180ms dip the plate uses. */
   const handleCardClick = () => {
-    if (!wine?.images || isFlipping) return;
-    const imageCount = Object.keys(wine.images).length;
-    if (imageCount <= 1) return;
+    if (isFlipping) return;
     setIsFlipping(true);
     setTimeout(() => {
-      setCurrentImageIndex(prev => (prev + 1) % imageCount);
+      setCurrentImageIndex(prev => (prev + 1) % IMAGE_SLOTS.length);
       setIsFlipping(false);
-    }, 300);
+    }, 180);
   };
   useEffect(() => {
     if (id) {
@@ -565,95 +576,144 @@ const WineDetail = () => {
         </div>
       </Layout>;
   }
+  const images = (wine.images ?? {}) as Record<string, string>;
+  const currentImage = images[IMAGE_SLOTS[currentImageIndex].key] ?? null;
+
+  /* The window is free text ("2024-2030"). Read the years out of it; say
+     nothing when it cannot be read rather than asserting a status. */
+  const windowYears = wine.optimal_drinking_window?.match(/\d{4}/g) ?? null;
+  const drinkUntil = windowYears ? windowYears[windowYears.length - 1] : null;
+  const inWindow = (() => {
+    if (!windowYears) return false;
+    const now = new Date().getFullYear();
+    const from = Number(windowYears[0]);
+    const to = Number(windowYears[windowYears.length - 1]);
+    return now >= from && now <= to;
+  })();
+
+  const grapeList = Array.isArray(wine.grape_varietals)
+    ? wine.grape_varietals.map((g: any) => (typeof g === "string" ? g : g?.name)).filter(Boolean).join(", ")
+    : "";
+
+  // Only rows the bottle actually has. Nothing is invented to fill the list.
+  const infoRows = [
+    { label: "Producer", value: wine.producer },
+    { label: "Type", value: wine.wine_type },
+    { label: "Grapes", value: grapeList || null },
+    { label: "Appellation", value: wine.appellation },
+    { label: "Region", value: wine.region },
+    { label: "Country", value: wine.country },
+    { label: "Alcohol", value: wine.alcohol_content ? `${wine.alcohol_content}%` : null },
+    { label: "Drinking window", value: wine.optimal_drinking_window },
+    { label: "My note", value: wine.notes },
+  ].filter((r): r is { label: string; value: string } => Boolean(r.value));
+
   return <Layout>
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <div className="bg-card text-white px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/cellar")} className="text-white hover:text-white/80 p-2">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-lg font-semibold ml-4">Wine Details</h1>
-          </div>
-        </div>
+      <div className="min-h-screen">
+        <CaveStickyHeader title={wine.wine_name} status={`${wine.current_stock} in stock`} />
 
-        <div className="px-4 pb-20">
+        <div className="mx-auto max-w-[1180px] px-7 pt-8 pb-10">
+          {/* Back row */}
+          <button
+            onClick={() => navigate("/cellar")}
+            className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            The cellar
+          </button>
 
+          {/* Header row. The plate is part of the card, not its own column: a
+              full-height panel wasted the phone screen. */}
+          <div className="mt-7 flex flex-wrap items-start gap-7">
+            <div className="flex-[0_0_clamp(98px,26vw,260px)]">
+              <button
+                type="button"
+                onClick={handleCardClick}
+                aria-label="Turn the bottle"
+                className="block w-full"
+              >
+                <Plate
+                  className={`w-full transition-all duration-[180ms] ease-[var(--ease-cave)] ${isFlipping ? "scale-[0.93] opacity-30" : ""}`}
+                >
+                  {currentImage ? (
+                    <img src={currentImage} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center">
+                      <Wine className="h-10 w-10 text-muted-foreground" strokeWidth={1.2} />
+                    </span>
+                  )}
+                </Plate>
+              </button>
 
-          {/* Wine Name */}
-          <div className="mt-6">
-            <h2 className="text-2xl font-bold text-white">{wine.wine_name} {wine.vintage_year || ''}</h2>
-            {(wine.country || wine.region) && <p className="text-gray-400 mt-1 text-sm">
-                {wine.region && wine.country ? `${wine.region}, ${wine.country}` : wine.region || wine.country}
-              </p>}
-          </div>
-
-          {/* Wine Information Section */}
-          <div className="mt-6 bg-card rounded-xl p-4 space-y-3 border border-border/50">
-            <h3 className="text-white font-semibold mb-3">Wine Information</h3>
-            
-            {wine.producer && <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Producer</span>
-                <span className="text-white text-right">{wine.producer}</span>
-              </div>}
-
-            {wine.vintage_year && <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Vintage Year</span>
-                <span className="text-white">{wine.vintage_year}</span>
-              </div>}
-            
-            {wine.wine_type && <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Type</span>
-                <span className="text-white capitalize">{wine.wine_type}</span>
-              </div>}
-
-            {wine.country && <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Country</span>
-                <span className="text-white text-right">{wine.country}</span>
-              </div>}
-
-            {wine.region && <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Region</span>
-                <span className="text-white text-right">{wine.region}</span>
-              </div>}
-            
-            {wine.grape_varietals && Array.isArray(wine.grape_varietals) && wine.grape_varietals.length > 0 && <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Grape Varietals</span>
-                <span className="text-white text-right">
-                  {wine.grape_varietals.map((g: any) => typeof g === 'string' ? g : g?.name).filter(Boolean).join(', ')}
-                </span>
-              </div>}
-            
-            {wine.appellation && <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Appellation</span>
-                <span className="text-white text-right">{wine.appellation}</span>
-              </div>}
-            
-            {wine.alcohol_content && <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Alcohol Content (ABV)</span>
-                <span className="text-white">{wine.alcohol_content}%</span>
-              </div>}
-            
-            {wine.optimal_drinking_window && <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Optimal Drinking Window</span>
-                <span className="text-white text-right">{wine.optimal_drinking_window}</span>
-              </div>}
-          </div>
-
-          {/* Description */}
-          <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-white font-semibold">Description</h3>
-              <Button variant="ghost" size="sm" onClick={handleRewriteDescription} disabled={rewritingDescription} className="text-gray-300 hover:text-white">
-                <RefreshCw className={`h-4 w-4 mr-1 ${rewritingDescription ? "animate-spin" : ""}`} />
-                {rewritingDescription ? "Researching..." : "Rewrite description"}
-              </Button>
+              <div className="mt-3 flex items-center gap-1.5">
+                {IMAGE_SLOTS.map((slot, i) => (
+                  <span
+                    key={slot.key}
+                    className={`h-[3px] transition-all duration-[320ms] ${i === currentImageIndex ? "w-[22px] bg-primary" : "w-[8px] bg-muted"}`}
+                  />
+                ))}
+              </div>
+              <p className="mt-2 font-mono text-[10px] tracking-[0.05em] text-muted-foreground">
+                {IMAGE_SLOTS[currentImageIndex]?.label ?? "Label"} · {currentImageIndex + 1} of {IMAGE_SLOTS.length}
+                {currentImage ? "" : " · no photo yet"}
+              </p>
             </div>
-            <p className="text-gray-300 text-sm">
+
+            <div className="min-w-[240px] flex-1">
+              <h1 className="font-serif font-bold leading-[1.04] tracking-[-0.02em] text-foreground text-[clamp(26px,4.6vw,50px)]">
+                {wine.wine_name} {wine.vintage_year || ""}
+              </h1>
+              <p className="mt-2 font-mono text-[11px] tracking-[0.05em] text-wine-champagne">
+                {[[wine.region, wine.country].filter(Boolean).join(", "), wine.appellation].filter(Boolean).join(" · ")}
+              </p>
+              {inWindow && (
+                <p className="mt-3 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.09em] text-primary">
+                  <span className="cave-ember inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+                  In its window
+                </p>
+              )}
+              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                Tap the label to turn the bottle
+              </p>
+            </div>
+          </div>
+
+          {/* Facts strip. Three only: a fourth orphaned at sheet width, and the
+              vintage is already in the headline and the list below. */}
+          <div className="mt-9 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-6 border-y border-border py-6">
+            <div>
+              <div className="font-serif text-[26px] leading-none text-foreground">{wine.current_stock}</div>
+              <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">in stock</div>
+            </div>
+            <div>
+              <div className="font-serif text-[26px] leading-none text-foreground">
+                {wine.alcohol_content ? `${wine.alcohol_content}%` : "—"}
+              </div>
+              <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">alcohol</div>
+            </div>
+            <div>
+              <div className="font-serif text-[26px] leading-none text-foreground">{drinkUntil ?? "—"}</div>
+              <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">drink until</div>
+            </div>
+          </div>
+
+          {/* 1. Description */}
+          <section className="mt-11">
+            <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-2">
+              <Eyebrow>Description</Eyebrow>
+              <button
+                onClick={handleRewriteDescription}
+                disabled={rewritingDescription}
+                className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3 w-3 ${rewritingDescription ? "animate-spin" : ""}`} />
+                {rewritingDescription ? "Researching…" : "Rewrite description"}
+              </button>
+            </div>
+            <p className={`mt-4 max-w-[70ch] text-[16px] leading-[1.65] text-wine-champagne transition-opacity duration-[420ms] ${rewritingDescription ? "opacity-45" : ""}`}>
               {wine.description || "No description yet. Use Rewrite description to look this wine up on the web."}
             </p>
-            {wine.description_sources && wine.description_sources.length > 0 && <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
-                <span>Sources:</span>
+            {wine.description_sources && wine.description_sources.length > 0 && <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
                 {wine.description_sources.map(url => {
                   let label = url;
                   try {
@@ -661,227 +721,215 @@ const WineDetail = () => {
                   } catch {
                     label = url;
                   }
-                  return <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
+                  return <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="border-b border-border font-mono text-[10px] tracking-[0.05em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground">
                       {label}
                     </a>;
                 })}
               </div>}
-          </div>
+          </section>
 
-          {/* Notes */}
-          {wine.notes && <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
-              <h3 className="text-white font-semibold mb-2">Notes</h3>
-              <p className="text-gray-300 text-sm">{wine.notes}</p>
-            </div>}
-
-          {/* AI Insights */}
-          {(wine.ai_tasting_notes || wine.ai_food_pairings && wine.ai_food_pairings.length > 0) && <div className="mt-6 bg-card rounded-xl p-4 space-y-3 border border-border/50">
-              <h3 className="text-white font-semibold mb-3">AI Insights</h3>
-              
-              {wine.ai_tasting_notes && <div>
-                  <p className="text-gray-400 text-xs mb-1">Tasting Notes</p>
-                  <p className="text-white text-sm">{wine.ai_tasting_notes}</p>
-                </div>}
-              
-              {wine.ai_food_pairings && wine.ai_food_pairings.length > 0 && <div>
-                  <p className="text-gray-400 text-xs mb-1">Food Pairings</p>
-                  <div className="flex flex-wrap gap-2">
-                    {wine.ai_food_pairings.map((pairing, index) => <span key={index} className="bg-[#3a3430] text-white text-xs px-2 py-1 rounded">
-                        {pairing}
-                      </span>)}
-                  </div>
-                </div>}
-            </div>}
-
-          {/* Tasting Notes */}
-          {tastingNotes.length > 0 && <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
-              <h3 className="text-white font-semibold mb-3">My Tasting Notes</h3>
-              <div className="space-y-4">
-                {tastingNotes.map(note => <div key={note.id} className="border-b border-gray-700 pb-3 last:border-0 last:pb-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-500">
-                        {new Date(note.tasting_date).toLocaleDateString()}
-                      </span>
-                      <div className="text-yellow-500">
-                        {"★".repeat(note.rating)}{"☆".repeat(5 - note.rating)}
-                      </div>
-                    </div>
-                    {note.notes && <p className="text-white text-sm mb-2">{note.notes}</p>}
-                    {note.occasion && <p className="text-xs text-gray-400">Occasion: {note.occasion}</p>}
-                    {note.food_pairing && <p className="text-xs text-gray-400">Paired with: {note.food_pairing}</p>}
-                  </div>)}
+          {/* 2. What the model knows */}
+          {(wine.ai_tasting_notes || (wine.ai_food_pairings && wine.ai_food_pairings.length > 0)) && (
+            <section className="mt-11">
+              <div className="border-b border-border pb-2">
+                <Eyebrow>What the model knows</Eyebrow>
               </div>
-            </div>}
+              {wine.ai_tasting_notes && (
+                <p className="mt-4 max-w-[46ch] font-serif text-[22px] leading-[1.4] text-foreground">
+                  {wine.ai_tasting_notes}
+                </p>
+              )}
+              {wine.ai_food_pairings && wine.ai_food_pairings.length > 0 && (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {wine.ai_food_pairings.map((pairing, index) => (
+                    <span
+                      key={index}
+                      className="border border-border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-wine-champagne transition-colors duration-[320ms] hover:border-primary hover:text-primary"
+                    >
+                      {pairing}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
-          {/* Purchase Details */}
-          <div className="mt-6 bg-card rounded-xl p-4 border border-border/50">
-            <h3 className="text-white font-semibold mb-3">Purchase Details</h3>
-            <div className="space-y-2.5">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Purchase Date</span>
-                <span className="text-white">{new Date(wine.created_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit'
-                })}</span>
+          {/* 3. Wine information */}
+          <section className="mt-11">
+            <div className="border-b border-border pb-2">
+              <Eyebrow>Wine information</Eyebrow>
+            </div>
+            <dl className="mt-1">
+              {infoRows.map(row => (
+                <div key={row.label} className="flex items-baseline justify-between gap-6 border-b border-muted py-3">
+                  <dt className="font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">{row.label}</dt>
+                  <dd className="text-right text-[14px] text-foreground">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          {/* 4. Where the bottles are */}
+          <section className="mt-11">
+            <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-2">
+              <Eyebrow>Where the bottles are</Eyebrow>
+              <button
+                onClick={() => {
+                  setNewLocation({ location: "", quantity: 1 });
+                  setEditingLocationIndex(null);
+                  setLocationDialogOpen(true);
+                }}
+                className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground"
+              >
+                <Plus className="h-3 w-3" />
+                Add a location
+              </button>
+            </div>
+            {wine.storage_locations && wine.storage_locations.length > 0 && (
+              <div className="mt-1">
+                {wine.storage_locations.map((loc, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setNewLocation(loc);
+                      setEditingLocationIndex(index);
+                      setLocationDialogOpen(true);
+                    }}
+                    className="flex w-full items-baseline justify-between gap-6 border-b border-muted py-3 text-left transition-colors duration-[320ms] hover:bg-secondary/50"
+                  >
+                    <span className="flex items-center gap-2 text-[14px] text-foreground">
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                      {loc.location}
+                    </span>
+                    <span className="font-mono text-[11px] tracking-[0.05em] text-wine-champagne">
+                      {loc.quantity} bottles
+                    </span>
+                  </button>
+                ))}
               </div>
-              {wine.price_per_bottle && <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Price</span>
-                  <span className="text-white">${wine.price_per_bottle.toFixed(0)}</span>
-                </div>}
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Quantity</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-white">{wine.current_stock}</span>
-                  <Button variant="ghost" size="sm" onClick={() => {
+            )}
+            <p className="mt-4 font-mono text-[10px] tracking-[0.05em] text-muted-foreground">
+              Bought {new Date(wine.created_at).toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" })}
+              {wine.price_per_bottle ? ` · $${wine.price_per_bottle.toFixed(0)} a bottle` : ""}
+              {" · "}
+              <button
+                onClick={() => {
                   setNewStock(wine.current_stock);
                   setEditStockDialogOpen(true);
-                }} className="h-5 w-5 p-0 text-gray-400 hover:text-white">
-                    <Edit className="h-3 w-3" />
-                  </Button>
+                }}
+                className="underline underline-offset-4 transition-colors duration-[320ms] hover:text-foreground"
+              >
+                {wine.current_stock} in stock
+              </button>
+            </p>
+          </section>
+
+          {/* 5. My tasting notes */}
+          <section className="mt-11">
+            <div className="flex items-baseline justify-between gap-3 border-b border-border pb-2">
+              <Eyebrow>My tasting notes</Eyebrow>
+              <span className="font-mono text-[10px] tracking-[0.05em] text-muted-foreground">{tastingNotes.length}</span>
+            </div>
+            {tastingNotes.length === 0 ? (
+              <p className="mt-4 text-[15px] text-muted-foreground">Nothing recorded yet.</p>
+            ) : (
+              <div className="mt-1">
+                {tastingNotes.map(note => (
+                  <div key={note.id} className="border-b border-muted py-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="font-mono text-[10px] tracking-[0.05em] text-muted-foreground">
+                        {new Date(note.tasting_date).toLocaleDateString()}
+                      </span>
+                      <span className="text-accent">
+                        {"★".repeat(note.rating)}{"☆".repeat(5 - note.rating)}
+                      </span>
+                    </div>
+                    {note.notes && <p className="mt-2 max-w-[70ch] text-[15px] leading-[1.6] text-foreground">{note.notes}</p>}
+                    {(note.occasion || note.food_pairing) && (
+                      <p className="mt-2 font-mono text-[10px] tracking-[0.05em] text-muted-foreground">
+                        {[note.occasion, note.food_pairing].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Actions */}
+          <div className="mt-11 flex flex-wrap gap-3">
+            <Button className="flex-[1_1_240px]" onClick={() => setConsumeDialogOpen(true)}>
+              Record your tasting note
+            </Button>
+            <Button variant="outline" onClick={() => setEditWineDialogOpen(true)}>
+              <Edit className="h-4 w-4" />
+              Edit wine
+            </Button>
+            <button
+              onClick={handleDelete}
+              className="px-4 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground transition-colors duration-[320ms] hover:text-destructive"
+            >
+              Delete
+            </button>
+          </div>
+
+          {/* Tasting sheet */}
+          <CaveSheet open={consumeDialogOpen} onClose={() => setConsumeDialogOpen(false)} labelledBy="tasting-sheet-title">
+            <div className="p-7">
+              <h2 id="tasting-sheet-title" className="font-serif text-[26px] text-foreground">Record your tasting note</h2>
+
+              <div className="mt-6">
+                <Eyebrow>Rating</Eyebrow>
+                <div className="mt-2 flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      aria-label={`${star} of 5`}
+                      className={`text-[30px] leading-none ${star <= rating ? "text-primary" : "text-muted-foreground"}`}
+                    >
+                      {star <= rating ? "★" : "☆"}
+                    </button>
+                  ))}
                 </div>
               </div>
-              {wine.storage_locations && wine.storage_locations.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Storage Locations</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setNewLocation({ location: "", quantity: 1 });
-                        setEditingLocationIndex(null);
-                        setLocationDialogOpen(true);
-                      }}
-                      className="text-xs text-primary hover:text-primary/80"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add
-                    </Button>
-                  </div>
-                  <div className="space-y-1">
-                    {wine.storage_locations.map((loc, index) => (
-                      <div key={index} className="flex justify-between items-center text-sm bg-[#2a2420]/50 rounded px-2 py-1 group">
-                        <span className="text-white flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {loc.location}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400">{loc.quantity} bottles</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setNewLocation(loc);
-                              setEditingLocationIndex(index);
-                              setLocationDialogOpen(true);
-                            }}
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setNewLocation({ location: "", quantity: 1 });
-                    setEditingLocationIndex(null);
-                    setLocationDialogOpen(true);
-                  }}
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Storage Location
-                </Button>
-              )}
-            </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="space-y-3 mt-8">
-            <Dialog open={consumeDialogOpen} onOpenChange={setConsumeDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full bg-card hover:bg-card/80 text-white border border-border/50 rounded-lg py-6 transition-all duration-300">Record your tasting note</Button>
-              </DialogTrigger>
-              <DialogContent className="bg-[#1a1410] text-white border-gray-700">
-                <DialogHeader>
-                  <DialogTitle className="text-white">Log Tasting</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label className="text-white">Rating</Label>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map(star => <button key={star} type="button" onClick={() => setRating(star)} className="text-2xl text-yellow-500">
-                          {star <= rating ? "★" : "☆"}
-                        </button>)}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-white">Tasting Notes</Label>
-                    <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe the flavors, aromas..." className="bg-[#2a2420] border-gray-700 text-white" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-white">Occasion</Label>
-                    <Input value={occasion} onChange={e => setOccasion(e.target.value)} placeholder="Dinner party, celebration..." className="bg-[#2a2420] border-gray-700 text-white" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-white">Food Pairing</Label>
-                    <Input value={foodPairing} onChange={e => setFoodPairing(e.target.value)} placeholder="What did you pair it with?" className="bg-[#2a2420] border-gray-700 text-white" />
-                  </div>
-                  <Button onClick={handleConsume} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
-                    Save Tasting Note
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+              <div className="mt-6">
+                <Eyebrow>Tasting notes</Eyebrow>
+                <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe the flavors, aromas..." className="mt-2 bg-background" />
+              </div>
+              <div className="mt-5">
+                <Eyebrow>Occasion</Eyebrow>
+                <Input value={occasion} onChange={e => setOccasion(e.target.value)} placeholder="Dinner party, celebration..." className="mt-2 bg-background" />
+              </div>
+              <div className="mt-5">
+                <Eyebrow>Paired with</Eyebrow>
+                <Input value={foodPairing} onChange={e => setFoodPairing(e.target.value)} placeholder="What did you pair it with?" className="mt-2 bg-background" />
+              </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Button onClick={() => setEditWineDialogOpen(true)} className="bg-card hover:bg-card/80 text-white border border-border/50 rounded-lg py-6 transition-all duration-300">
-                <Edit className="h-5 w-5 mr-2" />
-                Edit Wine
+              <Button onClick={handleConsume} className="mt-7 w-full">
+                Save tasting note · one bottle out
               </Button>
-
-              <Button variant="destructive" onClick={handleDelete} className="bg-card hover:bg-card/80 text-white border border-border/50 rounded-lg py-6 transition-all duration-300">
-                Delete
-              </Button>
+              <p className="mt-3 text-center font-mono text-[10px] tracking-[0.05em] text-muted-foreground">
+                {wine.current_stock} in stock now · {Math.max(0, wine.current_stock - 1)} after this
+              </p>
             </div>
-          </div>
+          </CaveSheet>
 
-          {/* Bottle Images Card */}
-          <div className="mt-6 bg-card rounded-xl p-6 perspective-1000 border border-border/50">
-            <h3 className="text-white font-semibold mb-4">Your Bottle Preview</h3>
-            {wine.images && typeof wine.images === 'object' && Object.keys(wine.images).length > 0 ? <div className={`relative h-80 cursor-pointer transition-all duration-300 ${isFlipping ? 'animate-flip' : ''}`} onClick={handleCardClick} style={{
-            transformStyle: 'preserve-3d'
-          }}>
-                {Object.entries(wine.images).map(([type, url]: [string, any], index) => <div key={type} className={`absolute inset-0 flex items-center justify-center p-8 transition-opacity duration-300 ${index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                    <img src={url} alt={`${type} view`} className="h-72 w-54 max-w-full object-contain" />
-                  </div>)}
-                {Object.keys(wine.images).length > 1 && <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                    {Object.keys(wine.images).map((_, index) => <div key={index} className={`h-2 w-2 rounded-full transition-all ${index === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'}`} />)}
-                  </div>}
-              </div> : <div className="flex items-center justify-center h-80 p-8">
-                <Wine className="h-32 w-32 text-gray-600/20" />
-              </div>}
-          </div>
 
           {/* Stock Edit Dialog */}
           <Dialog open={editStockDialogOpen} onOpenChange={setEditStockDialogOpen}>
-            <DialogContent className="bg-[#1a1410] text-white border-gray-700">
+            <DialogContent className="bg-popover text-foreground border-border">
               <DialogHeader>
-                <DialogTitle className="text-white">Update Stock</DialogTitle>
+                <DialogTitle className="text-foreground">Update Stock</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label className="text-white">Number of Bottles</Label>
-                  <Input type="number" min="0" value={newStock} onChange={e => setNewStock(parseInt(e.target.value) || 0)} className="bg-[#2a2420] border-gray-700 text-white" />
+                  <Label className="text-foreground">Number of Bottles</Label>
+                  <Input type="number" min="0" value={newStock} onChange={e => setNewStock(parseInt(e.target.value) || 0)} className="bg-card border-border text-foreground" />
                 </div>
-                <Button onClick={handleUpdateStock} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
+                <Button onClick={handleUpdateStock} className="w-full bg-primary hover:opacity-90">
                   Update Stock
                 </Button>
               </div>
@@ -890,85 +938,85 @@ const WineDetail = () => {
 
           {/* Edit Wine Dialog */}
           <Dialog open={editWineDialogOpen} onOpenChange={setEditWineDialogOpen}>
-            <DialogContent className="bg-[#1a1410] text-white border-gray-700 max-h-[90vh]">
+            <DialogContent className="bg-popover text-foreground border-border max-h-[90vh]">
               <DialogHeader>
-                <DialogTitle className="text-white">Edit Wine Details</DialogTitle>
+                <DialogTitle className="text-foreground">Edit Wine Details</DialogTitle>
               </DialogHeader>
               <ScrollArea className="max-h-[60vh] pr-4">
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label className="text-white">Wine Name</Label>
+                    <Label className="text-foreground">Wine Name</Label>
                     <Input value={editForm.wine_name} onChange={e => setEditForm({
                     ...editForm,
                     wine_name: e.target.value
-                  })} placeholder="Wine name" className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="Wine name" className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Producer</Label>
+                    <Label className="text-foreground">Producer</Label>
                     <Input value={editForm.producer} onChange={e => setEditForm({
                     ...editForm,
                     producer: e.target.value
-                  })} placeholder="Producer name" className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="Producer name" className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Vintage Year</Label>
+                    <Label className="text-foreground">Vintage Year</Label>
                     <Input type="number" value={editForm.vintage_year} onChange={e => setEditForm({
                     ...editForm,
                     vintage_year: e.target.value
-                  })} placeholder="2020" className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="2020" className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Wine Type</Label>
+                    <Label className="text-foreground">Wine Type</Label>
                     <Input value={editForm.wine_type} onChange={e => setEditForm({
                     ...editForm,
                     wine_type: e.target.value
-                  })} placeholder="Red, White, Rosé, etc." className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="Red, White, Rosé, etc." className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Country</Label>
+                    <Label className="text-foreground">Country</Label>
                     <Input value={editForm.country} onChange={e => setEditForm({
                     ...editForm,
                     country: e.target.value
-                  })} placeholder="France, Italy, etc." className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="France, Italy, etc." className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Region</Label>
+                    <Label className="text-foreground">Region</Label>
                     <Input value={editForm.region} onChange={e => setEditForm({
                     ...editForm,
                     region: e.target.value
-                  })} placeholder="Bordeaux, Tuscany, etc." className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="Bordeaux, Tuscany, etc." className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Appellation</Label>
+                    <Label className="text-foreground">Appellation</Label>
                     <Input value={editForm.appellation} onChange={e => setEditForm({
                     ...editForm,
                     appellation: e.target.value
-                  })} placeholder="e.g., Pauillac, Chianti Classico" className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="e.g., Pauillac, Chianti Classico" className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Grape Varietals</Label>
+                    <Label className="text-foreground">Grape Varietals</Label>
                     <Input value={editForm.grape_varietals} onChange={e => setEditForm({
                     ...editForm,
                     grape_varietals: e.target.value
-                  })} placeholder="e.g., Cabernet Sauvignon, Merlot" className="bg-[#2a2420] border-gray-700 text-white" />
-                    <p className="text-xs text-gray-400">Separate multiple grapes with commas</p>
+                  })} placeholder="e.g., Cabernet Sauvignon, Merlot" className="bg-card border-border text-foreground" />
+                    <p className="text-xs text-muted-foreground">Separate multiple grapes with commas</p>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Alcohol Content (%)</Label>
+                    <Label className="text-foreground">Alcohol Content (%)</Label>
                     <Input type="number" step="0.1" value={editForm.alcohol_content} onChange={e => setEditForm({
                     ...editForm,
                     alcohol_content: e.target.value
-                  })} placeholder="13.5" className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="13.5" className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Price ($)</Label>
+                    <Label className="text-foreground">Price ($)</Label>
                     <Input type="number" step="0.01" value={editForm.price_per_bottle} onChange={e => setEditForm({
                     ...editForm,
                     price_per_bottle: e.target.value
-                  })} placeholder="50.00" className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="50.00" className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Storage Location</Label>
+                    <Label className="text-foreground">Storage Location</Label>
                     {savedLocations.length > 0 && (
                       <Select 
                         value={editForm.storage_location} 
@@ -986,7 +1034,7 @@ const WineDetail = () => {
                           }
                         }}
                       >
-                        <SelectTrigger className="bg-[#2a2420] border-gray-700 text-white">
+                        <SelectTrigger className="bg-card border-border text-foreground">
                           <SelectValue placeholder="Select or enter location" />
                         </SelectTrigger>
                         <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
@@ -1007,49 +1055,49 @@ const WineDetail = () => {
                           storage_location: e.target.value
                         })} 
                         placeholder="e.g., Rack A3, Wine Cellar" 
-                        className={`bg-[#2a2420] border-gray-700 text-white ${savedLocations.length > 0 ? "mt-2" : ""}`}
+                        className={`bg-card border-border text-foreground ${savedLocations.length > 0 ? "mt-2" : ""}`}
                       />
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Optimal Drinking Window</Label>
+                    <Label className="text-foreground">Optimal Drinking Window</Label>
                     <Input value={editForm.optimal_drinking_window} onChange={e => setEditForm({
                     ...editForm,
                     optimal_drinking_window: e.target.value
-                  })} placeholder="e.g., 2025-2035" className="bg-[#2a2420] border-gray-700 text-white" />
+                  })} placeholder="e.g., 2025-2035" className="bg-card border-border text-foreground" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Description</Label>
+                    <Label className="text-foreground">Description</Label>
                     <Textarea value={editForm.description} onChange={e => setEditForm({
                     ...editForm,
                     description: e.target.value
-                  })} placeholder="Wine description..." className="bg-[#2a2420] border-gray-700 text-white" rows={3} />
+                  })} placeholder="Wine description..." className="bg-card border-border text-foreground" rows={3} />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Notes</Label>
+                    <Label className="text-foreground">Notes</Label>
                     <Textarea value={editForm.notes} onChange={e => setEditForm({
                     ...editForm,
                     notes: e.target.value
-                  })} placeholder="Add personal notes about this wine..." className="bg-[#2a2420] border-gray-700 text-white" rows={4} />
+                  })} placeholder="Add personal notes about this wine..." className="bg-card border-border text-foreground" rows={4} />
                   </div>
 
                   {/* My Tasting Notes Section */}
                   {tastingNotes.length > 0 && (
-                    <div className="space-y-3 pt-4 border-t border-gray-700">
-                      <h4 className="text-white font-semibold">My Tasting Notes</h4>
+                    <div className="space-y-3 pt-4 border-t border-border">
+                      <h4 className="text-foreground font-semibold">My Tasting Notes</h4>
                       {tastingNotes.map(note => (
-                        <div key={note.id} className="bg-[#1a1410] rounded-lg p-3 space-y-3">
+                        <div key={note.id} className="bg-popover rounded-lg p-3 space-y-3">
                           {editingTastingNoteId === note.id ? (
                             <>
                               <div className="space-y-2">
-                                <Label className="text-white text-xs">Rating</Label>
+                                <Label className="text-foreground text-xs">Rating</Label>
                                 <div className="flex gap-1">
                                   {[1, 2, 3, 4, 5].map(star => (
                                     <button
                                       key={star}
                                       type="button"
                                       onClick={() => setEditTastingForm({...editTastingForm, rating: star})}
-                                      className="text-xl text-yellow-500"
+                                      className="text-xl text-accent"
                                     >
                                       {star <= editTastingForm.rating ? "★" : "☆"}
                                     </button>
@@ -1057,46 +1105,46 @@ const WineDetail = () => {
                                 </div>
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-white text-xs">Tasting Date</Label>
+                                <Label className="text-foreground text-xs">Tasting Date</Label>
                                 <Input
                                   type="date"
                                   value={editTastingForm.tasting_date}
                                   onChange={e => setEditTastingForm({...editTastingForm, tasting_date: e.target.value})}
-                                  className="bg-[#2a2420] border-gray-700 text-white text-sm"
+                                  className="bg-card border-border text-foreground text-sm"
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-white text-xs">Notes</Label>
+                                <Label className="text-foreground text-xs">Notes</Label>
                                 <Textarea
                                   value={editTastingForm.notes}
                                   onChange={e => setEditTastingForm({...editTastingForm, notes: e.target.value})}
                                   placeholder="Tasting notes..."
-                                  className="bg-[#2a2420] border-gray-700 text-white text-sm"
+                                  className="bg-card border-border text-foreground text-sm"
                                   rows={2}
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-white text-xs">Occasion</Label>
+                                <Label className="text-foreground text-xs">Occasion</Label>
                                 <Input
                                   value={editTastingForm.occasion}
                                   onChange={e => setEditTastingForm({...editTastingForm, occasion: e.target.value})}
                                   placeholder="Occasion..."
-                                  className="bg-[#2a2420] border-gray-700 text-white text-sm"
+                                  className="bg-card border-border text-foreground text-sm"
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label className="text-white text-xs">Food Pairing</Label>
+                                <Label className="text-foreground text-xs">Food Pairing</Label>
                                 <Input
                                   value={editTastingForm.food_pairing}
                                   onChange={e => setEditTastingForm({...editTastingForm, food_pairing: e.target.value})}
                                   placeholder="Food pairing..."
-                                  className="bg-[#2a2420] border-gray-700 text-white text-sm"
+                                  className="bg-card border-border text-foreground text-sm"
                                 />
                               </div>
                               <div className="flex gap-2">
                                 <Button
                                   onClick={handleUpdateTastingNote}
-                                  className="flex-1 bg-[#5c2e2e] hover:bg-[#4a2424] text-xs py-1 h-8"
+                                  className="flex-1 bg-primary hover:opacity-90 text-xs py-1 h-8"
                                 >
                                   Save
                                 </Button>
@@ -1114,16 +1162,16 @@ const WineDetail = () => {
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs text-muted-foreground">
                                       {new Date(note.tasting_date).toLocaleDateString()}
                                     </span>
-                                    <div className="text-yellow-500 text-sm">
+                                    <div className="text-accent text-sm">
                                       {"★".repeat(note.rating)}{"☆".repeat(5 - note.rating)}
                                     </div>
                                   </div>
-                                  {note.notes && <p className="text-white text-xs mb-1">{note.notes}</p>}
-                                  {note.occasion && <p className="text-xs text-gray-400">Occasion: {note.occasion}</p>}
-                                  {note.food_pairing && <p className="text-xs text-gray-400">Paired with: {note.food_pairing}</p>}
+                                  {note.notes && <p className="text-foreground text-xs mb-1">{note.notes}</p>}
+                                  {note.occasion && <p className="text-xs text-muted-foreground">Occasion: {note.occasion}</p>}
+                                  {note.food_pairing && <p className="text-xs text-muted-foreground">Paired with: {note.food_pairing}</p>}
                                 </div>
                               </div>
                               <div className="flex gap-2 mt-2">
@@ -1154,8 +1202,8 @@ const WineDetail = () => {
                   )}
 
                   {/* Image Upload Section */}
-                  <div className="space-y-3 pt-4 border-t border-gray-700">
-                    <h4 className="text-white font-semibold flex items-center gap-2">
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <h4 className="text-foreground font-semibold flex items-center gap-2">
                       <Upload className="h-4 w-4" />
                       Wine Images
                     </h4>
@@ -1163,16 +1211,16 @@ const WineDetail = () => {
                     {/* Current Images */}
                     {wine.images && Object.keys(wine.images).length > 0 && (
                       <div className="space-y-2">
-                        <Label className="text-gray-400 text-xs">Current Images</Label>
+                        <Label className="text-muted-foreground text-xs">Current Images</Label>
                         <div className="grid grid-cols-2 gap-2">
                           {Object.entries(wine.images).map(([type, url]: [string, any]) => (
-                            <div key={type} className="relative bg-[#1a1410] rounded-lg p-2 aspect-[3/4] flex flex-col">
+                            <div key={type} className="relative bg-popover rounded-lg p-2 aspect-[3/4] flex flex-col">
                               <img 
                                 src={url} 
                                 alt={`${type} view`} 
                                 className="min-h-0 flex-1 w-full object-contain rounded"
                               />
-                              <p className="text-xs text-gray-400 text-center mt-1 capitalize">{type}</p>
+                              <p className="text-xs text-muted-foreground text-center mt-1 capitalize">{type}</p>
                             </div>
                           ))}
                         </div>
@@ -1181,11 +1229,11 @@ const WineDetail = () => {
                     
                     {/* Upload New Images */}
                     <div className="space-y-2">
-                      <Label className="text-white text-xs">Upload New Images</Label>
+                      <Label className="text-foreground text-xs">Upload New Images</Label>
                       <div className="grid grid-cols-2 gap-2">
                         {['front', 'back', 'overall', 'neck'].map(type => (
                           <div key={type} className="space-y-1">
-                            <Label className="text-xs text-gray-400 capitalize">{type} Label</Label>
+                            <Label className="text-xs text-muted-foreground capitalize">{type} Label</Label>
                             <div className="relative">
                               <input
                                 type="file"
@@ -1203,7 +1251,7 @@ const WineDetail = () => {
                               />
                               <label
                                 htmlFor={`upload-${type}`}
-                                className="flex items-center justify-center gap-2 bg-[#2a2420] border border-gray-700 rounded-lg p-2 cursor-pointer hover:bg-[#3a3430] transition-colors"
+                                className="flex items-center justify-center gap-2 bg-card border border-border rounded-lg p-2 cursor-pointer hover:bg-secondary transition-colors"
                               >
                                 {newImages[type] ? (
                                   <div className="flex items-center gap-1 text-xs text-green-400">
@@ -1222,7 +1270,7 @@ const WineDetail = () => {
                                     />
                                   </div>
                                 ) : (
-                                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <Upload className="h-3 w-3" />
                                     <span>Choose file</span>
                                   </div>
@@ -1237,7 +1285,7 @@ const WineDetail = () => {
                     {/* Additional Images */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label className="text-white text-xs">Additional Images</Label>
+                        <Label className="text-foreground text-xs">Additional Images</Label>
                         <Button
                           type="button"
                           size="sm"
@@ -1272,7 +1320,7 @@ const WineDetail = () => {
                               />
                               <label
                                 htmlFor={`upload-additional-${key}`}
-                                className="flex-1 flex items-center justify-center gap-2 bg-[#2a2420] border border-gray-700 rounded-lg p-2 cursor-pointer hover:bg-[#3a3430] transition-colors"
+                                className="flex-1 flex items-center justify-center gap-2 bg-card border border-border rounded-lg p-2 cursor-pointer hover:bg-secondary transition-colors"
                               >
                                 {newImages[key] ? (
                                   <div className="flex items-center gap-1 text-xs text-green-400">
@@ -1280,7 +1328,7 @@ const WineDetail = () => {
                                     <span className="truncate">{newImages[key].name.slice(0, 20)}...</span>
                                   </div>
                                 ) : (
-                                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <Upload className="h-3 w-3" />
                                     <span>Choose additional image</span>
                                   </div>
@@ -1309,7 +1357,7 @@ const WineDetail = () => {
                     </div>
                   </div>
 
-                  <Button onClick={handleUpdateWine} disabled={uploadingImages} className="w-full bg-[#5c2e2e] hover:bg-[#4a2424]">
+                  <Button onClick={handleUpdateWine} disabled={uploadingImages} className="w-full bg-primary hover:opacity-90">
                     {uploadingImages ? "Uploading..." : "Save Changes"}
                   </Button>
                 </div>
@@ -1319,15 +1367,15 @@ const WineDetail = () => {
 
           {/* Storage Location Dialog */}
           <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
-            <DialogContent className="bg-[#1a1410] text-white border-gray-700">
+            <DialogContent className="bg-popover text-foreground border-border">
               <DialogHeader>
-                <DialogTitle className="text-white">
+                <DialogTitle className="text-foreground">
                   {editingLocationIndex !== null ? "Edit Storage Location" : "Add Storage Location"}
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label className="text-white">Location</Label>
+                  <Label className="text-foreground">Location</Label>
                   {savedLocations.length > 0 ? (
                     <Select 
                       value={newLocation.location} 
@@ -1339,7 +1387,7 @@ const WineDetail = () => {
                         }
                       }}
                     >
-                      <SelectTrigger className="bg-[#2a2420] border-gray-700 text-white">
+                      <SelectTrigger className="bg-card border-border text-foreground">
                         <SelectValue placeholder="Select location" />
                       </SelectTrigger>
                       <SelectContent className="bg-background" side="bottom" position="popper" sideOffset={4}>
@@ -1357,24 +1405,24 @@ const WineDetail = () => {
                       value={newLocation.location}
                       onChange={e => setNewLocation({ ...newLocation, location: e.target.value })}
                       placeholder="e.g., Rack A3, Wine Cellar"
-                      className={`bg-[#2a2420] border-gray-700 text-white ${savedLocations.length > 0 ? "mt-2" : ""}`}
+                      className={`bg-card border-border text-foreground ${savedLocations.length > 0 ? "mt-2" : ""}`}
                     />
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-white">Quantity</Label>
+                  <Label className="text-foreground">Quantity</Label>
                   <Input
                     type="number"
                     min="1"
                     value={newLocation.quantity}
                     onChange={e => setNewLocation({ ...newLocation, quantity: parseInt(e.target.value) || 1 })}
-                    className="bg-[#2a2420] border-gray-700 text-white"
+                    className="bg-card border-border text-foreground"
                   />
                 </div>
                 <div className="flex gap-2">
                   <Button 
                     onClick={handleSaveLocation} 
-                    className="flex-1 bg-[#5c2e2e] hover:bg-[#4a2424]"
+                    className="flex-1 bg-primary hover:opacity-90"
                   >
                     {editingLocationIndex !== null ? "Update" : "Add"}
                   </Button>
