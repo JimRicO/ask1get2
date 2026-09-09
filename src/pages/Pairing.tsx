@@ -49,10 +49,10 @@ const Chip = ({ active, onClick, children }: { active: boolean; onClick: () => v
   <button
     type="button"
     onClick={onClick}
-    className={`px-3 py-1.5 rounded-full text-xs transition-all border ${
+    className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.07em] transition-colors duration-[320ms] ease-[var(--ease-cave)] ${
       active
-        ? "bg-primary text-primary-foreground border-primary"
-        : "bg-card/60 text-muted-foreground border-border/50 hover:border-border"
+        ? "border-foreground bg-foreground text-background"
+        : "border-border text-muted-foreground hover:text-foreground"
     }`}
   >
     {children}
@@ -322,10 +322,10 @@ const Pairing = () => {
 
   return (
     <Layout>
-      <div className="max-w-lg mx-auto px-4 pt-8 pb-6">
+      <div className="mx-auto max-w-[430px] px-7 pt-12 pb-6">
         <div className="flex items-center gap-2 mb-1">
           <UtensilsCrossed className="h-5 w-5 text-accent" />
-          <h1 className="text-2xl font-semibold text-foreground">What are you cooking?</h1>
+          <h1 className="font-serif text-[34px] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">What are you cooking?</h1>
         </div>
         <div className="flex items-baseline justify-between gap-3 mb-4">
           <p className="text-sm text-muted-foreground">The cave answers first.</p>
@@ -343,7 +343,7 @@ const Pairing = () => {
           onChange={(e) => setDish(e.target.value)}
           placeholder="Coq au vin for six. Or lamb chops with rosemary. Or last night's leftovers."
           rows={3}
-          className="bg-card/60 border-border/50 resize-none mb-4"
+          className="mb-4 resize-none border-border bg-card"
         />
 
         {/* Scope is chosen before the call, not after. A narrow search costs less
@@ -383,7 +383,7 @@ const Pairing = () => {
               maxLength={2}
               onBlur={(e) => saveMarket(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && saveMarket((e.target as HTMLInputElement).value)}
-              className="w-14 text-center bg-card/60 border border-border/50 rounded px-2 py-1 uppercase"
+              className="w-14 border border-border bg-card px-2 py-1 text-center font-mono uppercase"
             />
           ) : (
             <button onClick={() => setEditingMarket(true)} className="inline-flex items-center gap-1 hover:text-foreground">
@@ -402,9 +402,9 @@ const Pairing = () => {
             {/* Layer one. Renders on every search, including cave-only, because it
                 explains why the picks below were chosen. */}
             {result.profile && (
-              <div className="bg-card rounded-xl p-4 border border-border/50">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">What this dish wants</p>
-                <p className="text-foreground font-medium">{result.profile.headline}</p>
+              <div className="border border-border bg-card p-5">
+                <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">What this dish wants</p>
+                <p className="font-serif text-[25px] leading-[1.25] text-foreground">{result.profile.headline}</p>
                 <p className="text-sm text-foreground/80 mt-1">{result.profile.detail}</p>
               </div>
             )}
@@ -425,7 +425,7 @@ const Pairing = () => {
                 {(result.followUpsIntro?.heading || result.followUpsIntro?.hint) && (
                   <div>
                     {result.followUpsIntro.heading && (
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
                         {result.followUpsIntro.heading}
                       </p>
                     )}
@@ -468,12 +468,12 @@ const Pairing = () => {
             {/* Layer two. */}
             {result.grapes.length > 0 && (
               <div className="space-y-2">
-                <p className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+                <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
                   <Grape className="h-3.5 w-3.5" />
                   Grapes that do this
                 </p>
                 {result.grapes.map((g, i) => (
-                  <div key={i} className="bg-card/60 rounded-xl p-4 border border-border/50">
+                  <div key={i} className="border border-border bg-card/60 p-5">
                     <div className="flex justify-between items-baseline gap-3">
                       <p className="text-foreground font-medium">{g.grape}</p>
                       <span className="text-[10px] text-accent whitespace-nowrap">
@@ -491,16 +491,16 @@ const Pairing = () => {
                 out of the database and were validated on the way back. */}
             {result.picks.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Open tonight</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">Open tonight</p>
                 {result.picks.map(({ wine, why, serve, decantMinutes, caution, priceUnknown }) => (
                   <button
                     key={wine.id}
                     onClick={() => navigate(`/wine/${wine.id}`)}
-                    className="w-full text-left bg-card rounded-xl p-4 border border-border/50 transition-all"
+                    className="w-full border border-border bg-card p-5 text-left transition-colors duration-[420ms] ease-[var(--ease-cave)] hover:bg-secondary/50"
                   >
                     <div className="flex justify-between items-start gap-3">
                       <div>
-                        <p className="text-foreground font-medium">{wine.wine_name}</p>
+                        <p className="font-serif text-[21px] leading-tight text-primary">{wine.wine_name}</p>
                         <p className="text-xs text-muted-foreground">
                           {[wine.producer, wine.vintage_year, wine.region].filter(Boolean).join(" · ")}
                         </p>
@@ -513,9 +513,9 @@ const Pairing = () => {
                     <p className="text-sm text-foreground/90 mt-2">{why}</p>
 
                     <div className="flex flex-wrap gap-2 mt-3 text-[10px]">
-                      {serve && <span className="bg-[#3a3430] text-white px-2 py-1 rounded">Serve {serve}</span>}
-                      {!!decantMinutes && <span className="bg-[#3a3430] text-white px-2 py-1 rounded">Decant {decantMinutes} min</span>}
-                      {priceUnknown && <span className="bg-[#3a3430] text-muted-foreground px-2 py-1 rounded">No price on file</span>}
+                      {serve && <span className="border border-border bg-secondary px-2 py-1 font-mono uppercase tracking-[0.07em] text-primary">Serve {serve}</span>}
+                      {!!decantMinutes && <span className="border border-border bg-secondary px-2 py-1 font-mono uppercase tracking-[0.07em] text-primary">Decant {decantMinutes} min</span>}
+                      {priceUnknown && <span className="border border-border bg-secondary px-2 py-1 font-mono uppercase tracking-[0.07em] text-muted-foreground">No price on file</span>}
                     </div>
 
                     {caution && (
@@ -538,13 +538,13 @@ const Pairing = () => {
             {/* Context, not another recommendation: prose in one bordered block,
                 deliberately not a card like the picks above. */}
             {result.reference && (
-              <div className="rounded-xl p-4 border border-border/50">
+              <div className="border border-border p-5">
                 {result.reference.heading && (
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                  <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
                     {result.reference.heading}
                   </p>
                 )}
-                <p className="text-foreground font-medium">{result.reference.pairing}</p>
+                <p className="font-serif text-[22px] italic leading-[1.35] text-foreground">{result.reference.pairing}</p>
                 {result.reference.why && (
                   <p className="text-sm text-foreground/80 mt-1">{result.reference.why}</p>
                 )}
@@ -571,9 +571,9 @@ const Pairing = () => {
 
             {result.wishlistPicks.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">On your wishlist, not in the cave</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">On your wishlist, not in the cave</p>
                 {result.wishlistPicks.map(({ wine, why }, i) => (
-                  <div key={i} className="bg-card/60 rounded-xl p-4 border border-border/50">
+                  <div key={i} className="border border-border bg-card/60 p-5">
                     <p className="flex items-center gap-2 text-foreground font-medium">
                       <Heart className="h-3.5 w-3.5 text-accent" />
                       {String(wine.wine_name)}
@@ -594,7 +594,7 @@ const Pairing = () => {
 
             {discovery && discovery.bottles.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                <p className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
                   {discoveryFromEmptyCellar ? "Not in your cave, but worth buying" : "Worth buying"}
                 </p>
                 {discovery.bottles.map((b, i) => {
@@ -602,7 +602,7 @@ const Pairing = () => {
                   const isSaved = !!savedBottles[key];
                   const isSaving = savingBottle === key;
                   return (
-                    <div key={i} className="bg-card/60 rounded-xl p-4 border border-border/50">
+                    <div key={i} className="border border-border bg-card/60 p-5">
                       <p className="text-foreground font-medium">{b.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {[b.producer, b.origin, b.priceEstimate].filter(Boolean).join(" · ")}
@@ -616,7 +616,7 @@ const Pairing = () => {
                           type="button"
                           onClick={() => void saveBottle(b)}
                           disabled={isSaved || isSaving}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] border border-border/50 text-muted-foreground transition-colors hover:text-foreground hover:border-border disabled:hover:text-muted-foreground disabled:hover:border-border/50"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground disabled:hover:text-muted-foreground"
                         >
                           {isSaving ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -650,8 +650,8 @@ const Pairing = () => {
             )}
 
             {result.gap && (
-              <div className="bg-card/40 rounded-xl p-4 border border-dashed border-border/50">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">What is missing</p>
+              <div className="border border-dashed border-border bg-card/40 p-5">
+                <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">What is missing</p>
                 <p className="text-sm text-foreground/80">{result.gap}</p>
               </div>
             )}
