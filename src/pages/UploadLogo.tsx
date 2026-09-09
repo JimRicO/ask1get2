@@ -65,7 +65,7 @@ const UploadLogo = () => {
           {uploading && (
             <>
               <Loader2 className="h-16 w-16 mx-auto mb-4 animate-spin text-primary" />
-              <h2 className="text-2xl font-serif font-bold mb-2 text-white">
+              <h2 className="text-2xl font-serif font-bold mb-2 text-foreground">
                 Uploading to Supabase Storage...
               </h2>
               <p className="text-muted-foreground">
@@ -77,7 +77,7 @@ const UploadLogo = () => {
           {uploaded && !uploading && (
             <>
               <CheckCircle className="h-16 w-16 mx-auto mb-4 text-green-500" />
-              <h2 className="text-2xl font-serif font-bold mb-2 text-white">
+              <h2 className="text-2xl font-serif font-bold mb-2 text-foreground">
                 Upload Complete!
               </h2>
               <p className="text-muted-foreground mb-4">
@@ -85,7 +85,7 @@ const UploadLogo = () => {
               </p>
               
               <div className="bg-muted/50 rounded-lg p-4 mb-4 break-all text-left">
-                <p className="text-xs font-mono text-white/70">
+                <p className="text-xs font-mono text-wine-champagne">
                   {publicUrl}
                 </p>
               </div>
@@ -108,7 +108,7 @@ const UploadLogo = () => {
           {!uploaded && !uploading && (
             <>
               <Upload className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-2xl font-serif font-bold mb-2 text-white">
+              <h2 className="text-2xl font-serif font-bold mb-2 text-foreground">
                 Upload Failed
               </h2>
               <Button

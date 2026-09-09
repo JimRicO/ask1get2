@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, Upload, Loader2, Wine, X } from "lucide-react";
+import { Camera, Upload, Loader2, Wine, X, Check } from "lucide-react";
 import uploadButtonImg from "@/assets/upload-button.png";
 import bottleIcon from "@/assets/bottle-icon.png";
 import neckButtonImg from "@/assets/neck-button.png";
@@ -404,6 +404,8 @@ const AddWine = () => {
       setLoading(false);
     }
   };
+  const hasAnyShot = Boolean(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall);
+
   return <Layout>
       <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
         <AlertDialogContent>
@@ -431,21 +433,32 @@ const AddWine = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="min-h-screen bg-[#211111] pb-8">
-        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6">
-          <h1 className="text-3xl font-serif font-bold mb-2">Add your bottle</h1>
-          <p className="text-white/90">Snap a photo to fill details automatically.</p>
+      <div className="min-h-screen bg-background pb-8">
+        <div className="bg-background text-primary-foreground px-4 pt-8 pb-6">
+          <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Add your bottle</h1>
+          <p className="text-foreground/90">Snap a photo to fill details automatically.</p>
         </div>
 
         <div className="px-4 mt-6">
           {/* Image Upload */}
-          <div className="bg-card rounded-2xl p-6 mb-6 border border-border/50">
-            <Label className="text-base font-serif font-semibold mb-4 block text-white">Take a picture of your wine labels </Label>
+          <div className="mb-6 border border-border bg-card p-6">
+            <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">Take a picture of your wine labels</p>
             
-            <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
-              {(['front', 'back', 'neck', 'overall'] as const).map((type, index) => <div key={type}>
-                  {imagePreviews[type] ? <div className="relative group">
-                      <img src={imagePreviews[type]!} alt={`${type} view`} className="w-full h-40 object-contain rounded-xl border-2 border-white/20 bg-muted" />
+            {/* Hairline dashed plates. The shipped textured button PNGs are
+                deliberately not used here: they fight the palette. The tile
+                geometry is unchanged, so reinstating them is a one-line swap. */}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-4">
+              {(['front', 'back', 'neck', 'overall'] as const).map(type => {
+              const label = type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : 'Full bottle';
+              return <div key={type}>
+                  {imagePreviews[type] ? <div className="group">
+                      <div className="relative aspect-3/4 border border-primary bg-[rgba(244,168,113,0.08)]">
+                        <img src={imagePreviews[type]!} alt="" className="h-full w-full object-cover" />
+                        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center bg-primary text-primary-foreground">
+                          <Check className="h-3 w-3" />
+                        </span>
+                      </div>
+                      <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.09em] text-primary">{label} · taken</p>
                       <button type="button" onClick={() => {
                   setImages(prev => ({
                     ...prev,
@@ -455,30 +468,31 @@ const AddWine = () => {
                     ...prev,
                     [type]: null
                   }));
-                }} className="absolute top-2 right-2 bg-background/90 hover:bg-background rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <X className="h-4 w-4" />
+                }} className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground">
+                        Remove
                       </button>
-                      <div className="absolute bottom-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-medium capitalize">
-                        {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : `${type} bottle`}
-                      </div>
-                    </div> : <label className="relative flex flex-col items-center justify-center h-32 w-32 cursor-pointer overflow-hidden rounded-xl transition-all duration-300">
-                      <img src={type === 'neck' ? neckButtonImg : type === 'front' ? frontLabelButtonImg : type === 'back' ? backLabelButtonImg : type === 'overall' ? fullBottleButtonImg : uploadButtonImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="relative z-10 flex flex-col items-center justify-end h-full pb-4 drop-shadow-md">
-                        <Camera className="h-8 w-8 text-white/70 mb-2" />
-                        <span className="text-xs font-medium capitalize text-white">
-                          {type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : type === 'overall' ? 'Full bottle' : `${type} bottle`}
-                        </span>
-                      </div>
+                    </div> : <label className="block cursor-pointer">
+                      <span className="flex aspect-3/4 flex-col items-center justify-center gap-2 border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                        <Camera className="h-6 w-6 text-muted-foreground" strokeWidth={1.6} />
+                      </span>
+                      <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">{label}</span>
                       <input type="file" accept="image/*" capture="environment" onChange={e => handleImageChange(e, type)} className="hidden" />
                     </label>}
-                </div>)}
+                </div>;
+            })}
             </div>
 
-            {(imagePreviews.front || imagePreviews.back || imagePreviews.neck || imagePreviews.overall) && <Button type="button" onClick={processImageWithAI} disabled={aiProcessing} className="w-1/3 mx-auto mt-4 bg-gradient-primary hover:opacity-90 text-white flex justify-center items-center transition-all">
+            {/* Full width and gold, dimmed until a shot exists rather than
+                hidden, so the next step is visible before it is available. */}
+            <Button type="button" onClick={processImageWithAI} disabled={aiProcessing || !hasAnyShot} className="mt-6 w-full disabled:opacity-45">
                 {aiProcessing ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  </> : "Magic Scan"}
-              </Button>}
+                    Reading the labels…
+                  </> : magicScanCompleted ? "Scanned · read again" : "Magic scan"}
+              </Button>
+            {!hasAnyShot && <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
+                Photograph at least one label first
+              </p>}
           </div>
 
           {/* Wine & Virtue Logo - After the section */}
@@ -488,14 +502,14 @@ const AddWine = () => {
 
           {/* Form - Only show after Magic Scan is completed */}
           {magicScanCompleted && <form onSubmit={handleSubmit} className="space-y-4">
-            <div ref={formRef} className="bg-card rounded-2xl p-6 space-y-4 border border-border/50">
+            <div ref={formRef} className="space-y-4 border border-border bg-card p-6">
               <div className="mb-6 text-center">
-                <h2 className="text-xl font-semibold mb-1 text-white">Your wine details are ready.</h2>
-                <p className="text-sm text-white/60">Verify and press "Add to Cellar" below</p>
+                <h2 className="text-xl font-semibold mb-1 text-foreground">Your wine details are ready.</h2>
+                <p className="text-sm text-muted-foreground">Verify and press "Add to Cellar" below</p>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="wine_name" className="text-white">Wine Name *</Label>
+                <Label htmlFor="wine_name" className="text-foreground">Wine Name *</Label>
                 <Input id="wine_name" value={formData.wine_name} onChange={e => setFormData({
                 ...formData,
                 wine_name: e.target.value
@@ -503,7 +517,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="producer" className="text-white">Producer</Label>
+                <Label htmlFor="producer" className="text-foreground">Producer</Label>
                 <Input id="producer" value={formData.producer} onChange={e => setFormData({
                 ...formData,
                 producer: e.target.value
@@ -512,7 +526,7 @@ const AddWine = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="vintage_year" className="text-white">Vintage</Label>
+                  <Label htmlFor="vintage_year" className="text-foreground">Vintage</Label>
                   <Input id="vintage_year" type="number" value={formData.vintage_year} onChange={e => setFormData({
                   ...formData,
                   vintage_year: e.target.value
@@ -520,7 +534,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wine_type" className="text-white">Type</Label>
+                  <Label htmlFor="wine_type" className="text-foreground">Type</Label>
                   <Select value={formData.wine_type} onValueChange={value => setFormData({
                   ...formData,
                   wine_type: value
@@ -542,7 +556,7 @@ const AddWine = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="country" className="text-white">Country</Label>
+                  <Label htmlFor="country" className="text-foreground">Country</Label>
                   <Input id="country" value={formData.country} onChange={e => setFormData({
                   ...formData,
                   country: e.target.value
@@ -550,7 +564,7 @@ const AddWine = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="region" className="text-white">Region</Label>
+                  <Label htmlFor="region" className="text-foreground">Region</Label>
                   <Input id="region" value={formData.region} onChange={e => setFormData({
                   ...formData,
                   region: e.target.value
@@ -559,7 +573,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="grape_varietals" className="text-white">Main Grape Varietal</Label>
+                <Label htmlFor="grape_varietals" className="text-foreground">Main Grape Varietal</Label>
                 <Select value={useCustomGrape ? "custom" : formData.grape_varietals} onValueChange={value => {
                 if (value === "custom") {
                   setUseCustomGrape(true);
@@ -606,16 +620,16 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="custom_grape_varietals" className="text-white">Additional Grapes (Optional)</Label>
+                <Label htmlFor="custom_grape_varietals" className="text-foreground">Additional Grapes (Optional)</Label>
                 <Input id="custom_grape_varietals" value={formData.custom_grape_varietals} onChange={e => setFormData({
                 ...formData,
                 custom_grape_varietals: e.target.value
               })} placeholder="e.g., Petit Verdot, Mourvèdre" />
-                <p className="text-xs text-white/60">Separate multiple grapes with commas</p>
+                <p className="text-xs text-muted-foreground">Separate multiple grapes with commas</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-white">Description</Label>
+                <Label htmlFor="description" className="text-foreground">Description</Label>
                 <Textarea id="description" value={formData.description} onChange={e => setFormData({
                 ...formData,
                 description: e.target.value
@@ -623,7 +637,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-white">Notes</Label>
+                <Label htmlFor="notes" className="text-foreground">Notes</Label>
                 <Textarea id="notes" value={formData.notes} onChange={e => setFormData({
                 ...formData,
                 notes: e.target.value
@@ -631,7 +645,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="alcohol_content" className="text-white">ABV %</Label>
+                <Label htmlFor="alcohol_content" className="text-foreground">ABV %</Label>
                 <Input id="alcohol_content" type="number" step="0.1" value={formData.alcohol_content} onChange={e => setFormData({
                 ...formData,
                 alcohol_content: e.target.value
@@ -639,7 +653,7 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price_per_bottle" className="text-white">Price ($)</Label>
+                <Label htmlFor="price_per_bottle" className="text-foreground">Price ($)</Label>
                 <Input id="price_per_bottle" type="number" step="0.01" value={formData.price_per_bottle} onChange={e => setFormData({
                 ...formData,
                 price_per_bottle: e.target.value
@@ -648,7 +662,7 @@ const AddWine = () => {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-white">Storage Locations *</Label>
+                  <Label className="text-foreground">Storage Locations *</Label>
                   <Button type="button" variant="outline" size="sm" onClick={() => setStorageLocations([...storageLocations, {
                   location: "",
                   quantity: "1"
@@ -658,7 +672,7 @@ const AddWine = () => {
                 </div>
                 {storageLocations.map((storage, index) => <div key={index} className="grid grid-cols-[1fr,100px,auto] gap-2 items-end">
                     <div className="space-y-2">
-                      <Label htmlFor={`location_${index}`} className="text-white text-sm">Location</Label>
+                      <Label htmlFor={`location_${index}`} className="text-foreground text-sm">Location</Label>
                       {savedLocations.length > 0 ? <Select value={storage.location} onValueChange={value => {
                     const newLocations = [...storageLocations];
                     if (value === "custom") {
@@ -685,7 +699,7 @@ const AddWine = () => {
                   }} placeholder="e.g., Rack A3" className={savedLocations.length > 0 ? "mt-2" : ""} required />}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor={`quantity_${index}`} className="text-white text-sm">Qty</Label>
+                      <Label htmlFor={`quantity_${index}`} className="text-foreground text-sm">Qty</Label>
                       <Input id={`quantity_${index}`} type="number" inputMode="numeric" min="1" value={storage.quantity} onChange={e => {
                     const newLocations = [...storageLocations];
                     newLocations[index] = {
