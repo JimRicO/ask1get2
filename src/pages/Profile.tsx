@@ -58,52 +58,92 @@ But on what? Wine, poetry, or virtue, as you wish."
     }
   };
 
+  /* The manifesto string above is the shipped copy, unchanged. It is split
+     here only to typeset it: the couplet wants its own ruled band and the
+     Baudelaire wants a pull quote, and neither is reachable from one
+     whitespace-preserved paragraph. */
+  const blocks = manifesto.split("\n\n");
+  const [openingTitle, ...openingRest] = (blocks[0] ?? "").split("\n");
+  const couplet = (blocks[1] ?? "").split("\n");
+  const archiveLines = (blocks[2] ?? "").split("\n");
+  const quoteLines = (blocks[3] ?? "").split("\n");
+  const attribution = quoteLines[quoteLines.length - 1] ?? "";
+  const quoteBody = quoteLines.slice(0, -1);
+
   return (
     <Layout>
-      <div className="min-h-screen bg-[#211111]">
-        <div className="bg-[#211111] text-primary-foreground px-4 pt-8 pb-6">
-          <h1 className="text-3xl font-serif font-bold mb-2">Profile</h1>
-          <p className="text-primary-foreground/80">Manage your account</p>
-        </div>
+      <div className="min-h-screen">
+        <div className="mx-auto flex max-w-[1180px] flex-wrap items-start gap-x-12 gap-y-10 px-7 pt-12 pb-10">
+          {/* The manifesto is the screen, not a card on it. */}
+          <div className="max-w-[660px] flex-[1_1_420px]">
+            <h1 className="font-serif font-bold leading-[1.05] tracking-[-0.02em] text-foreground text-[clamp(30px,4.2vw,46px)]">
+              {openingTitle}
+            </h1>
+            {openingRest.map((line, i) => (
+              <p key={i} className="mt-4 max-w-[54ch] text-[18px] leading-[1.6] text-wine-champagne">
+                {line}
+              </p>
+            ))}
 
-        <div className="px-4 mt-6 space-y-4">
-          {/* Manifesto Section */}
-          <div className="bg-card rounded-2xl p-6 border border-border/50">
-            <h2 className="text-xl font-serif font-semibold text-white mb-4">No Wine No Sex — The Manifesto</h2>
-            <p className="text-white/70 text-sm leading-relaxed italic whitespace-pre-line">
-              {manifesto}
-            </p>
-          </div>
-
-          {/* Wine & Virtue Logo */}
-          <div className="flex justify-center my-8">
-            <img src={wineVirtueLogo} alt="Wine & Virtue" className="w-48 h-auto opacity-90" />
-          </div>
-
-          {/* User Profile Section */}
-          <div className="bg-card rounded-2xl p-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-8 w-8 text-primary" />
-              </div>
-              <div>
-                <div className="font-semibold">
-                  {session?.user?.user_metadata?.full_name || session?.user?.email}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {session?.user?.email}
-                </div>
-              </div>
+            <div className="my-9 border-y border-border py-7">
+              {couplet.map((line, i) => (
+                <p
+                  key={i}
+                  className="font-serif italic leading-[1.3] text-foreground text-[clamp(20px,2.6vw,34px)]"
+                >
+                  {line}
+                </p>
+              ))}
             </div>
 
-            <Button
-              onClick={handleSignOut}
-              variant="outline"
-              className="w-full"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
+            {archiveLines.map((line, i) => (
+              <p key={i} className="max-w-[54ch] text-[18px] leading-[1.6] text-wine-champagne">
+                {line}
+              </p>
+            ))}
+
+            <blockquote className="mt-9 border-l border-primary pl-6">
+              {quoteBody.map((line, i) => (
+                <p
+                  key={i}
+                  className="font-serif italic leading-[1.35] text-foreground text-[clamp(20px,2.6vw,34px)]"
+                >
+                  {line}
+                </p>
+              ))}
+              <footer className="mt-3 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
+                {attribution}
+              </footer>
+            </blockquote>
+          </div>
+
+          {/* Right column: the seal, then the account. This screen reads no
+              other fields, so nothing else appears here. */}
+          <div className="flex-[1_1_260px] lg:sticky lg:top-[92px]">
+            <div className="flex justify-center">
+              <img src={wineVirtueLogo} alt="Wine & Virtue" className="h-auto w-48 opacity-90" />
+            </div>
+
+            <div className="mt-8 border border-border bg-card p-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full border border-border">
+                  <User className="h-7 w-7 text-wine-champagne" strokeWidth={1.6} />
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-serif text-[21px] leading-tight text-foreground">
+                    {session?.user?.user_metadata?.full_name || session?.user?.email}
+                  </div>
+                  <div className="mt-1 truncate font-mono text-[10px] tracking-[0.05em] text-muted-foreground">
+                    {session?.user?.email}
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={handleSignOut} variant="outline" className="mt-6 w-full">
+                <LogOut className="h-4 w-4" />
+                Sign out
+              </Button>
+            </div>
           </div>
         </div>
       </div>
