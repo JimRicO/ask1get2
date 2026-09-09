@@ -14,6 +14,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { useFrozenMotion } from "@/lib/cave-motion";
 
 import appCss from "../styles.css?url";
 
@@ -75,6 +76,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Once, globally. Every screen's motion depends on it.
+  useFrozenMotion();
 
   return (
     <QueryClientProvider client={queryClient}>

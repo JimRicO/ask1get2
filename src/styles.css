@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -21,6 +22,7 @@
 
   --font-sans: Inter, system-ui, sans-serif;
   --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -78,61 +80,71 @@
 }
 
 :root {
-  --radius: 1rem;
+  /* Cave. Corners are square everywhere; chips and the avatar opt back in
+     with rounded-full. That squareness is load-bearing for the look. */
+  --radius: 0rem;
 
-  --background: hsl(345 45% 18%);
-  --foreground: hsl(40 60% 95%);
+  /* ---- Ground and ink: three tints, no fourth ---- */
+  --background: hsl(0 32% 10%);        /* #211111 canvas */
+  --foreground: hsl(40 60% 95%);       /* #FAF5EB ink */
 
-  --card: hsl(345 40% 22%);
+  --card: hsl(0 32% 13%);              /* #2B1616 */
   --card-foreground: hsl(40 60% 95%);
 
-  --popover: hsl(345 40% 22%);
+  --popover: hsl(0 32% 13%);           /* #2B1616 sheets and dialogs */
   --popover-foreground: hsl(40 60% 95%);
 
-  --primary: hsl(350 60% 28%);
-  --primary-foreground: hsl(40 60% 95%);
-  --primary-glow: hsl(350 65% 40%);
+  /* ---- Actions. Primary IS the accent: there is no burgundy button. ---- */
+  --primary: hsl(25 85% 70%);          /* #F4A871 */
+  --primary-foreground: hsl(0 32% 10%);/* #211111 ink ON gold, never cream */
+  --primary-glow: hsl(25 85% 70%);     /* no glow in this system */
 
-  --secondary: hsl(25 85% 70%);
-  --secondary-foreground: hsl(345 45% 18%);
+  --secondary: hsl(0 27% 23%);         /* #4A2A2A raised surface */
+  --secondary-foreground: hsl(40 60% 95%);
 
-  --muted: hsl(345 35% 28%);
-  --muted-foreground: hsl(40 40% 70%);
+  --muted: hsl(0 29% 18%);             /* #3A2020 hairline ground */
+  --muted-foreground: hsl(23 28% 57%); /* #B08A72 dim ink floor */
 
-  --accent: hsl(25 85% 70%);
-  --accent-foreground: hsl(345 45% 18%);
+  --accent: hsl(25 85% 70%);           /* #F4A871 */
+  --accent-foreground: hsl(0 32% 10%);
 
-  --destructive: hsl(0 84% 60%);
-  --destructive-foreground: hsl(0 0% 100%);
+  --destructive: hsl(0 62% 45%);       /* #B92A2A irreversible confirms only */
+  --destructive-foreground: hsl(40 60% 95%);
 
-  --border: hsl(345 30% 30%);
-  --input: hsl(345 35% 25%);
-  --ring: hsl(345 75% 55%);
+  --border: hsl(0 27% 23%);            /* #4A2A2A */
+  --input: hsl(0 27% 23%);
+  --ring: hsl(25 85% 70%);
 
-  --wine-burgundy: hsl(345 65% 42%);
-  --wine-dark: hsl(345 55% 25%);
+  /* ---- Wine scale, kept and re-pointed ---- */
+  --wine-burgundy: hsl(0 32% 13%);
+  --wine-dark: hsl(0 32% 10%);
   --wine-rose-gold: hsl(25 85% 70%);
-  --wine-champagne: hsl(40 40% 80%);
-  --wine-deep: hsl(345 70% 32%);
+  --wine-champagne: hsl(40 40% 70%);   /* #D1BD94 secondary ink */
+  --wine-deep: hsl(0 29% 18%);
 
-  --sidebar: hsl(345 40% 22%);
+  --sidebar: hsl(0 32% 13%);
   --sidebar-foreground: hsl(40 60% 95%);
-  --sidebar-primary: hsl(350 60% 28%);
-  --sidebar-primary-foreground: hsl(40 60% 95%);
-  --sidebar-accent: hsl(345 35% 28%);
+  --sidebar-primary: hsl(25 85% 70%);
+  --sidebar-primary-foreground: hsl(0 32% 10%);
+  --sidebar-accent: hsl(0 27% 23%);
   --sidebar-accent-foreground: hsl(40 60% 95%);
-  --sidebar-border: hsl(345 30% 30%);
-  --sidebar-ring: hsl(345 75% 55%);
+  --sidebar-border: hsl(0 27% 23%);
+  --sidebar-ring: hsl(25 85% 70%);
 
-  --gradient-primary: linear-gradient(135deg, hsl(350 60% 28%) 0%, hsl(350 65% 22%) 100%);
-  --gradient-rose: linear-gradient(135deg, hsl(25 85% 70%) 0%, hsl(15 75% 65%) 100%);
-  --gradient-elegant: linear-gradient(180deg, hsl(345 45% 18%) 0%, hsl(345 40% 22%) 100%);
-  --gradient-card: linear-gradient(135deg, hsl(345 40% 22%) 0%, hsl(345 35% 24%) 100%);
-  --gradient-shimmer: linear-gradient(90deg, transparent, hsl(345 75% 55% / 0.1), transparent);
+  /* ---- Gradients: flattened on purpose. Depth comes from the tints. ---- */
+  --gradient-primary: hsl(25 85% 70%);
+  --gradient-rose: hsl(25 85% 70%);
+  --gradient-elegant: hsl(0 32% 10%);
+  --gradient-card: hsl(0 32% 13%);
+  --gradient-shimmer: transparent;
 
-  --shadow-wine-value: 0 10px 40px -10px hsl(345 75% 55% / 0.4);
-  --shadow-elegant-value: 0 8px 32px hsl(345 75% 55% / 0.25);
-  --shadow-glow-value: 0 0 30px hsl(345 75% 65% / 0.3);
+  /* ---- Elevation: none. ---- */
+  --shadow-wine-value: none;
+  --shadow-elegant-value: none;
+  --shadow-glow-value: none;
+
+  /* ---- Motion: one easing for everything. ---- */
+  --ease-cave: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dark {
@@ -186,6 +198,19 @@
 @layer base {
   * {
     border-color: var(--color-border);
+  }
+
+  /* A transition that is not ticking keeps its START value, so in a hidden or
+     uncomposited document (background tab, screenshot pass, print, embedded
+     preview) every animated state change freezes half-applied: an invisible
+     form, a dialog that swallows clicks, a button stuck at 45%. Removing the
+     transition rather than the target lets final values apply instantly while
+     hidden; motion returns when the page is shown. Set by useFrozenMotion. */
+  html[data-frozen] *,
+  html[data-frozen] *::before,
+  html[data-frozen] *::after {
+    transition: none !important;
+    animation: none !important;
   }
 
   body {
