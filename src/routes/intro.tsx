@@ -1,4 +1,5 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import seal from "@/assets/wine-virtue-logo.png";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 
 const SEEN_KEY = "wv-intro-seen";
@@ -29,6 +30,10 @@ export const Route = createFileRoute("/intro")({
 
 function IntroPage() {
   const navigate = useNavigate();
+  const [started, setStarted] = useState(() => {
+    const ua = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
+    return !!ua?.hasBeenActive;
+  });
 
   const finish = useCallback(() => {
     localStorage.setItem(SEEN_KEY, "1");
@@ -45,6 +50,7 @@ function IntroPage() {
 
   return (
     <div style={{ position: "relative", background: "#140B0C", height: "100dvh" }}>
+      {started ? (
       <iframe
         src="/wine-and-virtue-intro.html"
         title="Wine & Virtue intro"
@@ -57,6 +63,40 @@ function IntroPage() {
           display: "block",
         }}
       />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setStarted(true)}
+          aria-label="Tap to begin"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100dvh",
+            background: "#140B0C",
+            border: "none",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 28,
+            cursor: "pointer",
+          }}
+        >
+          <img src={seal} alt="Wine & Virtue" style={{ width: 160, maxWidth: "50vw", height: "auto" }} />
+          <span
+            style={{
+              fontFamily: '"IBM Plex Mono", ui-monospace, monospace',
+              fontSize: 12,
+              textTransform: "uppercase",
+              letterSpacing: "0.2em",
+              color: "#F4ECE1",
+            }}
+          >
+            Tap to begin
+          </span>
+        </button>
+      )}
       <button
         type="button"
         onClick={finish}
