@@ -3,7 +3,7 @@ import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
@@ -124,15 +124,21 @@ But on what? Wine, poetry, or virtue, as you wish."
             <div className="flex justify-center">
               <img src={wineVirtueLogo} alt="Wine & Virtue" className="h-auto w-48 opacity-90" />
             </div>
-            <div className="mt-4 flex justify-center">
-              <Link
-                to="/intro"
-                search={{ replay: true }}
-                className="font-mono text-xs uppercase tracking-wider text-primary hover:underline"
-              >
-                Watch the intro
-              </Link>
-            </div>
+            <Link
+              to="/intro"
+              search={{ replay: true }}
+              className="mt-6 flex items-center gap-4 rounded-md border border-border bg-card p-5 transition-colors hover:border-primary"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary">
+                <Play className="h-5 w-5 text-primary" strokeWidth={1.6} />
+              </div>
+              <div>
+                <div className="font-serif text-[19px] leading-tight text-foreground">Experience the film</div>
+                <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
+                  Watch the intro
+                </div>
+              </div>
+            </Link>
 
             <div className="mt-8 border border-border bg-card p-6 rounded-md">
               <div className="flex items-center gap-4">
