@@ -37,23 +37,35 @@ function IntroPage() {
 
   type FilmWindow = Window & { nwnsSeek?: (t: number) => void };
 
-  // The film begins on its own; hold it still behind the "Tap to begin" screen.
+  // The tap screen lives inside the film's own frame, so the tap unlocks sound
+  // there even when this page is itself embedded (desktop preview).
   const onFrameLoad = () => {
-    setReady(true);
-    window.setTimeout(() => {
-      if (!startedRef.current) (frameRef.current?.contentWindow as FilmWindow | null)?.nwnsSeek?.(0);
-    }, 1000);
-  };
-
-  // Runs inside the tap itself, so the browser lets the soundtrack play.
-  const begin = () => {
     const win = frameRef.current?.contentWindow as FilmWindow | null;
     const doc = frameRef.current?.contentDocument;
-    if (!win || !doc) return;
-    startedRef.current = true;
-    win.nwnsSeek?.(0);
-    (doc.getElementById("sndhint") as HTMLButtonElement | null)?.click();
-    setStarted(true);
+    if (!win || !doc || startedRef.current) return;
+    const img = new URL(seal, window.location.href).href;
+    const ov = doc.createElement("button");
+    ov.type = "button";
+    ov.setAttribute("aria-label", "Tap to begin");
+    ov.style.cssText =
+      "all:unset;position:fixed;inset:0;z-index:2147483647;background:#140B0C;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;cursor:pointer";
+    ov.innerHTML =
+      '<img src="' + img + '" alt="Wine & Virtue" style="width:160px;max-width:50vw;height:auto">' +
+      '<span style="font:12px \'IBM Plex Mono\',ui-monospace,monospace;text-transform:uppercase;letter-spacing:.2em;color:#F4ECE1">Tap to begin</span>';
+    const hold = () => { if (!startedRef.current) win.nwnsSeek?.(0); };
+    const timer = win.setTimeout(hold, 1000);
+    ov.addEventListener("click", (e) => {
+      e.stopPropagation();
+      win.clearTimeout(timer);
+      startedRef.current = true;
+      win.nwnsSeek?.(0);
+      (doc.getElementById("sndhint") as HTMLButtonElement | null)?.click();
+      ov.remove();
+      setStarted(true);
+    });
+    doc.body.appendChild(ov);
+    hold();
+    setReady(true);
   };
 
   const finish = useCallback(() => {
@@ -85,11 +97,9 @@ function IntroPage() {
           display: "block",
         }}
       />
-      {!started && (
-        <button
-          type="button"
-          onClick={begin}
-          disabled={!ready}
+      {!ready && !started && (
+        <div
+          aria-label="Loading"
           aria-label="Tap to begin"
           style={{
             position: "absolute",
@@ -103,7 +113,7 @@ function IntroPage() {
             alignItems: "center",
             justifyContent: "center",
             gap: 28,
-            cursor: ready ? "pointer" : "default",
+
           }}
         >
           <img src={seal} alt="Wine & Virtue" style={{ width: 160, maxWidth: "50vw", height: "auto" }} />
@@ -116,9 +126,9 @@ function IntroPage() {
               color: "#F4ECE1",
             }}
           >
-            {ready ? "Tap to begin" : "Loading…"}
+            Loading…
           </span>
-        </button>
+        </div>
       )}
       <button
         type="button"
