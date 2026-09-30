@@ -100,7 +100,6 @@ function IntroPage() {
       {!ready && !started && (
         <div
           aria-label="Loading"
-          aria-label="Tap to begin"
           style={{
             position: "absolute",
             inset: 0,
