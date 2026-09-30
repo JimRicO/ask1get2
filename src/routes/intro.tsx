@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import seal from "@/assets/wine-virtue-logo.png";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 
@@ -30,10 +30,31 @@ export const Route = createFileRoute("/intro")({
 
 function IntroPage() {
   const navigate = useNavigate();
-  const [started, setStarted] = useState(() => {
-    const ua = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
-    return !!ua?.hasBeenActive;
-  });
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const [ready, setReady] = useState(false);
+  const [started, setStarted] = useState(false);
+  const startedRef = useRef(false);
+
+  type FilmWindow = Window & { nwnsSeek?: (t: number) => void };
+
+  // The film begins on its own; hold it still behind the "Tap to begin" screen.
+  const onFrameLoad = () => {
+    setReady(true);
+    window.setTimeout(() => {
+      if (!startedRef.current) (frameRef.current?.contentWindow as FilmWindow | null)?.nwnsSeek?.(0);
+    }, 1000);
+  };
+
+  // Runs inside the tap itself, so the browser lets the soundtrack play.
+  const begin = () => {
+    const win = frameRef.current?.contentWindow as FilmWindow | null;
+    const doc = frameRef.current?.contentDocument;
+    if (!win || !doc) return;
+    startedRef.current = true;
+    win.nwnsSeek?.(0);
+    (doc.getElementById("sndhint") as HTMLButtonElement | null)?.click();
+    setStarted(true);
+  };
 
   const finish = useCallback(() => {
     localStorage.setItem(SEEN_KEY, "1");
@@ -42,7 +63,7 @@ function IntroPage() {
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      if (event.data === "wv-intro-ended") finish();
+      if (event.data === "wv-intro-ended" && startedRef.current) finish();
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
@@ -50,8 +71,9 @@ function IntroPage() {
 
   return (
     <div style={{ position: "relative", background: "#140B0C", height: "100dvh" }}>
-      {started ? (
       <iframe
+        ref={frameRef}
+        onLoad={onFrameLoad}
         src="/wine-and-virtue-intro.html"
         title="Wine & Virtue intro"
         allow="autoplay"
@@ -63,10 +85,11 @@ function IntroPage() {
           display: "block",
         }}
       />
-      ) : (
+      {!started && (
         <button
           type="button"
-          onClick={() => setStarted(true)}
+          onClick={begin}
+          disabled={!ready}
           aria-label="Tap to begin"
           style={{
             position: "absolute",
@@ -80,7 +103,7 @@ function IntroPage() {
             alignItems: "center",
             justifyContent: "center",
             gap: 28,
-            cursor: "pointer",
+            cursor: ready ? "pointer" : "default",
           }}
         >
           <img src={seal} alt="Wine & Virtue" style={{ width: 160, maxWidth: "50vw", height: "auto" }} />
@@ -93,7 +116,7 @@ function IntroPage() {
               color: "#F4ECE1",
             }}
           >
-            Tap to begin
+            {ready ? "Tap to begin" : "Loading…"}
           </span>
         </button>
       )}
