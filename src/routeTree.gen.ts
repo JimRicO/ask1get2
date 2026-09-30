@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CellarRouteImport } from './routes/cellar'
+import { Route as IntroRouteImport } from './routes/intro'
 import { Route as PairRouteImport } from './routes/pair'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RestaurantRouteImport } from './routes/restaurant'
@@ -38,6 +39,11 @@ const AuthRoute = AuthRouteImport.update({
 const CellarRoute = CellarRouteImport.update({
   id: '/cellar',
   path: '/cellar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntroRoute = IntroRouteImport.update({
+  id: '/intro',
+  path: '/intro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PairRoute = PairRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
   '/cellar': typeof CellarRoute
+  '/intro': typeof IntroRoute
   '/pair': typeof PairRoute
   '/profile': typeof ProfileRoute
   '/restaurant': typeof RestaurantRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
   '/cellar': typeof CellarRoute
+  '/intro': typeof IntroRoute
   '/pair': typeof PairRoute
   '/profile': typeof ProfileRoute
   '/restaurant': typeof RestaurantRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/add': typeof AddRoute
   '/auth': typeof AuthRoute
   '/cellar': typeof CellarRoute
+  '/intro': typeof IntroRoute
   '/pair': typeof PairRoute
   '/profile': typeof ProfileRoute
   '/restaurant': typeof RestaurantRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/auth'
     | '/cellar'
+    | '/intro'
     | '/pair'
     | '/profile'
     | '/restaurant'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/auth'
     | '/cellar'
+    | '/intro'
     | '/pair'
     | '/profile'
     | '/restaurant'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/auth'
     | '/cellar'
+    | '/intro'
     | '/pair'
     | '/profile'
     | '/restaurant'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   AddRoute: typeof AddRoute
   AuthRoute: typeof AuthRoute
   CellarRoute: typeof CellarRoute
+  IntroRoute: typeof IntroRoute
   PairRoute: typeof PairRoute
   ProfileRoute: typeof ProfileRoute
   RestaurantRoute: typeof RestaurantRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/cellar'
       fullPath: '/cellar'
       preLoaderRoute: typeof CellarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intro': {
+      id: '/intro'
+      path: '/intro'
+      fullPath: '/intro'
+      preLoaderRoute: typeof IntroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pair': {
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   AddRoute: AddRoute,
   AuthRoute: AuthRoute,
   CellarRoute: CellarRoute,
+  IntroRoute: IntroRoute,
   PairRoute: PairRoute,
   ProfileRoute: ProfileRoute,
   RestaurantRoute: RestaurantRoute,
