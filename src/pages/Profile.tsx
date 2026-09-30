@@ -11,7 +11,7 @@ import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
 const Profile = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
-  const manifesto = `No wine, No sex
+  const manifesto = `Wine & Virtue
 Keep track of your bottles. Collection is recollection. Intimacy is legacy.
 
 To taste is to feel.
