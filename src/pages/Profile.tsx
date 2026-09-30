@@ -7,6 +7,7 @@ import { User, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
+import { Link } from "@tanstack/react-router";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -122,6 +123,15 @@ But on what? Wine, poetry, or virtue, as you wish."
           <div className="flex-[1_1_260px] lg:sticky lg:top-[92px]">
             <div className="flex justify-center">
               <img src={wineVirtueLogo} alt="Wine & Virtue" className="h-auto w-48 opacity-90" />
+            </div>
+            <div className="mt-4 flex justify-center">
+              <Link
+                to="/intro"
+                search={{ replay: true }}
+                className="font-mono text-xs uppercase tracking-wider text-primary hover:underline"
+              >
+                Watch the intro
+              </Link>
             </div>
 
             <div className="mt-8 border border-border bg-card p-6 rounded-md">
