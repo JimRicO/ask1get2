@@ -45,6 +45,13 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
           strokeWidth={isActive ? 2.4 : 1.8}
         />
       )}
+      <span
+        className={`absolute -bottom-3 whitespace-nowrap text-[9px] uppercase tracking-[0.15em] leading-none ${
+          isActive ? "text-foreground" : "text-wine-champagne/80"
+        }`}
+      >
+        {config.label}
+      </span>
       {isActive && <span className="absolute bottom-0 left-0 right-0 h-px bg-primary" />}
     </button>
   );
