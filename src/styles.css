@@ -507,3 +507,4 @@
 }
 @keyframes rv-blink { 50% { opacity: 0; } }
 .rv-caret { margin-left: 1px; animation: rv-blink 1s steps(1) infinite; }
+}
