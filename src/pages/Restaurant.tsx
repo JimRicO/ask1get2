@@ -327,6 +327,17 @@ const Restaurant = () => {
     }
   };
 
+  // Auto-pair once per wine list read, as soon as plates are ticked.
+  const autoPairedRef = useRef<ListResult | null>(null);
+  useEffect(() => {
+    if (!listShown || !listResult || listResult.entries.length === 0) return;
+    if (selectedCount === 0 || dishes.trim().length < 3 || table || pairing) return;
+    if (autoPairedRef.current === listResult) return;
+    autoPairedRef.current = listResult;
+    void pair();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listShown, listResult, selectedCount, dishes]);
+
   const toggleDish = (id: string) => {
     const next = { ...selected };
     if (next[id]) delete next[id];
@@ -588,7 +599,7 @@ const Restaurant = () => {
           />
         )}
 
-        {menuImages.length > 0 && (
+        {menuImages.length > 0 && !(menuResult && dishesShown) && (
           <button
             type="button"
             onClick={() => void readMenu()}
@@ -619,6 +630,9 @@ const Restaurant = () => {
                 <DishCounter key={clinkKey} total={menuResult.dishes.length} instant={skip} />
               ) : null}
             </div>
+            {totalPlates === 0 && dishesShown && menuResult.dishes.length > 0 && (
+              <p className="rv-eyebrow mb-1">Tick the plates</p>
+            )}
 
             {menuOpen && dishesShown &&
               grouped.map((group, gi) => (
