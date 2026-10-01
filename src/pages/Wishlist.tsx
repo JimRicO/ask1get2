@@ -516,7 +516,7 @@ const Wishlist = () => {
                          <img src={imagePreviews.front} alt="Front" className="w-full h-full object-contain rounded-md" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <img src={frontLabelButtonImg} alt="Front Label" className="w-16 h-16 mb-2" />
+                          <img src={frontLabelButtonImg} alt="Front Label" className="w-full flex-1 min-h-0 object-contain p-2" />
                           <span className="text-sm text-muted-foreground">Front Label</span>
                         </div>
                       )}
@@ -551,7 +551,7 @@ const Wishlist = () => {
                          <img src={imagePreviews.back} alt="Back" className="w-full h-full object-contain rounded-md" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <img src={backLabelButtonImg} alt="Back Label" className="w-16 h-16 mb-2" />
+                          <img src={backLabelButtonImg} alt="Back Label" className="w-full flex-1 min-h-0 object-contain p-2" />
                           <span className="text-sm text-muted-foreground">Back Label</span>
                         </div>
                       )}
@@ -586,7 +586,7 @@ const Wishlist = () => {
                          <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-contain rounded-md" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <img src={neckButtonImg} alt="Neck" className="w-16 h-16 mb-2" />
+                          <img src={neckButtonImg} alt="Neck" className="w-full flex-1 min-h-0 object-contain p-2" />
                           <span className="text-sm text-muted-foreground">Neck</span>
                         </div>
                       )}
@@ -621,7 +621,7 @@ const Wishlist = () => {
                          <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-contain rounded-md" />
                       ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <img src={fullBottleButtonImg} alt="Full Bottle" className="w-16 h-16 mb-2" />
+                          <img src={fullBottleButtonImg} alt="Full Bottle" className="w-full flex-1 min-h-0 object-contain p-2" />
                           <span className="text-sm text-muted-foreground">Full Bottle</span>
                         </div>
                       )}
