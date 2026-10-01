@@ -548,7 +548,7 @@ h1.h{margin:0;font-family:var(--display);font-weight:700;color:var(--cream);font
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = false; // app intro: the viewer chose to watch the film, so it always plays, even with the system "reduce motion" setting on
   const CORE = 108, T0 = 12.96, D = 38.04, SKIP = 1.8, DD = D - SKIP;
   /* radio edit: the picture follows the music. Anchors map film time to the old (held) timeline */
   const ANCH = [[51.0, 15], [99.6, 67.5], [127.0, 94.1], [132.2, 99.4], [136.4, 102.9], [141.0, 104.8], [147.4, 107.9], [148.0, 108.9], [155.5, 115.4], [168.6, 115.5]];
