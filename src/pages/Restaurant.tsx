@@ -481,7 +481,7 @@ const Restaurant = () => {
           Snap the menu. Tick what the table ordered.
         </p>
 
-        {menuImages.length > 0 && (
+        {menuImages.length > 0 ? (
           <div className="mb-4 flex justify-center">
             <div id="rv-menu-photo" className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
               <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
@@ -489,19 +489,46 @@ const Restaurant = () => {
               {flash > 0 && <Flash fire={flash} />}
             </div>
           </div>
+        ) : (
+          <div className="rv-viewfinder">
+            <span className="rv-corner rv-corner-tl" />
+            <span className="rv-corner rv-corner-br" />
+            <label
+              aria-label="Scan the menu"
+              className="flex h-[180px] cursor-pointer flex-col items-center justify-center gap-2 text-rv-tan2 transition-colors hover:text-rv-peach"
+            >
+              {preparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+              <span className="rv-eyebrow !text-current">Scan the menu</span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                className="hidden"
+                disabled={preparing}
+                onChange={(e) => {
+                  firePhoto(e.target.files, menuImages, MAX_MENU_IMAGES, setMenuImages);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
         )}
         {menuImages.length > 0 && (
           <div className="mb-3">
             <Thumbs images={menuImages} setImages={setMenuImages} />
           </div>
         )}
-        <CaptureButton
-          images={menuImages}
-          max={MAX_MENU_IMAGES}
-          setImages={setMenuImages}
-          addLabel="Photograph the menu"
-          moreLabel="Add another page"
-        />
+        {menuImages.length > 0 && (
+          <CaptureButton
+            images={menuImages}
+            max={MAX_MENU_IMAGES}
+            setImages={setMenuImages}
+            addLabel="Scan the menu"
+            moreLabel="Add another page"
+          />
+        )}
+
         {menuImages.length > 0 && (
           <button
             type="button"
