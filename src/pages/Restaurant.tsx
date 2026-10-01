@@ -99,16 +99,25 @@ const Restaurant = () => {
     setMenuLock((n) => n + 1);
     const header = orderHeaderRef.current, stage = stageRef.current;
     if (!header || !stage) { setDishesShown(true); return; }
-    const y = header.getBoundingClientRect().bottom - stage.getBoundingClientRect().top + 34;
-    setClinkY(y);
-    setSkip(false);
-    setClinking(true);
-    setClinkKey((k) => k + 1);
+    // Let the corners lock on the photo, then bring the clink spot into view.
+    window.setTimeout(() => {
+      header.scrollIntoView({ behavior: "smooth", block: "center" });
+      window.setTimeout(() => {
+        const y = header.getBoundingClientRect().bottom - stage.getBoundingClientRect().top + 34;
+        setClinkY(y);
+        setSkip(false);
+        setClinking(true);
+        setClinkKey((k) => k + 1);
+      }, 380);
+    }, 340);
   };
   const showDishes = () => { setClinking(false); setDishesShown(true); };
   const onListScanned = () => {
     setListLock((n) => n + 1);
-    window.setTimeout(() => setListShown(true), 320);
+    window.setTimeout(() => {
+      setListShown(true);
+      requestAnimationFrame(() => document.getElementById("rv-list-read")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    }, 340);
   };
 
   useEffect(() => {

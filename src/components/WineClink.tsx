@@ -72,8 +72,7 @@ export function WineClink({ run, y, onDone, sound = true, skip = false }:
 
   useEffect(() => {
     if (!run) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || skip) { onDone?.(); return; }
+    if (skip) { onDone?.(); return; }
     const parts = makeParts();
     const t0 = performance.now();
     let raf = 0, hit = false, done = false;
