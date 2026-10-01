@@ -654,6 +654,7 @@ export const pairFromList = createServerFn({ method: "POST" })
       .object({
         entries: z.array(listEntrySchema).min(1).max(MAX_LIST_ENTRIES),
         dishes: z.string().trim().min(3).max(600),
+        lang: z.string().trim().max(35).optional(),
       })
       .parse(input),
   )
@@ -689,7 +690,7 @@ With several dishes the job is not the best match for any one plate but the wine
 
 Prefer entries with "by_the_glass": true when the dishes are irreconcilable and a split would need more than two bottles.
 
-Answer entirely in the language of the dishes.
+${data.lang ? `Answer entirely in the language with BCP 47 code "${data.lang}", whatever language the dishes or list are written in.` : "Answer entirely in the language of the dishes."}
 
 Return ONLY valid JSON, no markdown fences:
 {
@@ -699,7 +700,7 @@ Return ONLY valid JSON, no markdown fences:
   "verdict": "one honest sentence about this list for this food. If the list is genuinely poor for what the table ordered, say so.",
   "save_label": "short button label meaning \\"we liked it\\", e.g. \\"on a aimé\\"",
   "saved_label": "the same button once saved, e.g. \\"déjà dans ma liste\\"",
-  "save_note_with_place": "a line recording the occasion, meaning \\"Drunk with <the dishes>, at {restaurant}, ${monthYear}\\". Keep the literal token {restaurant} exactly as written. Render the month and year in the language of the dishes.",
+  "save_note_with_place": "a line recording the occasion, meaning \\"Drunk with <the dishes>, at {restaurant}, ${monthYear}\\". Keep the literal token {restaurant} exactly as written. Render the month and year in that same answer language.",
   "save_note_plain": "the same line without the restaurant, meaning \\"Drunk with <the dishes>, ${monthYear}\\""
 }
 
