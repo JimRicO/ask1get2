@@ -443,7 +443,7 @@ const AddWine = () => {
         <div className="px-4 mt-6">
           {/* Image Upload */}
           <div className="mb-6 border border-border bg-card p-6 rounded-md">
-            <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">Take a picture of your wine labels</p>
+            <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">SCAN YOUR BOTTLE</p>
             
             {/* Hairline dashed plates. The shipped textured button PNGs are
                 deliberately not used here: they fight the palette. The tile
