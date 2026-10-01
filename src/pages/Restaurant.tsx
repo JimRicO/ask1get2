@@ -502,7 +502,12 @@ const Restaurant = () => {
     <Layout>
       {toastText && <div className="rv-toast"><TypeText key={toastText} text={toastText} /></div>}
 
-      <div className="mx-auto max-w-[560px] px-6 pb-10 pt-10">
+      <div
+        ref={stageRef}
+        className="relative mx-auto max-w-[560px] px-6 pb-10 pt-10"
+        onPointerDownCapture={() => { if (clinking) { setSkip(true); } }}
+      >
+        <WineClink run={clinkKey} y={clinkY} onDone={showDishes} skip={skip} />
         {/* STEP 1 */}
         <h1 className="font-serif text-[31px] font-bold leading-tight text-rv-cream">
           At a restaurant
@@ -513,10 +518,13 @@ const Restaurant = () => {
 
         {menuImages.length > 0 ? (
           <div className="mb-4 flex justify-center">
-            <div id="rv-menu-photo" className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
-              <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
-              <ScanLine active={readingMenu} from={4} to={92} ms={2400} />
-              {flash > 0 && <Flash fire={flash} />}
+            <div className="relative w-full max-w-[340px] -rotate-1">
+              <div id="rv-menu-photo" className="relative overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
+                <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
+                <ScanLine active={readingMenu} from={4} to={92} ms={2400} onFinished={onMenuScanned} />
+                {flash > 0 && <Flash fire={flash} />}
+              </div>
+              <LockCorners lock={menuLock} gap={10} />
             </div>
           </div>
         ) : (
@@ -573,7 +581,7 @@ const Restaurant = () => {
         {menuResult && (
           <div className="mt-6">
             {menuResult.unreadable && <Unreadable what="menu" />}
-            <div className="mb-1 flex items-baseline justify-between gap-3">
+            <div ref={orderHeaderRef} className="mb-1 flex items-baseline justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setMenuOpen((o) => !o)}
@@ -582,22 +590,28 @@ const Restaurant = () => {
                 {menuOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                 What did the table order?
               </button>
-              <span className="rv-eyebrow !text-rv-peach">
-                {totalPlates} {totalPlates === 1 ? "plate" : "plates"}
-              </span>
+              {totalPlates > 0 ? (
+                <span className="rv-eyebrow !text-rv-peach">
+                  {totalPlates} {totalPlates === 1 ? "plate" : "plates"}
+                </span>
+              ) : dishesShown ? (
+                <DishCounter key={clinkKey} total={menuResult.dishes.length} instant={skip} />
+              ) : null}
             </div>
 
-            {menuOpen &&
+            {menuOpen && dishesShown &&
               grouped.map((group, gi) => (
                 <div key={gi}>
                   {group.section && <p className="rv-eyebrow pb-1 pt-4">{group.section}</p>}
                   {group.dishes.map((d) => {
                     const qty = selected[d.id] ?? 0;
                     const on = qty > 0;
+                    const idx = menuResult.dishes.indexOf(d);
                     return (
                       <div
                         key={d.id}
-                        className="flex items-center gap-3 border-b border-rv-line py-[10px]"
+                        className={`flex items-center gap-3 border-b border-rv-line py-[10px] ${skip ? "" : "rv-row-rise"}`}
+                        style={skip ? undefined : { animationDelay: `${idx * 80}ms` }}
                       >
                         <button
                           type="button"
