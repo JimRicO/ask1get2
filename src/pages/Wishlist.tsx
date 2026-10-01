@@ -415,7 +415,7 @@ const Wishlist = () => {
               {wishlistItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex cursor-pointer items-start gap-5 border-t border-muted px-2 py-5 transition-colors duration-[420ms] ease-[var(--ease-cave)] hover:bg-secondary/50"
+                  className="wood-panel flex cursor-pointer items-start gap-5 rounded-lg px-4 py-4 transition-transform duration-150 active:translate-y-px"
                   onClick={() => {
                     setSelectedItem(item);
                     setDetailDialogOpen(true);
