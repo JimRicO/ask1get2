@@ -527,6 +527,7 @@
 @layer components {
   .bg-card { background-image: var(--gradient-wood); box-shadow: var(--bevel-wood); }
   button.bg-primary, a.bg-primary, .btn-plate {
+    font-family: var(--font-sans) !important; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 500;
     background-image: linear-gradient(180deg, hsl(0 34% 24%) 0%, var(--wine-burgundy) 100%);
     color: #E8986A !important;
     border: 1px solid hsl(0 30% 30%);
