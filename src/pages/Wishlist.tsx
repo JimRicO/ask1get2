@@ -511,16 +511,14 @@ const Wishlist = () => {
                     htmlFor="upload-front"
                     className="block cursor-pointer"
                   >
-                    <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
                       {imagePreviews.front ? (
                          <img src={imagePreviews.front} alt="Front" className="w-full h-full object-contain rounded-md" />
                       ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <img src={frontLabelButtonImg} alt="Front Label" className="w-full flex-1 min-h-0 object-contain p-2" />
-                          <span className="text-sm text-muted-foreground">Front Label</span>
-                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center"><img src={frontLabelButtonImg} alt="" className="h-[78%] w-auto object-contain" /></div>
                       )}
                     </div>
+                    <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">Front Label</span>
                   </label>
                   {images.front && (
                     <Button
@@ -546,16 +544,14 @@ const Wishlist = () => {
                     id="upload-back"
                   />
                   <label htmlFor="upload-back" className="block cursor-pointer">
-                    <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
                       {imagePreviews.back ? (
                          <img src={imagePreviews.back} alt="Back" className="w-full h-full object-contain rounded-md" />
                       ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <img src={backLabelButtonImg} alt="Back Label" className="w-full flex-1 min-h-0 object-contain p-2" />
-                          <span className="text-sm text-muted-foreground">Back Label</span>
-                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center"><img src={backLabelButtonImg} alt="" className="h-[78%] w-auto object-contain" /></div>
                       )}
                     </div>
+                    <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">Back Label</span>
                   </label>
                   {images.back && (
                     <Button
@@ -581,16 +577,14 @@ const Wishlist = () => {
                     id="upload-neck"
                   />
                   <label htmlFor="upload-neck" className="block cursor-pointer">
-                    <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
                       {imagePreviews.neck ? (
                          <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-contain rounded-md" />
                       ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <img src={neckButtonImg} alt="Neck" className="w-full flex-1 min-h-0 object-contain p-2" />
-                          <span className="text-sm text-muted-foreground">Neck</span>
-                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center"><img src={neckButtonImg} alt="" className="h-[78%] w-auto object-contain" /></div>
                       )}
                     </div>
+                    <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">Neck</span>
                   </label>
                   {images.neck && (
                     <Button
@@ -616,16 +610,14 @@ const Wishlist = () => {
                     id="upload-overall"
                   />
                   <label htmlFor="upload-overall" className="block cursor-pointer">
-                    <div className="relative aspect-[3/4] bg-card rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
                       {imagePreviews.overall ? (
                          <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-contain rounded-md" />
                       ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <img src={fullBottleButtonImg} alt="Full Bottle" className="w-full flex-1 min-h-0 object-contain p-2" />
-                          <span className="text-sm text-muted-foreground">Full Bottle</span>
-                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center"><img src={fullBottleButtonImg} alt="" className="h-[78%] w-auto object-contain" /></div>
                       )}
                     </div>
+                    <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">Full Bottle</span>
                   </label>
                   {images.overall && (
                     <Button
