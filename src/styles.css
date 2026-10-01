@@ -507,4 +507,38 @@
 }
 @keyframes rv-blink { 50% { opacity: 0; } }
 .rv-caret { margin-left: 1px; animation: rv-blink 1s steps(1) infinite; }
+
+/* Wood & brass material layer: gradients only, existing palette, no bitmap textures. */
+:root {
+  --brass-hi: #F2D88F;
+  --brass: #D9B45F;
+  --brass-lo: #9A7638;
+  --wood-hi: #3A2122;
+  --wood: #2B1616;
+  --wood-lo: #1A0D0D;
+  --gradient-brass: linear-gradient(180deg, var(--brass-hi) 0%, var(--brass) 45%, var(--brass-lo) 100%);
+  --gradient-wood:
+    repeating-linear-gradient(92deg, rgba(0,0,0,0) 0 7px, rgba(0,0,0,0.07) 7px 8px, rgba(0,0,0,0) 8px 19px, rgba(255,220,180,0.025) 19px 20px),
+    linear-gradient(180deg, var(--wood-hi) 0%, var(--wood) 55%, var(--wood-lo) 100%);
+  --bevel-wood: inset 0 1px 0 rgba(255,225,190,0.09), inset 0 -2px 0 rgba(0,0,0,0.45), 0 10px 22px -12px rgba(0,0,0,0.85);
+  --bevel-brass: inset 0 1px 0 rgba(255,250,225,0.7), inset 0 -1px 0 rgba(80,50,10,0.55), 0 3px 8px -3px rgba(0,0,0,0.8);
+}
+
+@layer components {
+  .bg-card { background-image: var(--gradient-wood); box-shadow: var(--bevel-wood); }
+  button.bg-primary, a.bg-primary {
+    background-image: var(--gradient-brass);
+    color: #211111;
+    box-shadow: var(--bevel-brass);
+    text-shadow: 0 1px 0 rgba(255,245,215,0.45);
+  }
+  button.bg-primary:hover, a.bg-primary:hover { filter: brightness(1.06); }
+  button.bg-primary:active, a.bg-primary:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(60,35,5,0.55); }
+  input, textarea, select { box-shadow: inset 0 2px 4px rgba(0,0,0,0.45); }
+  h1.font-serif { text-shadow: 0 2px 1px rgba(0,0,0,0.55); }
+  .wood-rail {
+    background-image: var(--gradient-wood);
+    border-top: 1px solid var(--brass-lo);
+    box-shadow: inset 0 1px 0 rgba(242,216,143,0.35), 0 -10px 24px -8px rgba(0,0,0,0.8);
+  }
 }
