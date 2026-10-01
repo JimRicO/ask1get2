@@ -380,23 +380,16 @@ const Wishlist = () => {
     <Layout>
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-[1180px] bg-background text-primary-foreground px-4 pt-8 pb-6">
-          <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Wishlist</h1>
+          <div className="mb-2 flex items-center gap-3">
+            <h1 className="font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Wishlist</h1>
+            <button type="button" onClick={openAddDialog} aria-label="Add a Bottle" className="shrink-0 transition-transform duration-150 hover:brightness-110 active:scale-95">
+              <img src={addBottleButton.url} alt="" className="h-12 w-12 object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.8)]" />
+            </button>
+          </div>
           <p className="mt-3 text-[15px] text-wine-champagne">Wines you want to try, to remember, to buy.</p>
         </div>
 
-        <div className="mx-auto max-w-[1180px] mt-6 pb-20">
-          {/* Add Wine Button */}
-          <div className="mb-6 flex justify-center px-4">
-            <button
-              type="button"
-              onClick={openAddDialog}
-              aria-label="Add a Bottle"
-              className="mx-auto transition-transform duration-150 hover:brightness-110 active:scale-95"
-            >
-              <img src={addBottleButton.url} alt="" className="h-20 w-20 object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)]" />
-            </button>
-          </div>
-
+        <div className="mx-auto max-w-[1180px] mt-2 pb-20">
           {/* Wishlist Items */}
           {loading ? (
             <div className="text-center py-12">
