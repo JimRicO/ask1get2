@@ -312,7 +312,7 @@ const Restaurant = () => {
     setTable(null);
     try {
       const data = (await pairFn({
-        data: { entries: listResult.entries, dishes: dishes.trim() },
+        data: { entries: listResult.entries, dishes: dishes.trim(), lang: navigator.language || "en" },
       })) as TableResult;
       setTable(data);
       // Both lists fold away once there is an answer, but stay one tap from
