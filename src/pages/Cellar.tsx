@@ -588,9 +588,7 @@ const Cellar = () => {
                   return (
                     <div
                       key={wine.id}
-                      className={`cave-reveal border-t border-muted transition-colors duration-[420ms] ease-[var(--ease-cave)] ${
-                        isOpen ? "bg-secondary/50" : "hover:bg-secondary/50"
-                      }`}
+                      className="cave-reveal"
                       style={{ animationDelay: revealDelay(index) }}
                     >
                       <button
@@ -705,7 +703,6 @@ const Cellar = () => {
                     </div>
                   );
                 })}
-                <div className="border-t border-muted" />
               </div>
             )}
           </div>
