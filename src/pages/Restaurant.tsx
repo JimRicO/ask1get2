@@ -777,7 +777,7 @@ const Restaurant = () => {
 
         {listResult && listShown && (
           <div className="mt-4 space-y-3">
-            <div className="rv-card rv-rise flex items-baseline justify-between gap-3">
+            <div id="rv-list-read" className="rv-card rv-rise flex items-baseline justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setListOpen((o) => !o)}
