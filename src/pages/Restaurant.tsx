@@ -192,6 +192,7 @@ const Restaurant = () => {
       return;
     }
     setReadingMenu(true);
+    document.getElementById("rv-menu-photo")?.scrollIntoView({ behavior: "smooth", block: "center" });
     // The old ids point at dishes that will not exist after this call, so the
     // selection goes — and its composed run comes out of the text with it,
     // leaving anything typed by hand in place.
@@ -219,6 +220,7 @@ const Restaurant = () => {
       return;
     }
     setReadingList(true);
+    document.getElementById("rv-list-photo")?.scrollIntoView({ behavior: "smooth", block: "center" });
     setListResult(null);
     setTable(null);
     try {
@@ -481,7 +483,7 @@ const Restaurant = () => {
 
         {menuImages.length > 0 && (
           <div className="mb-4 flex justify-center">
-            <div className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
+            <div id="rv-menu-photo" className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
               <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
               <ScanLine active={readingMenu} from={4} to={92} />
               {flash > 0 && <Flash fire={flash} />}
@@ -610,7 +612,7 @@ const Restaurant = () => {
             <span className="rv-corner rv-corner-tl" />
             <span className="rv-corner rv-corner-br" />
             {listImages.length > 0 ? (
-              <div className="relative overflow-hidden rounded-[4px]">
+              <div id="rv-list-photo" className="relative overflow-hidden rounded-[4px]">
                 <img src={listImages[0]} alt="Wine list" className="block max-h-[52vh] w-full object-cover object-top" />
                 <ScanLine active={readingList} from={8} to={86} ms={1000} />
                 {flash > 0 && <Flash fire={flash} />}
