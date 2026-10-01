@@ -24,6 +24,7 @@ import backLabelButtonImg from "@/assets/back-label-button.png";
 import wineVirtueLogoAsset from "@/assets/wine-virtue-seal.png.asset.json";
 const wineVirtueLogo = wineVirtueLogoAsset.url;
 import { toast } from "sonner";
+import { ScanLine, LockCorners, Flash } from "@/components/ScanEffects";
 import { Session } from "@supabase/supabase-js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { validateWineData } from "@/lib/wineValidation";
@@ -35,6 +36,10 @@ const AddWine = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
+  // Scan effects per photo tile: flash + one sweep on upload, sweep while reading, corners lock after.
+  const [shotFire, setShotFire] = useState<Record<string, number>>({});
+  const [shotScanning, setShotScanning] = useState<Record<string, boolean>>({});
+  const [lockKey, setLockKey] = useState(0);
   const [magicScanCompleted, setMagicScanCompleted] = useState(false);
   const [savedLocations, setSavedLocations] = useState<string[]>([]);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
@@ -144,6 +149,9 @@ const AddWine = () => {
           ...prev,
           [type]: reader.result as string
         }));
+        setShotFire(prev => ({ ...prev, [type]: (prev[type] ?? 0) + 1 }));
+        setShotScanning(prev => ({ ...prev, [type]: true }));
+        window.setTimeout(() => setShotScanning(prev => ({ ...prev, [type]: false })), 2400);
       };
       reader.readAsDataURL(file);
     }
@@ -247,6 +255,7 @@ const AddWine = () => {
       console.error("AI processing error:", error);
     } finally {
       setAiProcessing(false);
+      window.setTimeout(() => setLockKey(k => k + 1), 280);
     }
   };
   const checkForDuplicates = async () => {
@@ -453,8 +462,11 @@ const AddWine = () => {
               const label = type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : 'Full bottle';
               return <div key={type}>
                   {imagePreviews[type] ? <div className="group">
-                      <div className="relative aspect-3/4 border border-primary bg-[rgba(244,168,113,0.08)] rounded-md">
+                      <div className="relative aspect-3/4 overflow-hidden border border-primary bg-[rgba(244,168,113,0.08)] rounded-md">
                         <img src={imagePreviews[type]!} alt="" className="h-full w-full object-cover rounded-md" />
+                        {shotFire[type] ? <Flash fire={shotFire[type]} /> : null}
+                        <ScanLine active={aiProcessing || !!shotScanning[type]} from={4} to={92} ms={2400} />
+                        {lockKey > 0 && <LockCorners lock={lockKey} gap={8} />}
                         <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center bg-primary text-primary-foreground rounded-md">
                           <Check className="h-3 w-3" />
                         </span>
