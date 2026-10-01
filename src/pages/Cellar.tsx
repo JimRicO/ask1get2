@@ -597,7 +597,7 @@ const Cellar = () => {
                         type="button"
                         onClick={() => setOpenRow(isOpen ? null : wine.id)}
                         aria-expanded={isOpen}
-                        className="flex w-full items-start gap-5 px-2 py-5 text-left"
+                        className="wood-panel my-2 flex w-full items-start gap-5 px-4 py-4 text-left transition-transform duration-150 active:translate-y-px"
                       >
                         <Plate
                           className={`w-[clamp(76px,15vw,108px)] transition-colors duration-[420ms] ${
