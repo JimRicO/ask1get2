@@ -30,7 +30,7 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
       aria-label={config.label}
       aria-current={isActive ? "page" : undefined}
       className={`relative flex flex-col items-center justify-center w-[52px] h-[52px] rounded-md transition-colors duration-[320ms] ease-[var(--ease-cave)] ${
-        isActive ? "nav-well" : "bg-transparent hover:bg-secondary/40"
+        isActive ? "bg-transparent" : "bg-transparent hover:bg-secondary/40"
       }`}
     >
       {config.img ? (
