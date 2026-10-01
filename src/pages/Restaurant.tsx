@@ -793,35 +793,29 @@ const Restaurant = () => {
 };
 
 /** Scan sweep, ported from the film. Loops while active. */
+/**
+ * Peach scan line, a pure CSS sweep (no animation-frame loop, so it runs even
+ * where the preview throttles frames). Sweeps on every device, reduce-motion
+ * included. When reading ends it finishes the current pass, then hides.
+ */
 function ScanLine({ active, from = 4, to = 92, ms = 900 }: { active: boolean; from?: number; to?: number; ms?: number }) {
-  const [p, setP] = useState(0);
-  const [reduced, setReduced] = useState(false);
+  const [show, setShow] = useState(active);
+  const activeRef = useRef(active);
+  activeRef.current = active;
   useEffect(() => {
-    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
-  useEffect(() => {
-    if (!active || reduced) { setP(0); return; }
-    let raf = 0; const t0 = performance.now();
-    const tick = (now: number) => { setP(((now - t0) % ms) / ms); raf = requestAnimationFrame(tick); };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [active, ms, reduced]);
-  if (!active) return null;
-  if (reduced) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center bg-[rgba(20,9,9,0.45)]">
-        <span className="rv-eyebrow !text-rv-cream">Reading…</span>
-      </div>
-    );
-  }
+    if (active) { setShow(true); return; }
+    // Safety net in case animationiteration never fires.
+    const t = window.setTimeout(() => setShow(false), ms + 50);
+    return () => window.clearTimeout(t);
+  }, [active, ms]);
+  if (!show) return null;
   return (
-    <div style={{
-      position: "absolute", left: "10%", right: "10%", height: 2, zIndex: 3,
-      top: `${from + p * (to - from)}%`,
-      background: "#F2A46C",
-      boxShadow: "0 0 18px 4px rgba(242,164,108,.5)",
-      pointerEvents: "none",
-    }} />
+    <div
+      aria-hidden
+      className="rv-scanline"
+      onAnimationIteration={() => { if (!activeRef.current) setShow(false); }}
+      style={{ ["--rv-from" as string]: `${from}%`, ["--rv-to" as string]: `${to}%`, ["--rv-ms" as string]: `${ms}ms` }}
+    />
   );
 }
 
@@ -850,6 +844,8 @@ export default Restaurant;
 
 /** White capture flash over the photo, .85 to 0 over 450ms. */
 function Flash({ fire }: { fire: number }) {
+  // Base opacity 0: if motion is frozen the flash simply never shows, instead
+  // of sticking as a white layer. Sits under the scan line.
   return <div key={fire} aria-hidden style={{ position: "absolute", inset: 0, background: "#fff",
-    zIndex: 21, pointerEvents: "none", animation: "wvFlash .45s linear forwards" }} />;
+    opacity: 0, zIndex: 2, pointerEvents: "none", animation: "wvFlash .45s linear" }} />;
 }
