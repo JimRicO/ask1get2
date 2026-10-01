@@ -323,7 +323,7 @@ const Pairing = () => {
   return (
     <Layout>
       <div className="px-4 pt-8 pb-6">
-        <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Food & Wine</h1>
+        <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Pair</h1>
         <p className="text-primary-foreground/80">The cave answers first.</p>
       </div>
       <div className="mx-auto max-w-[430px] px-4 pb-6">
