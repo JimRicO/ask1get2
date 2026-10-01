@@ -712,7 +712,7 @@ const Cellar = () => {
         </div>
 
         <div className="flex justify-center pb-10">
-          <img src={cellarSeal.url} alt="Wine & Virtue" className="h-auto w-[240px] opacity-90" />
+          <img src={cellarSeal.url} alt="Wine & Virtue" className="h-auto w-[240px] rounded-full opacity-95 shadow-[0_18px_30px_-10px_rgba(0,0,0,0.95),0_4px_8px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(0,0,0,0.4)] [filter:drop-shadow(0_2px_1px_rgba(255,225,190,0.08))]" />
         </div>
       </div>
     </Layout>
