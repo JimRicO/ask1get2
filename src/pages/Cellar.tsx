@@ -600,7 +600,7 @@ const Cellar = () => {
                         className="wood-panel my-2 flex w-full items-start gap-5 px-4 py-4 text-left transition-transform duration-150 active:translate-y-px"
                       >
                         <Plate
-                          className={`w-[clamp(76px,15vw,108px)] transition-colors duration-[420ms] ${
+                          className={`w-[clamp(76px,15vw,108px)] rounded-md shadow-[inset_0_2px_6px_rgba(0,0,0,0.7),0_10px_18px_-8px_rgba(0,0,0,0.95),0_2px_4px_rgba(0,0,0,0.6)] ring-1 ring-black/50 transition-colors duration-[420ms] ${
                             isOpen ? "border-wine-champagne" : ""
                           }`}
                         >
