@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { User, LogOut, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
-import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
+import wineVirtueLogoAsset from "@/assets/wine-virtue-seal.png.asset.json";
+const wineVirtueLogo = wineVirtueLogoAsset.url;
 import { Link } from "@tanstack/react-router";
 
 const Profile = () => {

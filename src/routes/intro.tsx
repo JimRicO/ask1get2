@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import seal from "@/assets/wine-virtue-logo.png";
+import sealAsset from "@/assets/wine-virtue-seal.png.asset.json";
+const seal = sealAsset.url;
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 
 const SEEN_KEY = "wv-intro-seen";

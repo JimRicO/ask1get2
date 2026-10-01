@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CheckCircle, Loader2, Upload } from "lucide-react";
-import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
+import wineVirtueLogoAsset from "@/assets/wine-virtue-seal.png.asset.json";
+const wineVirtueLogo = wineVirtueLogoAsset.url;
 
 const UploadLogo = () => {
   const [uploading, setUploading] = useState(false);
