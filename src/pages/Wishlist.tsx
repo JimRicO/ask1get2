@@ -415,7 +415,7 @@ const Wishlist = () => {
               {wishlistItems.map((item) => (
                 <div
                   key={item.id}
-                  className="wood-panel flex flex-wrap cursor-pointer items-start gap-x-5 gap-y-3 rounded-lg px-4 py-4 transition-transform duration-150 active:translate-y-px"
+                  className="wood-panel flex cursor-pointer items-start gap-5 rounded-lg px-4 py-4 transition-transform duration-150 active:translate-y-px"
                   onClick={() => {
                     setSelectedItem(item);
                     setDetailDialogOpen(true);
@@ -475,6 +475,11 @@ const Wishlist = () => {
                         {item.grape_varietals}
                       </p>
                     )}
+                    {item.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {item.description}
+                      </p>
+                    )}
                   </div>
 
                   {/* Action buttons */}
@@ -491,12 +496,6 @@ const Wishlist = () => {
                       <BinIcon className="h-4 w-4" />
                     </Button>
                   </div>
-
-                  {item.description && (
-                    <p className="basis-full text-sm text-muted-foreground line-clamp-3">
-                      {item.description}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
