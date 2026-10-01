@@ -367,7 +367,7 @@ const Pairing = () => {
         </div>
 
         <Button onClick={() => run()} disabled={loading} className="w-full">
-          {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Pouring...</> : <><img src={findBottleIcon.url} alt="" className="mr-2 h-6 w-6 object-contain" />Find a bottle</>}
+          {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Pouring...</> : <><img src={findBottleIcon.url} alt="" className="-my-3 mr-2 h-[57px] w-[57px] max-w-none object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]" />Find a bottle</>}
         </Button>
 
 
