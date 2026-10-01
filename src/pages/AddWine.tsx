@@ -449,7 +449,7 @@ const AddWine = () => {
 
       <div className="min-h-screen bg-background pb-8">
         <div className="bg-background text-primary-foreground px-4 pt-8 pb-6">
-          <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Add your bottle</h1>
+          <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">New Wine</h1>
           <p className="text-foreground/90">Snap a photo to fill details automatically.</p>
         </div>
 
