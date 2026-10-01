@@ -458,15 +458,6 @@
   font-family: var(--font-mono); font-size: 10px; color: var(--rv-peach);
   padding: 2px 4px; animation: rv-fade 300ms ease-out both;
 }
-@utility rv-flash {
-  position: fixed; inset: 0; z-index: 60; background: #fff; pointer-events: none;
-  animation: rv-flash 450ms ease-out forwards;
-}
-@utility rv-scan {
-  position: absolute; left: 10%; right: 10%; height: 2px; top: var(--scan-from);
-  background: var(--rv-peach); box-shadow: 0 0 18px 4px rgba(242,164,108,.5);
-  animation: rv-sweep 900ms linear infinite;
-}
 @utility rv-viewfinder {
   position: relative; background: #0e0708; border-radius: 10px; padding: 14px;
 }
@@ -496,10 +487,6 @@
   background: var(--rv-cream); color: var(--rv-ink); font-weight: 500; font-size: 12px;
   border-radius: 99px; padding: 9px 16px; white-space: nowrap; pointer-events: none;
 }
-@keyframes rv-flash { from { opacity: .85; } to { opacity: 0; } }
-@keyframes rv-sweep { from { top: var(--scan-from); } to { top: var(--scan-to); } }
+@keyframes wvFlash { from { opacity: .85; } to { opacity: 0; } }
 @keyframes rv-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes rv-fade { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) {
-  .rv-flash { display: none; }
-}
