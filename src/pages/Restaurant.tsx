@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { extractWineList, extractMenu, pairFromList } from "@/lib/pairing.functions";
 import { wishlistKey } from "@/lib/wishlistKey";
+import { WineClink } from "@/components/WineClink";
 
 type ListResult = Awaited<ReturnType<typeof extractWineList>>;
 type MenuResult = Awaited<ReturnType<typeof extractMenu>>;
@@ -81,6 +82,34 @@ const Restaurant = () => {
   const [flash, setFlash] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+  const listInputRef = useRef<HTMLInputElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const orderHeaderRef = useRef<HTMLDivElement>(null);
+  // Scan confirmation: lock-on, clink (menu only), then the reveal.
+  const [menuLock, setMenuLock] = useState(0);
+  const [listLock, setListLock] = useState(0);
+  const [clinkKey, setClinkKey] = useState(0);
+  const [clinkY, setClinkY] = useState(0);
+  const [clinking, setClinking] = useState(false);
+  const [skip, setSkip] = useState(false);
+  const [dishesShown, setDishesShown] = useState(true);
+  const [listShown, setListShown] = useState(true);
+
+  const onMenuScanned = () => {
+    setMenuLock((n) => n + 1);
+    const header = orderHeaderRef.current, stage = stageRef.current;
+    if (!header || !stage) { setDishesShown(true); return; }
+    const y = header.getBoundingClientRect().bottom - stage.getBoundingClientRect().top + 34;
+    setClinkY(y);
+    setSkip(false);
+    setClinking(true);
+    setClinkKey((k) => k + 1);
+  };
+  const showDishes = () => { setClinking(false); setDishesShown(true); };
+  const onListScanned = () => {
+    setListLock((n) => n + 1);
+    window.setTimeout(() => setListShown(true), 320);
+  };
 
   useEffect(() => {
     setSheetOpen(!!table);
@@ -200,6 +229,7 @@ const Restaurant = () => {
     setDishes((text) => mergeComposed(text, staleComposed, ""));
     setMenuResult(null);
     setSelected({});
+    setDishesShown(false);
     setTable(null);
     try {
       const data = (await extractMenuFn({ data: { images: menuImages } })) as MenuResult;
@@ -222,6 +252,7 @@ const Restaurant = () => {
     setReadingList(true);
     requestAnimationFrame(() => document.getElementById("rv-list-photo")?.scrollIntoView({ block: "center" }));
     setListResult(null);
+    setListShown(false);
     setTable(null);
     try {
       const data = (await extractListFn({ data: { images: listImages } })) as ListResult;
@@ -472,7 +503,12 @@ const Restaurant = () => {
     <Layout>
       {toastText && <div className="rv-toast"><TypeText key={toastText} text={toastText} /></div>}
 
-      <div className="mx-auto max-w-[560px] px-6 pb-10 pt-10">
+      <div
+        ref={stageRef}
+        className="relative mx-auto max-w-[560px] px-6 pb-10 pt-10"
+        onPointerDownCapture={() => { if (clinking) { setSkip(true); } }}
+      >
+        <WineClink run={clinkKey} y={clinkY} onDone={showDishes} skip={skip} />
         {/* STEP 1 */}
         <h1 className="font-serif text-[31px] font-bold leading-tight text-rv-cream">
           At a restaurant
@@ -483,10 +519,13 @@ const Restaurant = () => {
 
         {menuImages.length > 0 ? (
           <div className="mb-4 flex justify-center">
-            <div id="rv-menu-photo" className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
-              <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
-              <ScanLine active={readingMenu} from={4} to={92} ms={2400} />
-              {flash > 0 && <Flash fire={flash} />}
+            <div className="relative w-full max-w-[340px] -rotate-1">
+              <div id="rv-menu-photo" className="relative overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
+                <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
+                <ScanLine active={readingMenu} from={4} to={92} ms={2400} onFinished={onMenuScanned} />
+                {flash > 0 && <Flash fire={flash} />}
+              </div>
+              <LockCorners lock={menuLock} gap={10} />
             </div>
           </div>
         ) : (
@@ -543,7 +582,7 @@ const Restaurant = () => {
         {menuResult && (
           <div className="mt-6">
             {menuResult.unreadable && <Unreadable what="menu" />}
-            <div className="mb-1 flex items-baseline justify-between gap-3">
+            <div ref={orderHeaderRef} className="mb-1 flex items-baseline justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setMenuOpen((o) => !o)}
@@ -552,22 +591,28 @@ const Restaurant = () => {
                 {menuOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                 What did the table order?
               </button>
-              <span className="rv-eyebrow !text-rv-peach">
-                {totalPlates} {totalPlates === 1 ? "plate" : "plates"}
-              </span>
+              {totalPlates > 0 ? (
+                <span className="rv-eyebrow !text-rv-peach">
+                  {totalPlates} {totalPlates === 1 ? "plate" : "plates"}
+                </span>
+              ) : dishesShown ? (
+                <DishCounter key={clinkKey} total={menuResult.dishes.length} instant={skip} />
+              ) : null}
             </div>
 
-            {menuOpen &&
+            {menuOpen && dishesShown &&
               grouped.map((group, gi) => (
                 <div key={gi}>
                   {group.section && <p className="rv-eyebrow pb-1 pt-4">{group.section}</p>}
                   {group.dishes.map((d) => {
                     const qty = selected[d.id] ?? 0;
                     const on = qty > 0;
+                    const idx = menuResult.dishes.indexOf(d);
                     return (
                       <div
                         key={d.id}
-                        className="flex items-center gap-3 border-b border-rv-line py-[10px]"
+                        className={`flex items-center gap-3 border-b border-rv-line py-[10px] ${skip ? "" : "rv-row-rise"}`}
+                        style={skip ? undefined : { animationDelay: `${idx * 80}ms` }}
                       >
                         <button
                           type="button"
@@ -625,7 +670,11 @@ const Restaurant = () => {
         <button
           type="button"
           className="rv-btn mt-6"
-          onClick={() => listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          onClick={() => {
+            listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            // Opens the camera straight away when there is no list photo yet.
+            if (listImages.length === 0 && !preparing) listInputRef.current?.click();
+          }}
         >
           Now the wine list
         </button>
@@ -636,13 +685,20 @@ const Restaurant = () => {
             The wine list
           </h2>
           <div className="rv-viewfinder">
-            <span className="rv-corner rv-corner-tl" />
-            <span className="rv-corner rv-corner-br" />
+            {listImages.length === 0 && (
+              <>
+                <span className="rv-corner rv-corner-tl" />
+                <span className="rv-corner rv-corner-br" />
+              </>
+            )}
             {listImages.length > 0 ? (
-              <div id="rv-list-photo" className="relative overflow-hidden rounded-[4px]">
-                <img src={listImages[0]} alt="Wine list" className="block max-h-[52vh] w-full object-cover object-top" />
-                <ScanLine active={readingList} from={8} to={86} ms={2600} />
-                {flash > 0 && <Flash fire={flash} />}
+              <div className="relative">
+                <div id="rv-list-photo" className="relative overflow-hidden rounded-[4px]">
+                  <img src={listImages[0]} alt="Wine list" className="block max-h-[52vh] w-full object-cover object-top" />
+                  <ScanLine active={readingList} from={8} to={86} ms={2600} onFinished={onListScanned} />
+                  {flash > 0 && <Flash fire={flash} />}
+                </div>
+                <LockCorners lock={listLock} gap={6} />
               </div>
             ) : (
               <label
@@ -651,6 +707,7 @@ const Restaurant = () => {
               >
                 {preparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
                 <input
+                  ref={listInputRef}
                   type="file"
                   accept="image/*"
                   capture="environment"
@@ -698,7 +755,7 @@ const Restaurant = () => {
           )}
         </div>
 
-        {listResult && (
+        {listResult && listShown && (
           <div className="mt-4 space-y-3">
             <div className="rv-card rv-rise flex items-baseline justify-between gap-3">
               <button
@@ -842,24 +899,81 @@ const Restaurant = () => {
  * where the preview throttles frames). Sweeps on every device, reduce-motion
  * included. When reading ends it finishes the current pass, then hides.
  */
-function ScanLine({ active, from = 4, to = 92, ms = 900 }: { active: boolean; from?: number; to?: number; ms?: number }) {
-  const [show, setShow] = useState(active);
-  const activeRef = useRef(active);
-  activeRef.current = active;
+function ScanLine({ active, from = 4, to = 92, ms = 900, onFinished }: { active: boolean; from?: number; to?: number; ms?: number; onFinished?: () => void }) {
+  const [phase, setPhase] = useState<"off" | "loop" | "end">(active ? "loop" : "off");
+  const [cur, setCur] = useState("0px");
+  const el = useRef<HTMLDivElement>(null);
+  const finished = useRef(onFinished);
+  finished.current = onFinished;
   useEffect(() => {
-    if (active) { setShow(true); return; }
-    // Safety net in case animationiteration never fires.
-    const t = window.setTimeout(() => setShow(false), ms + 50);
+    if (active) { setPhase("loop"); return; }
+    setPhase((p) => {
+      if (p !== "loop") return p;
+      // Final pass: from wherever the line is, ease into the bottom edge.
+      setCur(el.current ? getComputedStyle(el.current).top : "0px");
+      return "end";
+    });
+  }, [active]);
+  useEffect(() => {
+    if (phase !== "end") return;
+    const t = window.setTimeout(() => { setPhase("off"); finished.current?.(); }, 280);
     return () => window.clearTimeout(t);
-  }, [active, ms]);
-  if (!show) return null;
+  }, [phase]);
+  if (phase === "off") return null;
   return (
     <div
+      ref={el}
       aria-hidden
       className="rv-scanline"
-      onAnimationIteration={() => { if (!activeRef.current) setShow(false); }}
-      style={{ ["--rv-from" as string]: `${from}%`, ["--rv-to" as string]: `${to}%`, ["--rv-ms" as string]: `${ms}ms` }}
+      style={{
+        ["--rv-from" as string]: phase === "end" ? cur : `${from}%`,
+        ["--rv-to" as string]: phase === "end" ? "calc(100% - 2px)" : `${to}%`,
+        ["--rv-ms" as string]: `${ms}ms`,
+        ...(phase === "end"
+          ? { animation: "rv-scan 250ms cubic-bezier(0.33,1,0.68,1) forwards" }
+          : {}),
+      }}
     />
+  );
+}
+
+/** Two peach brackets that lock inward onto the photo, 320ms back-out (1.6). */
+function LockCorners({ lock, gap = 10 }: { lock: number; gap?: number }) {
+  const base: React.CSSProperties = { position: "absolute", width: 22, height: 22, zIndex: 4, pointerEvents: "none" };
+  const anim = (dir: number) =>
+    lock > 0
+      ? { animation: "rv-lock 320ms cubic-bezier(0.34,1.6,0.64,1) both", ["--rv-lk" as string]: `${dir * gap}px` }
+      : { transform: `translate(${dir * gap}px, ${dir * gap}px)` };
+  return (
+    <>
+      <span key={`a${lock}`} aria-hidden style={{ ...base, top: 0, left: 0, borderTop: "2px solid #F2A46C", borderLeft: "2px solid #F2A46C", ...anim(-1) }} />
+      <span key={`b${lock}`} aria-hidden style={{ ...base, bottom: 0, right: 0, borderBottom: "2px solid #F2A46C", borderRight: "2px solid #F2A46C", ...anim(1) }} />
+    </>
+  );
+}
+
+/** Counts rows in step with their rise (80ms each), then pops a gold diamond. */
+function DishCounter({ total, instant }: { total: number; instant: boolean }) {
+  const [n, setN] = useState(instant ? total : 0);
+  useEffect(() => {
+    if (instant) { setN(total); return; }
+    setN(0);
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 1;
+      setN(Math.min(i, total));
+      if (i >= total) window.clearInterval(id);
+    }, 80);
+    return () => window.clearInterval(id);
+  }, [total, instant]);
+  return (
+    <span className="rv-eyebrow inline-flex items-center gap-1.5 !text-rv-peach">
+      {n} {n === 1 ? "dish" : "dishes"}
+      {n >= total && (
+        <span aria-hidden style={{ width: 7, height: 7, background: "#D9B45F", transform: "rotate(45deg)",
+          animation: "rv-pop 300ms cubic-bezier(0.34,1.6,0.64,1) both" }} />
+      )}
+    </span>
   );
 }
 
