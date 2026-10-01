@@ -466,7 +466,7 @@ const AddWine = () => {
               const label = type === 'front' ? 'Front label' : type === 'back' ? 'Back label' : type === 'neck' ? 'Neck' : 'Full bottle';
               return <div key={type}>
                   {imagePreviews[type] ? <div className="group">
-                      <div className="relative aspect-3/4 overflow-hidden border border-primary bg-[rgba(244,168,113,0.08)] rounded-md">
+                      <div className="relative aspect-3/4 overflow-hidden border border-primary bg-[rgba(244,168,113,0.08)] shadow-[inset_0_2px_8px_rgba(0,0,0,0.75),0_12px_20px_-10px_rgba(0,0,0,0.95),0_2px_4px_rgba(0,0,0,0.6)] rounded-md">
                         <img src={imagePreviews[type]!} alt="" className="h-full w-full object-cover rounded-md" />
                         {shotFire[type] ? <Flash fire={shotFire[type]} /> : null}
                         <ScanLine active={aiProcessing || !!shotScanning[type]} from={4} to={92} ms={2400} />
@@ -489,7 +489,7 @@ const AddWine = () => {
                         Remove
                       </button>
                     </div> : <label className="block cursor-pointer">
-                      <span className="flex aspect-3/4 flex-col items-center justify-center gap-2 border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne rounded-md">
+                      <span className="flex aspect-3/4 flex-col items-center justify-center gap-2 border border-dashed border-border bg-[#0F0507]/40 shadow-[inset_0_2px_8px_rgba(0,0,0,0.75),0_12px_20px_-10px_rgba(0,0,0,0.95),0_2px_4px_rgba(0,0,0,0.6)] transition-[border-color,transform] duration-[320ms] hover:border-wine-champagne active:translate-y-px rounded-md">
                         <img src={(type === 'front' ? frontIcon : type === 'back' ? backIcon : type === 'neck' ? neckIcon : fullIcon).url} alt="" className="h-[78%] w-auto object-contain" />
                       </span>
                       <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">{label}</span>
