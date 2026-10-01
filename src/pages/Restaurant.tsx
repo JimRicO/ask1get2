@@ -527,8 +527,8 @@ const Restaurant = () => {
         className="relative mx-auto max-w-[560px] px-6 pb-10 pt-10"
         onPointerDownCapture={() => { if (clinking) { setSkip(true); } }}
       >
-        <WineClink run={clinkKey} y={clinkY} onDone={showDishes} skip={skip} />
-        <WineClink run={listClinkKey} y={listClinkY} />
+        <WineClink motif="cutlery" run={clinkKey} y={clinkY} onDone={showDishes} skip={skip} />
+        <WineClink motif="glasses" run={listClinkKey} y={listClinkY} />
         {/* STEP 1 */}
         <h1 className="font-serif text-[31px] font-bold leading-tight text-rv-cream">
           At a restaurant
