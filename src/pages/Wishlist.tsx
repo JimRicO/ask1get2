@@ -383,7 +383,7 @@ const Wishlist = () => {
           <div className="mb-2 flex items-center gap-3">
             <h1 className="font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Wishlist</h1>
             <button type="button" onClick={openAddDialog} aria-label="Add a Bottle" className="shrink-0 transition-transform duration-150 hover:brightness-110 active:scale-95">
-              <img src={addBottleButton.url} alt="" className="h-12 w-12 object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.8)]" />
+              <img src={addBottleButton.url} alt="" className="h-[57px] w-[57px] max-w-none object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]" />
             </button>
           </div>
           <p className="mt-3 text-[15px] text-wine-champagne">Wines you want to try, to remember, to buy.</p>
