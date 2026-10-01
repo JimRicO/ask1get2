@@ -567,21 +567,13 @@
     position: relative;
     border-radius: 8px;
     background-image: var(--gradient-wood);
-    border: 1px solid var(--brass-lo);
+    border: 1px solid rgba(0,0,0,0.6);
     box-shadow:
-      inset 0 0 0 2px rgba(0,0,0,0.55),
-      inset 0 0 0 3px rgba(217,180,95,0.35),
-      inset 0 1px 0 4px rgba(255,225,190,0.04),
+      inset 0 1px 0 rgba(255,225,190,0.12),
+      inset 0 -3px 0 rgba(0,0,0,0.5),
       0 14px 24px -12px rgba(0,0,0,0.95),
       0 3px 6px -2px rgba(0,0,0,0.7);
   }
-  .brass-plaque::before, .brass-plaque::after {
-    content: ""; position: absolute; top: 7px; width: 5px; height: 5px; border-radius: 9999px;
-    background: radial-gradient(circle at 35% 30%, var(--brass-hi), var(--brass) 45%, var(--brass-lo));
-    box-shadow: 0 1px 1px rgba(0,0,0,0.8);
-  }
-  .brass-plaque::before { left: 7px; }
-  .brass-plaque::after { right: 7px; }
   .nav-well {
     background: linear-gradient(180deg, #120808, #24130f);
     box-shadow:
