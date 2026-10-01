@@ -1,4 +1,5 @@
 import { BinIcon } from "@/components/BinIcon";
+import addBottleButton from "@/assets/add-bottle-button.png.asset.json";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
