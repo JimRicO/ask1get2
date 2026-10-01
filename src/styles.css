@@ -436,7 +436,7 @@
 }
 @utility rv-btn {
   display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px;
-  background: var(--rv-peach); color: var(--rv-ink); font-family: var(--font-sans);
+  background-image: linear-gradient(180deg, hsl(0 34% 24%) 0%, var(--wine-burgundy) 100%); color: #E8986A; border: 1px solid hsl(0 30% 30%); box-shadow: inset 0 1px 0 rgba(255,225,190,0.14), inset 0 -2px 0 rgba(0,0,0,0.5), 0 8px 16px -8px rgba(0,0,0,0.9); text-shadow: 0 1px 1px rgba(0,0,0,0.6); font-family: var(--font-sans);
   font-weight: 500; font-size: 14px; border-radius: 6px; padding: 12px;
   transition: transform 150ms, filter 150ms;
   &:active { transform: scale(.97); filter: brightness(.9); }
@@ -526,15 +526,15 @@
 
 @layer components {
   .bg-card { background-image: var(--gradient-wood); box-shadow: var(--bevel-wood); }
-  button.bg-primary, a.bg-primary {
+  button.bg-primary, a.bg-primary, .btn-plate {
     background-image: linear-gradient(180deg, hsl(0 34% 24%) 0%, var(--wine-burgundy) 100%);
     color: #E8986A !important;
     border: 1px solid hsl(0 30% 30%);
     box-shadow: inset 0 1px 0 rgba(255,225,190,0.14), inset 0 -2px 0 rgba(0,0,0,0.5), 0 8px 16px -8px rgba(0,0,0,0.9);
     text-shadow: 0 1px 1px rgba(0,0,0,0.6);
   }
-  button.bg-primary:hover, a.bg-primary:hover { filter: brightness(1.12); }
-  button.bg-primary:active, a.bg-primary:active { transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(0,0,0,0.7); }
+  button.bg-primary:hover, a.bg-primary:hover, .btn-plate:hover { filter: brightness(1.12); }
+  button.bg-primary:active, a.bg-primary:active, .btn-plate:active { transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(0,0,0,0.7); }
   input, textarea, select { box-shadow: inset 0 2px 4px rgba(0,0,0,0.45); }
   h1.font-serif { text-shadow: 0 2px 1px rgba(0,0,0,0.55); }
   .wood-rail {
