@@ -21,6 +21,10 @@ import neckButtonImg from "@/assets/neck-button.png";
 import frontLabelButtonImg from "@/assets/front-label-button.png";
 import fullBottleButtonImg from "@/assets/full-bottle-button.png";
 import backLabelButtonImg from "@/assets/back-label-button.png";
+import frontIcon from "@/assets/bottle-front-label.png.asset.json";
+import backIcon from "@/assets/bottle-back-label.png.asset.json";
+import neckIcon from "@/assets/bottle-neck-label.png.asset.json";
+import fullIcon from "@/assets/full_bottle.png.asset.json";
 import wineVirtueLogoAsset from "@/assets/wine-virtue-seal.png.asset.json";
 const wineVirtueLogo = wineVirtueLogoAsset.url;
 import { toast } from "sonner";
@@ -486,7 +490,7 @@ const AddWine = () => {
                       </button>
                     </div> : <label className="block cursor-pointer">
                       <span className="flex aspect-3/4 flex-col items-center justify-center gap-2 border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne rounded-md">
-                        <Camera className="h-6 w-6 text-muted-foreground" strokeWidth={1.6} />
+                        <img src={(type === 'front' ? frontIcon : type === 'back' ? backIcon : type === 'neck' ? neckIcon : fullIcon).url} alt="" className="h-[78%] w-auto object-contain" />
                       </span>
                       <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">{label}</span>
                       <input type="file" accept="image/*" capture="environment" onChange={e => handleImageChange(e, type)} className="hidden" />
