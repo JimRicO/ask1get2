@@ -535,11 +535,7 @@ const Cellar = () => {
             <button
               type="button"
               onClick={() => setShowArchive(!showArchive)}
-              className={`mt-6 w-full border px-3 py-2.5 font-mono text-[10px] uppercase tracking-[0.09em] transition-colors duration-[320ms] ${
-                showArchive
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
+              className="btn-plate mt-6 h-10 w-full rounded-md px-4 text-sm font-medium"
             >
               {showArchive ? "Hide archive" : `View archive (${archivedWines.length})`}
             </button>
