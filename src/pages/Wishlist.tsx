@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { ScanLine, LockCorners, Flash } from "@/components/ScanEffects";
 import { Session } from "@supabase/supabase-js";
 import uploadButtonImg from "@/assets/upload-button.png";
 import bottleIcon from "@/assets/bottle-icon.png";
@@ -242,6 +243,13 @@ const Wishlist = () => {
       window.setTimeout(() => setLockKey(k => k + 1), 280);
     }
   };
+
+  useEffect(() => {
+    if (autoScanKey === 0) return;
+    const t = window.setTimeout(() => { void processImageWithAI(); }, 600);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoScanKey]);
 
   const handleSubmit = async () => {
     if (!session) return;
@@ -518,6 +526,9 @@ const Wishlist = () => {
                     className="block cursor-pointer"
                   >
                     <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                      {shotFire.front ? <Flash fire={shotFire.front} /> : null}
+                      <ScanLine active={(aiProcessing && !!images.front) || !!shotScanning.front} from={4} to={92} ms={2400} />
+                      {lockKey > 0 && images.front && <LockCorners lock={lockKey} gap={8} />}
                       {imagePreviews.front ? (
                          <img src={imagePreviews.front} alt="Front" className="w-full h-full object-contain rounded-md" />
                       ) : (
@@ -551,6 +562,9 @@ const Wishlist = () => {
                   />
                   <label htmlFor="upload-back" className="block cursor-pointer">
                     <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                      {shotFire.back ? <Flash fire={shotFire.back} /> : null}
+                      <ScanLine active={(aiProcessing && !!images.back) || !!shotScanning.back} from={4} to={92} ms={2400} />
+                      {lockKey > 0 && images.back && <LockCorners lock={lockKey} gap={8} />}
                       {imagePreviews.back ? (
                          <img src={imagePreviews.back} alt="Back" className="w-full h-full object-contain rounded-md" />
                       ) : (
@@ -584,6 +598,9 @@ const Wishlist = () => {
                   />
                   <label htmlFor="upload-neck" className="block cursor-pointer">
                     <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                      {shotFire.neck ? <Flash fire={shotFire.neck} /> : null}
+                      <ScanLine active={(aiProcessing && !!images.neck) || !!shotScanning.neck} from={4} to={92} ms={2400} />
+                      {lockKey > 0 && images.neck && <LockCorners lock={lockKey} gap={8} />}
                       {imagePreviews.neck ? (
                          <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-contain rounded-md" />
                       ) : (
@@ -617,6 +634,9 @@ const Wishlist = () => {
                   />
                   <label htmlFor="upload-overall" className="block cursor-pointer">
                     <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                      {shotFire.overall ? <Flash fire={shotFire.overall} /> : null}
+                      <ScanLine active={(aiProcessing && !!images.overall) || !!shotScanning.overall} from={4} to={92} ms={2400} />
+                      {lockKey > 0 && images.overall && <LockCorners lock={lockKey} gap={8} />}
                       {imagePreviews.overall ? (
                          <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-contain rounded-md" />
                       ) : (
