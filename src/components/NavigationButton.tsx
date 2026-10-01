@@ -30,14 +30,14 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
       aria-label={config.label}
       aria-current={isActive ? "page" : undefined}
       className={`relative flex flex-col items-center justify-center w-[52px] h-[52px] rounded-md transition-colors duration-[320ms] ease-[var(--ease-cave)] ${
-        isActive ? "bg-secondary/90" : "bg-transparent hover:bg-secondary/40"
+        isActive ? "nav-well" : "bg-transparent hover:bg-secondary/40"
       }`}
     >
       {config.img ? (
         <img
           src={config.img}
           alt=""
-          className={`${config.size} object-contain transition-opacity duration-[320ms] ${isActive ? "opacity-100" : "opacity-80"}`}
+          className={`${config.size} object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)] transition-opacity duration-[320ms] ${isActive ? "opacity-100" : "opacity-80"}`}
         />
       ) : (
         <User

@@ -413,9 +413,9 @@ const Cellar = () => {
         )}
 
         {/* Stats: ruled top and bottom, all three derived from the collection. */}
-        <div className="mt-9 flex flex-wrap border-y border-border py-6">
+        <div className="mt-9 flex flex-wrap gap-3">
           {stats.map((s) => (
-            <div key={s.label} className="flex-[1_1_150px]">
+            <div key={s.label} className="brass-plaque flex-[1_1_120px] px-4 py-4">
               <div className="font-serif text-[36px] font-semibold leading-none text-foreground">
                 {s.value}
               </div>
@@ -428,7 +428,7 @@ const Cellar = () => {
 
         <div className="mt-9 flex flex-wrap items-start gap-x-10 gap-y-8 pb-8">
           {/* Filter rail. Stacks above the list on phone with no media query. */}
-          <aside className="mx-auto flex-[1_1_210px] max-w-[250px] lg:sticky lg:top-[92px]">
+          <aside className="wood-panel mx-auto flex-[1_1_210px] max-w-[280px] p-5 lg:sticky lg:top-[92px]">
             <div className="flex items-center gap-2 border-b border-border pb-2">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
