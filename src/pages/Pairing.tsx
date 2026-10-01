@@ -356,14 +356,6 @@ const Pairing = () => {
             <Chip active={scope === "anything"} onClick={() => setScope("anything")}>Anything</Chip>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Chip active={bandIndex === null} onClick={() => setBandIndex(null)}>Any price</Chip>
-            {money.bands.map((b, i) => (
-              <Chip key={i} active={bandIndex === i} onClick={() => setBandIndex(i)}>
-                {bandLabel(money.symbol, b)}
-              </Chip>
-            ))}
-          </div>
 
           {isProducing && (
             <div className="flex flex-wrap gap-2">
@@ -376,23 +368,6 @@ const Pairing = () => {
           {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Pouring...</> : "Find a bottle"}
         </Button>
 
-        <div className="mt-3 text-center text-xs text-muted-foreground">
-          {editingMarket ? (
-            <input
-              autoFocus
-              defaultValue={market ?? ""}
-              maxLength={2}
-              onBlur={(e) => saveMarket(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && saveMarket((e.target as HTMLInputElement).value)}
-              className="w-14 border border-border bg-card px-2 py-1 text-center font-mono uppercase rounded-md"
-            />
-          ) : (
-            <button onClick={() => setEditingMarket(true)} className="inline-flex items-center gap-1 hover:text-foreground">
-              <MapPin className="h-3 w-3" />
-              Prices in {money.code}{market ? ` · ${market}` : ""} · change
-            </button>
-          )}
-        </div>
 
         {result && (
           <div
