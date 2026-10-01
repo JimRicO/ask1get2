@@ -327,6 +327,16 @@ const Pairing = () => {
         <p className="mt-3 text-[15px] text-wine-champagne">The cave answers first.</p>
       </div>
       <div className="mx-auto max-w-[430px] px-4 pb-6">
+        <p className="mb-2 font-serif text-[20px] text-foreground">What are you cooking?</p>
+
+        <Textarea
+          value={dish}
+          onChange={(e) => setDish(e.target.value)}
+          placeholder="Coq au vin for six. Or lamb chops with rosemary. Or last night's leftovers."
+          rows={3}
+          className="mb-4 resize-none border-border bg-card"
+        />
+
         {/* The bottom bar is full at five, so restaurant mode lives here. */}
         <div className="mb-4 flex justify-center">
           <button
@@ -337,15 +347,6 @@ const Pairing = () => {
             At a restaurant?
           </button>
         </div>
-        <p className="mb-2 font-serif text-[20px] text-foreground">What are you cooking?</p>
-
-        <Textarea
-          value={dish}
-          onChange={(e) => setDish(e.target.value)}
-          placeholder="Coq au vin for six. Or lamb chops with rosemary. Or last night's leftovers."
-          rows={3}
-          className="mb-4 resize-none border-border bg-card"
-        />
 
         {/* Scope is chosen before the call, not after. A narrow search costs less
             and answers faster, and the user is the one who knows how wide they want it. */}
