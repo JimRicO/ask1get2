@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@/lib/router-compat";
 import Layout from "@/components/Layout";
 import { Wine, Plus, Search, Pencil, Check, X } from "lucide-react";
-import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
 import cellarSeal from "@/assets/wine-virtue-seal.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
