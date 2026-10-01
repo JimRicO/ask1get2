@@ -14,11 +14,11 @@ interface NavigationButtonProps {
 }
 
 const BUTTON_PRESETS: Record<ButtonPreset, { img?: string; label: string; size: string }> = {
-  cellar: { img: bottleIcon.url, label: "Cellar", size: "h-11 w-11" },
-  pair: { img: pairIcon.url, label: "Pair", size: "h-11 w-11" },
-  add: { img: scanIcon.url, label: "New Wine", size: "h-12 w-12" },
-  wishlist: { img: favIcon.url, label: "Wishlist", size: "h-11 w-11" },
-  profile: { img: profileIcon.url, label: "Profile", size: "h-10 w-10" },
+  cellar: { img: bottleIcon.url, label: "Cellar", size: "h-[57px] w-[57px] max-w-none" },
+  pair: { img: pairIcon.url, label: "Pair", size: "h-[57px] w-[57px] max-w-none" },
+  add: { img: scanIcon.url, label: "New Wine", size: "h-[62px] w-[62px] max-w-none" },
+  wishlist: { img: favIcon.url, label: "Wishlist", size: "h-[57px] w-[57px] max-w-none" },
+  profile: { img: profileIcon.url, label: "Profile", size: "h-[52px] w-[52px] max-w-none" },
 };
 
 const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButtonProps) => {
