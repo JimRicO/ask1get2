@@ -1,3 +1,4 @@
+import { BinIcon } from "@/components/BinIcon";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,7 @@ import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
 
 
 import Layout from "@/components/Layout";
-import { Heart, Camera, Trash2, Loader2, Edit, Upload, X } from "lucide-react";
+import { Heart, Camera, Loader2, Edit, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -490,7 +491,7 @@ const Wishlist = () => {
                         confirmDelete(item.id, item.wine_name);
                       }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <BinIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -921,7 +922,7 @@ const Wishlist = () => {
                   }}
                   className="flex-1"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <BinIcon className="h-4 w-4 mr-2" />
                   Remove from Wishlist
                 </Button>
               </div>

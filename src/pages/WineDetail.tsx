@@ -1,3 +1,4 @@
+import { BinIcon } from "@/components/BinIcon";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { removeWineBackground, describeWine } from "@/lib/wine-ai.functions";
 import Layout from "@/components/Layout";
 import { CaveStickyHeader, CaveSheet, Eyebrow, Plate } from "@/components/CaveChrome";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Trash2, Plus, Sparkles, Upload, X, RefreshCw } from "lucide-react";
+import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Plus, Sparkles, Upload, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -1190,7 +1191,7 @@ const WineDetail = () => {
                                   size="sm"
                                   className="flex-1 text-xs py-1 h-7"
                                 >
-                                  <Trash2 className="h-3 w-3 mr-1" />
+                                  <BinIcon className="h-3 w-3 mr-1" />
                                   Delete
                                 </Button>
                               </div>
@@ -1432,7 +1433,7 @@ const WineDetail = () => {
                       variant="destructive"
                       className="flex-1"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <BinIcon className="h-4 w-4 mr-2" />
                       Remove
                     </Button>
                   )}
