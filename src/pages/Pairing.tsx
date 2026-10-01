@@ -1,3 +1,4 @@
+import findBottleButton from "@/assets/find-bottle-button.png.asset.json";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Session } from "@supabase/supabase-js";
@@ -365,9 +366,12 @@ const Pairing = () => {
           )}
         </div>
 
-        <Button onClick={() => run()} disabled={loading} className="w-full">
-          {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Pouring...</> : "Find a bottle"}
-        </Button>
+        <div className="flex justify-center">
+          <button type="button" onClick={() => run()} disabled={loading} aria-label="Find a bottle" className="relative transition-transform duration-150 hover:brightness-110 active:scale-95 disabled:opacity-60">
+            <img src={findBottleButton.url} alt="" className="h-[57px] w-[57px] max-w-none object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]" />
+            {loading && <Loader2 className="absolute inset-0 m-auto h-5 w-5 animate-spin text-foreground" />}
+          </button>
+        </div>
 
 
         {result && (
