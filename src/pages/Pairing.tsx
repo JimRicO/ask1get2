@@ -322,14 +322,13 @@ const Pairing = () => {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-[430px] px-7 pt-12 pb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <UtensilsCrossed className="h-5 w-5 text-accent" />
-          <h1 className="font-serif text-[34px] font-bold leading-[1.05] tracking-[-0.02em] text-foreground">What are you cooking?</h1>
-        </div>
-        <div className="flex items-baseline justify-between gap-3 mb-4">
-          <p className="text-sm text-muted-foreground">The cave answers first.</p>
-          {/* The bottom bar is full at five, so restaurant mode lives here. */}
+      <div className="px-4 pt-8 pb-6">
+        <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Food & Wine</h1>
+        <p className="text-primary-foreground/80">The cave answers first.</p>
+      </div>
+      <div className="mx-auto max-w-[430px] px-4 pb-6">
+        {/* The bottom bar is full at five, so restaurant mode lives here. */}
+        <div className="mb-4 flex justify-center">
           <button
             onClick={() => navigate("/restaurant")}
             className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent/15 px-4 py-2 text-sm font-semibold text-accent hover:bg-accent hover:text-accent-foreground transition-colors whitespace-nowrap"
@@ -338,6 +337,7 @@ const Pairing = () => {
             At a restaurant?
           </button>
         </div>
+        <p className="mb-2 font-serif text-[20px] text-foreground">What are you cooking?</p>
 
         <Textarea
           value={dish}

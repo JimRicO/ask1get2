@@ -75,7 +75,11 @@ But on what? Wine, poetry, or virtue, as you wish."
   return (
     <Layout>
       <div className="min-h-screen">
-        <div className="mx-auto flex max-w-[1180px] flex-wrap items-start gap-x-12 gap-y-10 px-7 pt-12 pb-10">
+        <div className="px-4 pt-8 pb-6">
+          <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Profile</h1>
+          <p className="text-primary-foreground/80">Your cellar, manifesto & account.</p>
+        </div>
+        <div className="mx-auto flex max-w-[1180px] flex-wrap items-start gap-x-12 gap-y-10 px-4 pt-4 pb-10">
           {/* The manifesto is the screen, not a card on it. */}
           <div className="max-w-[660px] flex-[1_1_420px]">
             <h1 className="font-serif font-bold leading-[1.05] tracking-[-0.02em] text-foreground text-[clamp(30px,4.2vw,46px)]">

@@ -370,9 +370,8 @@ const Cellar = () => {
         status={`${filteredWines.length} shown`}
       />
 
-      <div className="mx-auto max-w-[1180px] px-7 pt-12">
-        <Eyebrow>The cellar</Eyebrow>
-        <h1 className="mt-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">
+      <div className="mx-auto max-w-[1180px] px-4 pt-8">
+        <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">
           Wine & Virtue
         </h1>
 
