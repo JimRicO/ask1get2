@@ -192,6 +192,7 @@ const Restaurant = () => {
       return;
     }
     setReadingMenu(true);
+    requestAnimationFrame(() => document.getElementById("rv-menu-photo")?.scrollIntoView({ block: "center" }));
     // The old ids point at dishes that will not exist after this call, so the
     // selection goes — and its composed run comes out of the text with it,
     // leaving anything typed by hand in place.
@@ -219,6 +220,7 @@ const Restaurant = () => {
       return;
     }
     setReadingList(true);
+    requestAnimationFrame(() => document.getElementById("rv-list-photo")?.scrollIntoView({ block: "center" }));
     setListResult(null);
     setTable(null);
     try {
@@ -233,6 +235,22 @@ const Restaurant = () => {
       setReadingList(false);
     }
   };
+
+  // Like the film: capture, flash, then the scan starts on its own.
+  const menuCountRef = useRef(0);
+  const listCountRef = useRef(0);
+  useEffect(() => {
+    const grew = menuImages.length > menuCountRef.current;
+    menuCountRef.current = menuImages.length;
+    if (grew && !readingMenu) void readMenu();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menuImages.length]);
+  useEffect(() => {
+    const grew = listImages.length > listCountRef.current;
+    listCountRef.current = listImages.length;
+    if (grew && !readingList) void readList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listImages.length]);
 
   const pair = async () => {
     if (!listResult || listResult.entries.length === 0) return;
@@ -465,8 +483,8 @@ const Restaurant = () => {
 
         {menuImages.length > 0 && (
           <div className="mb-4 flex justify-center">
-            <div className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
-              <img src={menuImages[0]} alt="Menu" className="block w-full" />
+            <div id="rv-menu-photo" className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
+              <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
               <ScanLine active={readingMenu} from={4} to={92} />
               {flash > 0 && <Flash fire={flash} />}
             </div>
@@ -594,8 +612,8 @@ const Restaurant = () => {
             <span className="rv-corner rv-corner-tl" />
             <span className="rv-corner rv-corner-br" />
             {listImages.length > 0 ? (
-              <div className="relative overflow-hidden rounded-[4px]">
-                <img src={listImages[0]} alt="Wine list" className="block w-full" />
+              <div id="rv-list-photo" className="relative overflow-hidden rounded-[4px]">
+                <img src={listImages[0]} alt="Wine list" className="block max-h-[52vh] w-full object-cover object-top" />
                 <ScanLine active={readingList} from={8} to={86} ms={1000} />
                 {flash > 0 && <Flash fire={flash} />}
               </div>
