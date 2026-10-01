@@ -669,9 +669,11 @@ const Restaurant = () => {
                               type="button"
                               onClick={() => (qty <= 1 ? toggleDish(d.id) : stepQty(d.id, -1))}
                               aria-label="One less"
-                              className="flex h-7 w-7 items-center justify-center rounded-full border border-rv-line text-rv-peach"
+                              className="p-1.5"
                             >
-                              −
+                              <span className="rv-check" data-on="true">
+                                <Minus className="h-3 w-3" strokeWidth={3} />
+                              </span>
                             </button>
                             <span className="rv-qty min-w-[26px] text-center">×{qty}</span>
                             <button
@@ -679,9 +681,11 @@ const Restaurant = () => {
                               onClick={() => stepQty(d.id, 1)}
                               disabled={qty >= 20}
                               aria-label="One more"
-                              className="flex h-7 w-7 items-center justify-center rounded-full border border-rv-peach text-rv-peach disabled:opacity-40"
+                              className="p-1.5 disabled:opacity-40"
                             >
-                              +
+                              <span className="rv-check" data-on="true">
+                                <Plus className="h-3 w-3" strokeWidth={3} />
+                              </span>
                             </button>
                           </div>
                         )}
