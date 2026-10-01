@@ -450,7 +450,7 @@ const AddWine = () => {
       <div className="min-h-screen bg-background pb-8">
         <div className="mx-auto max-w-[1180px] bg-background text-primary-foreground px-4 pt-8 pb-6">
           <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">New Wine</h1>
-          <p className="text-foreground/90">Snap a photo to fill details automatically.</p>
+          <p className="mt-3 text-[15px] text-wine-champagne">Snap a photo to fill details automatically.</p>
         </div>
 
         <div className="mx-auto max-w-[1180px] px-4 mt-6">

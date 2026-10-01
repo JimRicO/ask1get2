@@ -143,7 +143,7 @@ const Cellar = () => {
 
   // Editable subtitle states
   const [cellarSubtitle, setCellarSubtitle] = useState<string>(
-    "To taste is to feel. To collect is to remember",
+    "To taste is to feel. To collect is to remember.",
   );
   const [archiveSubtitle, setArchiveSubtitle] = useState<string>(
     "Archive - All wines including out of stock",
