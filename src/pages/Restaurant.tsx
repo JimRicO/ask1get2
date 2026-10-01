@@ -192,7 +192,7 @@ const Restaurant = () => {
       return;
     }
     setReadingMenu(true);
-    document.getElementById("rv-menu-photo")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    requestAnimationFrame(() => document.getElementById("rv-menu-photo")?.scrollIntoView({ block: "center" }));
     // The old ids point at dishes that will not exist after this call, so the
     // selection goes — and its composed run comes out of the text with it,
     // leaving anything typed by hand in place.
@@ -220,7 +220,7 @@ const Restaurant = () => {
       return;
     }
     setReadingList(true);
-    document.getElementById("rv-list-photo")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    requestAnimationFrame(() => document.getElementById("rv-list-photo")?.scrollIntoView({ block: "center" }));
     setListResult(null);
     setTable(null);
     try {
