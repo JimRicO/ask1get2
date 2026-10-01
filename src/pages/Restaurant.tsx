@@ -469,6 +469,7 @@ const Restaurant = () => {
             <div className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
               <img src={menuImages[0]} alt="Menu" className="block w-full" />
               <ScanLine active={readingMenu} from={4} to={92} />
+              {flash > 0 && <Flash fire={flash} />}
             </div>
           </div>
         )}
@@ -596,7 +597,8 @@ const Restaurant = () => {
             {listImages.length > 0 ? (
               <div className="relative overflow-hidden rounded-[4px]">
                 <img src={listImages[0]} alt="Wine list" className="block w-full" />
-                <ScanLine active={readingList} from={8} to={86} />
+                <ScanLine active={readingList} from={8} to={86} ms={1000} />
+                {flash > 0 && <Flash fire={flash} />}
               </div>
             ) : (
               <div className="flex h-[180px] items-center justify-center text-rv-tan2">
@@ -773,25 +775,21 @@ const Restaurant = () => {
   );
 };
 
-/** Scan sweep. Loops while active; once inactive it finishes the pass, then hides. */
-function ScanLine({ active, from, to }: { active: boolean; from: number; to: number }) {
-  const [running, setRunning] = useState(active);
+/** Scan sweep, ported from the film. Loops while active. */
+function ScanLine({ active, from = 4, to = 92, ms = 900 }: { active: boolean; from?: number; to?: number; ms?: number }) {
+  const [p, setP] = useState(0);
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }, []);
   useEffect(() => {
-    if (active) setRunning(true);
-    else if (reduced || document.visibilityState !== "visible") setRunning(false);
-  }, [active, reduced]);
-  // Safety net: never leave the line up longer than one pass after finishing.
-  useEffect(() => {
-    if (active || !running) return;
-    const t = window.setTimeout(() => setRunning(false), 1000);
-    return () => window.clearTimeout(t);
-  }, [active, running]);
-
-  if (!running) return null;
+    if (!active || reduced) { setP(0); return; }
+    let raf = 0; const t0 = performance.now();
+    const tick = (now: number) => { setP(((now - t0) % ms) / ms); raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, ms, reduced]);
+  if (!active) return null;
   if (reduced) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-[rgba(20,9,9,0.45)]">
@@ -800,13 +798,13 @@ function ScanLine({ active, from, to }: { active: boolean; from: number; to: num
     );
   }
   return (
-    <div
-      className="rv-scan"
-      style={{ ["--scan-from" as string]: `${from}%`, ["--scan-to" as string]: `${to}%` }}
-      onAnimationIteration={() => {
-        if (!active) setRunning(false);
-      }}
-    />
+    <div style={{
+      position: "absolute", left: "10%", right: "10%", height: 2, zIndex: 3,
+      top: `${from + p * (to - from)}%`,
+      background: "#F2A46C",
+      boxShadow: "0 0 18px 4px rgba(242,164,108,.5)",
+      pointerEvents: "none",
+    }} />
   );
 }
 
