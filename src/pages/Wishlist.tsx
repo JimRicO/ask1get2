@@ -60,6 +60,12 @@ const Wishlist = () => {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [magicScanCompleted, setMagicScanCompleted] = useState(false);
+  // Same scan effects as Add Wine: flash + sweep on upload, sweep while reading, corners lock after.
+  const [shotFire, setShotFire] = useState<Record<string, number>>({});
+  const [shotScanning, setShotScanning] = useState<Record<string, boolean>>({});
+  const [lockKey, setLockKey] = useState(0);
+  // Bumped per photo; reading starts automatically once the new photo is in state.
+  const [autoScanKey, setAutoScanKey] = useState(0);
   const formSectionRef = useRef<HTMLDivElement>(null);
   
   const [images, setImages] = useState<{
@@ -147,8 +153,12 @@ const Wishlist = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreviews(prev => ({ ...prev, [type]: reader.result as string }));
+        setShotFire(prev => ({ ...prev, [type]: (prev[type] ?? 0) + 1 }));
+        setShotScanning(prev => ({ ...prev, [type]: true }));
+        window.setTimeout(() => setShotScanning(prev => ({ ...prev, [type]: false })), 2400);
       };
       reader.readAsDataURL(file);
+      setAutoScanKey(k => k + 1);
     } else {
       setImages(prev => ({ ...prev, [type]: null }));
       setImagePreviews(prev => ({ ...prev, [type]: null }));
@@ -157,10 +167,7 @@ const Wishlist = () => {
 
 
   const processImageWithAI = async () => {
-    if (!Object.values(images).some(img => img !== null)) {
-      toast.error("Please upload at least one image");
-      return;
-    }
+    if (!Object.values(images).some(img => img !== null)) return;
 
     setAiProcessing(true);
     try {
@@ -197,7 +204,6 @@ const Wishlist = () => {
       });
 
       setMagicScanCompleted(true);
-      toast.success("Wine data extracted successfully!");
 
       // Look the wine up on the web and write a grounded description
       if (wineData.wine_name) {
@@ -230,10 +236,10 @@ const Wishlist = () => {
         formSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     } catch (error: any) {
-      toast.error("Failed to analyze images");
       console.error(error);
     } finally {
       setAiProcessing(false);
+      window.setTimeout(() => setLockKey(k => k + 1), 280);
     }
   };
 
@@ -634,24 +640,7 @@ const Wishlist = () => {
                 </div>
               </div>
 
-              {/* Magic Scan Button */}
-              <Button
-                onClick={processImageWithAI}
-                disabled={aiProcessing || !Object.values(images).some(img => img !== null)}
-                className="w-full"
-              >
-                {aiProcessing ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Analyzing Images...
-                  </>
-                ) : (
-                  <>
-                    <Camera className="h-5 w-5 mr-2" />
-                    Magic Scan
-                  </>
-                )}
-              </Button>
+              {/* Reading starts on its own after each photo; the scan line on the tiles shows progress. */}
             </div>
 
             {/* Form Fields - Show after Magic Scan */}
