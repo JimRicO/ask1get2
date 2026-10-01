@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@/lib/router-compat";
 import Layout from "@/components/Layout";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
@@ -12,12 +11,8 @@ import {
   Camera,
   X,
   AlertTriangle,
-  ScrollText,
-  Heart,
   ChevronDown,
   ChevronRight,
-  Minus,
-  Plus,
   Check,
 } from "lucide-react";
 import { extractWineList, extractMenu, pairFromList } from "@/lib/pairing.functions";
@@ -83,6 +78,13 @@ const Restaurant = () => {
 
   const [savedBottles, setSavedBottles] = useState<Record<string, boolean>>({});
   const [savingBottle, setSavingBottle] = useState<string | null>(null);
+  const [flash, setFlash] = useState(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSheetOpen(!!table);
+  }, [table]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -323,7 +325,17 @@ const Restaurant = () => {
     }
   };
 
-  const PhotoStep = ({
+  const firePhoto = (
+    files: FileList | null,
+    images: string[],
+    max: number,
+    setImages: (updater: (prev: string[]) => string[]) => void,
+  ) => {
+    if (files && files.length > 0) setFlash((n) => n + 1);
+    void addFiles(files, images, max, setImages);
+  };
+
+  const CaptureButton = ({
     images,
     max,
     setImages,
@@ -335,116 +347,137 @@ const Restaurant = () => {
     setImages: (updater: (prev: string[]) => string[]) => void;
     addLabel: string;
     moreLabel: string;
+  }) =>
+    images.length < max ? (
+      <label className="rv-btn-ghost">
+        {preparing ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" /> Preparing...
+          </>
+        ) : (
+          <>
+            <Camera className="h-4 w-4" /> {images.length === 0 ? addLabel : moreLabel}
+          </>
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          multiple
+          className="hidden"
+          disabled={preparing}
+          onChange={(e) => {
+            firePhoto(e.target.files, images, max, setImages);
+            e.target.value = "";
+          }}
+        />
+      </label>
+    ) : null;
+
+  const Thumbs = ({
+    images,
+    setImages,
+    skipFirst,
+  }: {
+    images: string[];
+    setImages: (updater: (prev: string[]) => string[]) => void;
+    skipFirst?: boolean;
   }) => (
-    <>
-      {images.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {images.map((src, i) => (
-            <div key={i} className="relative">
-              <img
-                src={src}
-                alt={`Page ${i + 1}`}
-                className="h-[82px] w-[64px] object-cover border border-border rounded-md"
-              />
-              <button
-                type="button"
-                onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
-                aria-label={`Remove page ${i + 1}`}
-                className="absolute -right-1.5 -top-1.5 rounded-full border border-border bg-card p-0.5 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-        </div>
+    <div className="flex flex-wrap gap-2">
+      {images.map((src, i) =>
+        skipFirst && i === 0 ? null : (
+          <div key={i} className="relative">
+            <img
+              src={src}
+              alt={`Page ${i + 1}`}
+              className="h-[64px] w-[50px] rounded-[3px] border border-rv-line object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
+              aria-label={`Remove page ${i + 1}`}
+              className="absolute -right-1.5 -top-1.5 rounded-full border border-rv-line bg-rv-panel p-0.5 text-rv-tan2 hover:text-rv-cream"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ),
       )}
-      {images.length < max && (
-        <label className="mb-3 flex w-full cursor-pointer items-center justify-center gap-2 border border-dashed border-border py-4 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground transition-colors duration-[320ms] hover:border-wine-champagne hover:text-foreground rounded-md">
-          {preparing ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Preparing...
-            </>
-          ) : (
-            <>
-              <Camera className="h-4 w-4" />
-              {images.length === 0 ? addLabel : moreLabel}
-            </>
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            multiple
-            className="hidden"
-            disabled={preparing}
-            onChange={(e) => {
-              void addFiles(e.target.files, images, max, setImages);
-              e.target.value = "";
-            }}
-          />
-        </label>
-      )}
-    </>
+    </div>
   );
 
   const Unreadable = ({ what }: { what: string }) => (
-    <p className="flex items-start gap-1.5 text-xs text-accent">
-      <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-      Some of that was too dark or blurred to read, so this {what} is probably
-      incomplete. Add another photo of the pages that are missing.
+    <p className="flex items-start gap-1.5 text-xs text-rv-peach">
+      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+      Some of that was too dark or blurred to read, so this {what} is probably incomplete. Add
+      another photo of the pages that are missing.
     </p>
   );
 
-  const SaveButton = ({ entry, why }: { entry: ListEntry; why: string }) => {
+  const LovedPill = ({ entry, why }: { entry: ListEntry; why: string }) => {
     const key = wishlistKey(entry.name, entry.producer);
     const isSaved = !!savedBottles[key];
     const isSaving = savingBottle === key;
     return (
-      <div className="flex justify-end mt-2">
-        <button
-          type="button"
-          onClick={() => void saveBottle(entry, why)}
-          disabled={isSaved || isSaving}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.07em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground disabled:hover:text-muted-foreground"
-        >
-          {isSaving ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Heart className={`h-3 w-3 ${isSaved ? "fill-accent text-accent" : ""}`} />
-          )}
-          {isSaved ? table?.savedLabel : table?.saveLabel}
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => void saveBottle(entry, why)}
+        disabled={isSaved || isSaving}
+        data-loved={isSaved}
+        className="rv-loved"
+      >
+        {isSaving ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : isSaved ? (
+          `♥ Loved${place.trim() ? ` · ${place.trim()}` : ""}`
+        ) : (
+          "♡ We loved it"
+        )}
+      </button>
     );
   };
 
-  const BottleLine = ({ entry }: { entry: ListEntry }) => (
-    <>
-      <p className="font-serif text-[21px] leading-tight text-foreground">{entry.name}</p>
-      <p className="text-xs text-muted-foreground">
-        {[entry.producer, entry.vintage, entry.region, entry.price].filter(Boolean).join(" · ")}
-        {entry.byTheGlass && <span className="ml-1.5 text-accent">glass</span>}
-      </p>
-    </>
-  );
+  const totalPlates = Object.values(selected).reduce((a, b) => a + b, 0);
+  const toastText = readingMenu
+    ? "Reading the menu…"
+    : readingList
+      ? "Reading the wine list…"
+      : pairing
+        ? "Pairing recommendation"
+        : null;
 
   if (!session) return null;
 
+  const first = table?.single ?? null;
+
   return (
     <Layout>
-      <div className="mx-auto max-w-[1180px] px-7 pt-12 pb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <ScrollText className="h-5 w-5 text-accent" />
-          <h1 className="font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">At the table</h1>
-        </div>
-        <p className="text-sm text-muted-foreground mb-6">
-          The menu, then the wine list. Your cave stays out of this one.
+      {flash > 0 && <div key={flash} className="rv-flash" aria-hidden />}
+      {toastText && <div className="rv-toast">{toastText}</div>}
+
+      <div className="mx-auto max-w-[560px] px-6 pb-10 pt-10">
+        {/* STEP 1 */}
+        <h1 className="font-serif text-[31px] font-bold leading-tight text-rv-cream">
+          At a restaurant
+        </h1>
+        <p className="mb-5 mt-1 text-[13.5px] leading-[1.5] text-rv-tan">
+          Snap the menu. Tick what the table ordered.
         </p>
 
-        {/* Step one: the food, because that is the order the evening goes in. */}
-        <p className="mb-3 flex items-baseline gap-2 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground"><span className="text-primary">One</span> The menu</p>
-        <PhotoStep
+        {menuImages.length > 0 && (
+          <div className="mb-4 flex justify-center">
+            <div className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
+              <img src={menuImages[0]} alt="Menu" className="block w-full" />
+              <ScanLine active={readingMenu} from={4} to={92} />
+            </div>
+          </div>
+        )}
+        {menuImages.length > 0 && (
+          <div className="mb-3">
+            <Thumbs images={menuImages} setImages={setMenuImages} />
+          </div>
+        )}
+        <CaptureButton
           images={menuImages}
           max={MAX_MENU_IMAGES}
           setImages={setMenuImages}
@@ -452,108 +485,69 @@ const Restaurant = () => {
           moreLabel="Add another page"
         />
         {menuImages.length > 0 && (
-          <Button
+          <button
+            type="button"
             onClick={() => void readMenu()}
             disabled={readingMenu || preparing}
-            variant="secondary"
-            className="w-full"
+            className="rv-btn mt-3"
           >
-            {readingMenu ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Reading...
-              </>
-            ) : (
-              "Read the menu"
-            )}
-          </Button>
+            {readingMenu ? "Reading…" : "Read the menu"}
+          </button>
         )}
 
         {menuResult && (
-          <div className="mt-4 space-y-3">
-            <button
-              onClick={() => setMenuOpen((o) => !o)}
-              className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground"
-            >
-              {menuOpen ? (
-                <ChevronDown className="h-3 w-3" />
-              ) : (
-                <ChevronRight className="h-3 w-3" />
-              )}
-              {menuResult.dishes.length} {menuResult.dishes.length === 1 ? "dish" : "dishes"} read
-            </button>
-
+          <div className="mt-6">
             {menuResult.unreadable && <Unreadable what="menu" />}
-
-            {/* The step has to read as a question. Without this the rows look
-                like a list the app is showing you, and people sit there. */}
-            {menuResult.dishes.length > 0 && (
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-sm text-foreground">{menuResult.selectionPrompt}</p>
-                <p className="text-xs text-muted-foreground whitespace-nowrap">
-                  {selectedCount} selected
-                </p>
-              </div>
-            )}
+            <div className="mb-1 flex items-baseline justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                className="rv-eyebrow flex items-center gap-1 !text-rv-cream"
+              >
+                {menuOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                What did the table order?
+              </button>
+              <span className="rv-eyebrow !text-rv-peach">
+                {totalPlates} {totalPlates === 1 ? "plate" : "plates"}
+              </span>
+            </div>
 
             {menuOpen &&
               grouped.map((group, gi) => (
-                <div key={gi} className="space-y-1">
-                  {group.section && (
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70 pt-1">
-                      {group.section}
-                    </p>
-                  )}
+                <div key={gi}>
+                  {group.section && <p className="rv-eyebrow pb-1 pt-4">{group.section}</p>}
                   {group.dishes.map((d) => {
                     const qty = selected[d.id] ?? 0;
+                    const on = qty > 0;
                     return (
                       <div
                         key={d.id}
-                        className={`flex items-start gap-2 border px-3 py-2.5 transition-colors duration-[320ms] ease-[var(--ease-cave)] ${
-                          qty > 0
-                            ? "border-primary/50 bg-primary/10"
-                            : "border-border bg-card/60"
-                        }`}
+                        className="flex items-center gap-3 border-b border-rv-line py-[10px]"
                       >
                         <button
                           type="button"
                           onClick={() => toggleDish(d.id)}
-                          aria-pressed={qty > 0}
-                          className="flex-1 flex items-start gap-2 text-left text-xs text-foreground"
+                          aria-pressed={on}
+                          className="flex flex-1 items-center gap-3 text-left"
                         >
-                          {/* On every row, not only selected ones: the box is
-                              what tells the user these are tappable. */}
-                          <span
-                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border ${
-                              qty > 0
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-border"
-                            }`}
-                          >
-                            {qty > 0 && <Check className="h-2.5 w-2.5" />}
+                          <span className="rv-check" data-on={on}>
+                            {on && <Check className="h-3 w-3" strokeWidth={3} />}
                           </span>
-                          {d.name}
+                          <span
+                            className={`text-[13.5px] transition-colors duration-300 ${on ? "text-rv-cream" : "text-rv-tan"}`}
+                          >
+                            {d.name}
+                          </span>
                         </button>
-                        {qty > 0 && (
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => stepQty(d.id, -1)}
-                              aria-label="One fewer"
-                              className="border border-border p-0.5 text-muted-foreground transition-colors duration-[320ms] hover:text-foreground rounded-md"
-                            >
-                              <Minus className="h-3 w-3" />
-                            </button>
-                            <span className="text-xs text-foreground w-4 text-center">{qty}</span>
-                            <button
-                              type="button"
-                              onClick={() => stepQty(d.id, 1)}
-                              aria-label="One more"
-                              className="border border-border p-0.5 text-muted-foreground transition-colors duration-[320ms] hover:text-foreground rounded-md"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
-                          </div>
+                        {on && (
+                          <button
+                            type="button"
+                            onClick={() => stepQty(d.id, qty >= 20 ? -19 : 1)}
+                            aria-label="One more"
+                            className="rv-qty"
+                          >
+                            ×{qty}
+                          </button>
                         )}
                       </div>
                     );
@@ -563,18 +557,14 @@ const Restaurant = () => {
           </div>
         )}
 
-        {/* Always present, with or without a menu photo: tapping fills it in,
-            typing works exactly as it did before this step existed. */}
         <div className="mt-6 space-y-3">
-          <p className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
-            What the table is eating
-          </p>
+          <p className="rv-eyebrow">Or type what the table is eating</p>
           <Textarea
             value={dishes}
             onChange={(e) => setDishes(e.target.value)}
             placeholder="A steak, two mushroom risottos, grilled sea bass, a goat's cheese salad."
             rows={3}
-            className="resize-none border-border bg-card"
+            className="resize-none rounded-[8px] border-rv-line bg-rv-panel text-[13.5px] text-rv-cream"
           />
           <input
             value={place}
@@ -583,174 +573,262 @@ const Restaurant = () => {
               setPlace(e.target.value);
             }}
             placeholder="Restaurant name, for your notes later"
-            className="w-full border-b border-border bg-transparent px-0 py-2 text-[15px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+            className="w-full border-b border-rv-line bg-transparent px-0 py-2 text-[14px] text-rv-cream placeholder:text-rv-tan2 focus:border-rv-peach focus:outline-none"
           />
         </div>
 
-        {/* Step two: the wine list. */}
-        <div className="mt-8">
-          <p className="mb-3 flex items-baseline gap-2 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground"><span className="text-primary">Two</span> The wine list</p>
-          <PhotoStep
-            images={listImages}
-            max={MAX_LIST_IMAGES}
-            setImages={setListImages}
-            addLabel="Photograph the list"
-            moreLabel="Add another page"
-          />
+        <button
+          type="button"
+          className="rv-btn mt-6"
+          onClick={() => listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+        >
+          Now the wine list
+        </button>
+
+        {/* STEP 2 */}
+        <div ref={listRef} className="scroll-mt-6 pt-12">
+          <h2 className="mb-4 font-serif text-[31px] font-bold leading-tight text-rv-cream">
+            The wine list
+          </h2>
+          <div className="rv-viewfinder">
+            <span className="rv-corner rv-corner-tl" />
+            <span className="rv-corner rv-corner-br" />
+            {listImages.length > 0 ? (
+              <div className="relative overflow-hidden rounded-[4px]">
+                <img src={listImages[0]} alt="Wine list" className="block w-full" />
+                <ScanLine active={readingList} from={8} to={86} />
+              </div>
+            ) : (
+              <div className="flex h-[180px] items-center justify-center text-rv-tan2">
+                <Camera className="h-6 w-6" />
+              </div>
+            )}
+          </div>
+          {listImages.length > 1 && (
+            <div className="mt-3">
+              <Thumbs images={listImages} setImages={setListImages} skipFirst />
+            </div>
+          )}
+          {listImages.length === 1 && (
+            <div className="mt-3">
+              <Thumbs images={listImages} setImages={setListImages} />
+            </div>
+          )}
+          <div className="mt-3">
+            <CaptureButton
+              images={listImages}
+              max={MAX_LIST_IMAGES}
+              setImages={setListImages}
+              addLabel="Photograph the list"
+              moreLabel="Add another page"
+            />
+          </div>
           {listImages.length > 0 && (
-            <Button
+            <button
+              type="button"
               onClick={() => void readList()}
               disabled={readingList || preparing}
-              variant="secondary"
-              className="w-full"
+              className="rv-btn mt-3"
             >
-              {readingList ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Reading...
-                </>
-              ) : (
-                "Read the list"
-              )}
-            </Button>
+              {readingList ? "Reading…" : "Read the list"}
+            </button>
           )}
         </div>
 
         {listResult && (
           <div className="mt-4 space-y-3">
-            <button
-              onClick={() => setListOpen((o) => !o)}
-              className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground"
-            >
-              {listOpen ? (
-                <ChevronDown className="h-3 w-3" />
-              ) : (
-                <ChevronRight className="h-3 w-3" />
-              )}
-              {listResult.entries.length}{" "}
-              {listResult.entries.length === 1 ? "wine read" : "wines read"}
-            </button>
-
+            <div className="rv-card rv-rise flex items-baseline justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setListOpen((o) => !o)}
+                className="flex items-center gap-1 font-serif text-[15px] text-rv-cream"
+              >
+                {listOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                Wine list read
+              </button>
+              <span className="rv-eyebrow !text-rv-peach">
+                <CountUp to={listResult.entries.length} />{" "}
+                {listResult.entries.length === 1 ? "wine" : "wines"} · {totalPlates}{" "}
+                {totalPlates === 1 ? "plate" : "plates"}
+              </span>
+            </div>
             {listResult.unreadable && <Unreadable what="list" />}
-
             {listOpen && listResult.entries.length > 0 && (
-              <div className="overflow-x-auto border border-border rounded-md">
-                <table className="w-full text-xs">
-                  <tbody>
-                    {listResult.entries.map((e) => (
-                      <tr key={e.id} className="border-b border-border/30 last:border-0">
-                        <td className="px-3 py-2 align-top">
-                          <span className="text-foreground">{e.name}</span>
-                          {e.byTheGlass && (
-                            <span className="ml-1.5 text-[10px] text-accent">glass</span>
-                          )}
-                          {(e.producer || e.region) && (
-                            <span className="block text-muted-foreground">
-                              {[e.producer, e.region].filter(Boolean).join(" · ")}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-2 py-2 align-top text-muted-foreground whitespace-nowrap">
-                          {e.vintage ?? ""}
-                        </td>
-                        <td className="px-3 py-2 align-top text-right text-foreground whitespace-nowrap">
-                          {e.price ?? ""}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Kept visible while inactive: hiding it removes the cue about what
-            comes next. */}
-        {listResult && listResult.entries.length > 0 && (
-          <div className="mt-6">
-            <Button
-              onClick={() => void pair()}
-              disabled={pairing || awaitingDish}
-              className="w-full"
-            >
-              {pairing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Choosing...
-                </>
-              ) : (
-                "Pick for the table"
-              )}
-            </Button>
-            {awaitingDish && (
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                Choose at least one dish above first.
-              </p>
-            )}
-          </div>
-        )}
-
-        {table && (
-          <div className="mt-8 space-y-6">
-            {table.tableRead && (
-              <div className="border border-border bg-card p-5 rounded-md">
-                <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
-                  This table
-                </p>
-                <p className="text-sm text-foreground/80">{table.tableRead}</p>
-              </div>
-            )}
-
-            {table.single && (
-              <div className="space-y-2">
-                <p className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">One bottle</p>
-                <div className="border border-border bg-card p-5 rounded-md">
-                  <BottleLine entry={table.single.entry} />
-                  <p className="text-sm text-foreground/90 mt-2">{table.single.why}</p>
-                  {table.single.compromise && (
-                    <p className="flex items-start gap-1.5 text-xs text-accent mt-3">
-                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      {table.single.compromise}
-                    </p>
-                  )}
-                  <SaveButton entry={table.single.entry} why={table.single.why} />
-                </div>
-              </div>
-            )}
-
-            {table.split && (
-              <div className="space-y-2">
-                <p className="font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
-                  Or two bottles
-                </p>
-                {table.split.rationale && (
-                  <p className="text-xs text-muted-foreground">{table.split.rationale}</p>
-                )}
-                {table.split.bottles.map((b, i) => (
-                  <div key={i} className="border border-border bg-card/60 p-5 rounded-md">
-                    <BottleLine entry={b.entry} />
-                    {b.serves && <p className="text-xs text-accent mt-1">{b.serves}</p>}
-                    <p className="text-sm text-foreground/80 mt-1">{b.why}</p>
-                    <SaveButton entry={b.entry} why={b.why} />
+              <div className="rv-card !p-0">
+                {listResult.entries.map((e) => (
+                  <div
+                    key={e.id}
+                    className="flex items-start justify-between gap-3 border-b border-rv-line px-[14px] py-2 text-[12.5px] last:border-0"
+                  >
+                    <div>
+                      <span className="text-rv-cream">{e.name}</span>
+                      {e.byTheGlass && <span className="ml-1.5 text-[10px] text-rv-peach">glass</span>}
+                      {(e.producer || e.region || e.vintage) && (
+                        <span className="block text-rv-tan2">
+                          {[e.producer, e.vintage, e.region].filter(Boolean).join(" · ")}
+                        </span>
+                      )}
+                    </div>
+                    <span className="whitespace-nowrap text-rv-tan">{e.price ?? ""}</span>
                   </div>
                 ))}
               </div>
             )}
+          </div>
+        )}
 
-            {table.verdict && (
-              <div className="border border-dashed border-border bg-card/40 p-5 rounded-md">
-                <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-muted-foreground">
-                  The list
-                </p>
-                <p className="text-sm text-foreground/80">{table.verdict}</p>
-              </div>
+        {listResult && listResult.entries.length > 0 && (
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={() => void pair()}
+              disabled={pairing || awaitingDish}
+              className="rv-btn"
+            >
+              {pairing ? "Choosing…" : "Pick for the table"}
+            </button>
+            {awaitingDish && (
+              <p className="mt-2 text-center text-xs text-rv-tan2">Choose at least one dish above first.</p>
             )}
           </div>
         )}
+
+        {table && !sheetOpen && (
+          <button type="button" className="rv-btn-ghost mt-4" onClick={() => setSheetOpen(true)}>
+            Show the recommendation
+          </button>
+        )}
+      </div>
+
+      {/* STEP 3: the sheet */}
+      <div
+        className="fixed inset-0 z-50 flex items-end justify-center"
+        style={{ pointerEvents: table && sheetOpen ? "auto" : "none" }}
+        aria-hidden={!(table && sheetOpen)}
+      >
+        <button
+          type="button"
+          aria-label="Close"
+          tabIndex={table && sheetOpen ? 0 : -1}
+          onClick={() => setSheetOpen(false)}
+          className={`absolute inset-0 bg-[rgba(20,9,9,0.6)] transition-opacity duration-500 ${table && sheetOpen ? "opacity-100" : "opacity-0"}`}
+        />
+        <div className="rv-sheet" data-open={!!(table && sheetOpen)} role="dialog">
+          <div className="mx-auto mb-4 h-[3px] w-9 rounded-full bg-rv-line" />
+          {table && (
+            <div className="space-y-5">
+              {table.tableRead && <p className="text-[12px] leading-[1.5] text-rv-tan">{table.tableRead}</p>}
+
+              {first && (
+                <div>
+                  <p className="rv-eyebrow !text-rv-peach">One bottle for the table</p>
+                  <p className="mt-1 font-serif text-[24px] font-bold leading-tight text-rv-cream">
+                    {first.entry.name}
+                  </p>
+                  <p className="text-[12px] text-rv-tan2">
+                    {[first.entry.producer, first.entry.vintage, first.entry.region, first.entry.price]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  <p className="mt-2 text-[13px] leading-[1.5] text-rv-cream">{first.why}</p>
+                  {first.compromise && (
+                    <p className="mt-2 text-[12.5px] leading-[1.5] text-rv-peach">⚠ {first.compromise}</p>
+                  )}
+                  <div className="mt-3">
+                    <LovedPill entry={first.entry} why={first.why} />
+                  </div>
+                </div>
+              )}
+
+              {table.split && (
+                <div className="space-y-4 border-t border-rv-line pt-4">
+                  <p className="rv-eyebrow !text-rv-peach">{first ? "Or two bottles" : "Two bottles for the table"}</p>
+                  {table.split.rationale && (
+                    <p className="text-[12px] leading-[1.5] text-rv-tan">{table.split.rationale}</p>
+                  )}
+                  {table.split.bottles.map((b, i) => (
+                    <div key={i}>
+                      <p className="font-serif text-[19px] font-bold leading-tight text-rv-cream">{b.entry.name}</p>
+                      <p className="text-[12px] text-rv-tan2">
+                        {[b.entry.producer, b.entry.vintage, b.entry.region, b.entry.price].filter(Boolean).join(" · ")}
+                      </p>
+                      {b.serves && <p className="mt-1 text-[12px] text-rv-peach">{b.serves}</p>}
+                      <p className="mt-1 text-[13px] leading-[1.5] text-rv-cream">{b.why}</p>
+                      <div className="mt-2">
+                        <LovedPill entry={b.entry} why={b.why} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {table.verdict && (
+                <p className="border-t border-rv-line pt-4 text-[12px] leading-[1.5] text-rv-tan">{table.verdict}</p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </Layout>
   );
 };
+
+/** Scan sweep. Loops while active; once inactive it finishes the pass, then hides. */
+function ScanLine({ active, from, to }: { active: boolean; from: number; to: number }) {
+  const [running, setRunning] = useState(active);
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
+  useEffect(() => {
+    if (active) setRunning(true);
+    else if (reduced || document.visibilityState !== "visible") setRunning(false);
+  }, [active, reduced]);
+  // Safety net: never leave the line up longer than one pass after finishing.
+  useEffect(() => {
+    if (active || !running) return;
+    const t = window.setTimeout(() => setRunning(false), 1000);
+    return () => window.clearTimeout(t);
+  }, [active, running]);
+
+  if (!running) return null;
+  if (reduced) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-[rgba(20,9,9,0.45)]">
+        <span className="rv-eyebrow !text-rv-cream">Reading…</span>
+      </div>
+    );
+  }
+  return (
+    <div
+      className="rv-scan"
+      style={{ ["--scan-from" as string]: `${from}%`, ["--scan-to" as string]: `${to}%` }}
+      onAnimationIteration={() => {
+        if (!active) setRunning(false);
+      }}
+    />
+  );
+}
+
+/** Counts from 0 to `to` over 900ms, ease-out cubic. Always lands on the real number. */
+function CountUp({ to }: { to: number }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const done = window.setTimeout(() => setN(to), 1000);
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / 900);
+      setN(Math.round(to * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(done);
+    };
+  }, [to]);
+  return <>{n}</>;
+}
 
 export default Restaurant;
