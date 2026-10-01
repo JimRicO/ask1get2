@@ -415,7 +415,7 @@ const Wishlist = () => {
               {wishlistItems.map((item) => (
                 <div
                   key={item.id}
-                  className="wood-panel flex cursor-pointer items-start gap-5 rounded-lg px-4 py-4 transition-transform duration-150 active:translate-y-px"
+                  className="wood-panel relative flex cursor-pointer items-start gap-5 rounded-lg px-4 py-4 transition-transform duration-150 active:translate-y-px"
                   onClick={() => {
                     setSelectedItem(item);
                     setDetailDialogOpen(true);
@@ -456,7 +456,7 @@ const Wishlist = () => {
 
                   {/* Wine details */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="mb-1 font-serif text-[21px] leading-tight tracking-[-0.005em] text-foreground">
+                    <h3 className="mb-1 pr-9 font-serif text-[21px] leading-tight tracking-[-0.005em] text-foreground">
                       {item.wine_name}
                     </h3>
                     {item.producer && (
@@ -483,7 +483,7 @@ const Wishlist = () => {
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex flex-col gap-1 flex-shrink-0">
+                  <div className="absolute right-2 top-2">
                     <Button
                       variant="ghost"
                       size="icon"
