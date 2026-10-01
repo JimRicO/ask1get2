@@ -23,8 +23,8 @@
   --radius-3xl: var(--radius);
   --radius-4xl: var(--radius);
 
-  --font-sans: Inter, system-ui, sans-serif;
-  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Fira Sans", Inter, system-ui, sans-serif;
+  --font-serif: "DM Serif Display", "Playfair Display", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   --color-background: var(--background);
