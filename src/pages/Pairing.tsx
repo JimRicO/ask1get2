@@ -332,8 +332,9 @@ const Pairing = () => {
           {/* The bottom bar is full at five, so restaurant mode lives here. */}
           <button
             onClick={() => navigate("/restaurant")}
-            className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent/15 px-4 py-2 text-sm font-semibold text-accent hover:bg-accent hover:text-accent-foreground transition-colors whitespace-nowrap"
           >
+            <UtensilsCrossed className="h-4 w-4" />
             At a restaurant?
           </button>
         </div>
