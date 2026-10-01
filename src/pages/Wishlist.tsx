@@ -21,10 +21,15 @@ import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import uploadButtonImg from "@/assets/upload-button.png";
 import bottleIcon from "@/assets/bottle-icon.png";
-import neckButtonImg from "@/assets/neck-button.png";
-import frontLabelButtonImg from "@/assets/front-label-button.png";
-import fullBottleButtonImg from "@/assets/full-bottle-button.png";
-import backLabelButtonImg from "@/assets/back-label-button.png";
+import neckIconAsset from "@/assets/bottle-neck-label.png.asset.json";
+import frontIconAsset from "@/assets/bottle-front-label.png.asset.json";
+import fullIconAsset from "@/assets/full_bottle.png.asset.json";
+import backIconAsset from "@/assets/bottle-back-label.png.asset.json";
+import scanIconAsset from "@/assets/nav-scan-heritage.png.asset.json";
+const neckButtonImg = neckIconAsset.url;
+const frontLabelButtonImg = frontIconAsset.url;
+const fullBottleButtonImg = fullIconAsset.url;
+const backLabelButtonImg = backIconAsset.url;
 
 interface WishlistItem {
   id: string;
@@ -370,7 +375,7 @@ const Wishlist = () => {
               onClick={openAddDialog}
               className="mx-auto bg-primary hover:bg-primary/90"
             >
-              <Camera className="h-5 w-5 mr-2" />
+              <img src={scanIconAsset.url} alt="" className="h-6 w-6 mr-2 object-contain" />
               Add a Bottle
             </Button>
           </div>
