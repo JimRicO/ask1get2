@@ -866,3 +866,24 @@ function Flash({ fire }: { fire: number }) {
   return <div key={fire} aria-hidden style={{ position: "absolute", inset: 0, background: "#fff",
     opacity: 0, zIndex: 2, pointerEvents: "none", animation: "wvFlash .45s linear" }} />;
 }
+
+/** Types the text in one letter at a time (45ms per letter), with a blinking caret. */
+function TypeText({ text }: { text: string }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    setN(0);
+    const id = window.setInterval(() => {
+      setN((v) => {
+        if (v >= text.length) { window.clearInterval(id); return v; }
+        return v + 1;
+      });
+    }, 45);
+    return () => window.clearInterval(id);
+  }, [text]);
+  return (
+    <span aria-label={text}>
+      {text.slice(0, n)}
+      <span aria-hidden className="rv-caret">|</span>
+    </span>
+  );
+}
