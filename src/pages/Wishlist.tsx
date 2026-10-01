@@ -377,12 +377,12 @@ const Wishlist = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-background">
-        <div className="bg-background text-primary-foreground px-4 pt-8 pb-6">
+        <div className="mx-auto max-w-[1180px] bg-background text-primary-foreground px-4 pt-8 pb-6">
           <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Wishlist</h1>
           <p className="text-primary-foreground/80">Wines you want to try, to remember, to buy</p>
         </div>
 
-        <div className="mt-6 pb-20">
+        <div className="mx-auto max-w-[1180px] mt-6 pb-20">
           {/* Add Wine Button */}
           <div className="mb-6 flex justify-center px-4">
             <Button 
