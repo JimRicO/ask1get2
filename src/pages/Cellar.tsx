@@ -4,6 +4,7 @@ import { useNavigate } from "@/lib/router-compat";
 import Layout from "@/components/Layout";
 import { Wine, Plus, Search, Pencil, Check, X } from "lucide-react";
 import wineVirtueLogo from "@/assets/wine-virtue-logo.png";
+import cellarSeal from "@/assets/wine-virtue-seal.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { normalizeCountry } from "@/lib/normalizeCountry";
@@ -717,7 +718,7 @@ const Cellar = () => {
         </div>
 
         <div className="flex justify-center pb-10">
-          <img src={wineVirtueLogo} alt="Wine & Virtue" className="h-auto w-[240px] opacity-90" />
+          <img src={cellarSeal.url} alt="Wine & Virtue" className="h-auto w-[240px] opacity-90" />
         </div>
       </div>
     </Layout>
