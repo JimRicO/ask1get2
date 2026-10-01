@@ -664,14 +664,26 @@ const Restaurant = () => {
                           </span>
                         </button>
                         {on && (
-                          <button
-                            type="button"
-                            onClick={() => stepQty(d.id, qty >= 20 ? -19 : 1)}
-                            aria-label="One more"
-                            className="rv-qty"
-                          >
-                            ×{qty}
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => (qty <= 1 ? toggleDish(d.id) : stepQty(d.id, -1))}
+                              aria-label="One less"
+                              className="flex h-7 w-7 items-center justify-center rounded-full border border-rv-line text-rv-peach"
+                            >
+                              −
+                            </button>
+                            <span className="rv-qty min-w-[26px] text-center">×{qty}</span>
+                            <button
+                              type="button"
+                              onClick={() => stepQty(d.id, 1)}
+                              disabled={qty >= 20}
+                              aria-label="One more"
+                              className="flex h-7 w-7 items-center justify-center rounded-full border border-rv-peach text-rv-peach disabled:opacity-40"
+                            >
+                              +
+                            </button>
+                          </div>
                         )}
                       </div>
                     );
