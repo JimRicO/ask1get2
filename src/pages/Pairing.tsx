@@ -338,10 +338,10 @@ const Pairing = () => {
         />
 
         {/* The bottom bar is full at five, so restaurant mode lives here. */}
-        <div className="mb-4 flex justify-center">
+        <div className="mb-4 flex justify-start">
           <button
             onClick={() => navigate("/restaurant")}
-            className="btn-plate inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold whitespace-nowrap"
+            className="btn-plate btn-plate-light inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold whitespace-nowrap"
           >
             <UtensilsCrossed className="h-4 w-4" />
             At a restaurant?
