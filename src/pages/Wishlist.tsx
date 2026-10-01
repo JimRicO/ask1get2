@@ -1,4 +1,5 @@
 import { BinIcon } from "@/components/BinIcon";
+import addBottleButton from "@/assets/add-bottle-button.png.asset.json";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -386,13 +387,14 @@ const Wishlist = () => {
         <div className="mx-auto max-w-[1180px] mt-6 pb-20">
           {/* Add Wine Button */}
           <div className="mb-6 flex justify-center px-4">
-            <Button 
+            <button
+              type="button"
               onClick={openAddDialog}
-              className="mx-auto bg-primary hover:bg-primary/90"
+              aria-label="Add a Bottle"
+              className="mx-auto transition-transform duration-150 hover:brightness-110 active:scale-95"
             >
-              <img src={scanIconAsset.url} alt="" className="h-6 w-6 mr-2 object-contain" />
-              Add a Bottle
-            </Button>
+              <img src={addBottleButton.url} alt="" className="h-20 w-20 object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.8)]" />
+            </button>
           </div>
 
           {/* Wishlist Items */}
