@@ -3,6 +3,7 @@ import bottleIcon from "@/assets/nav-bottle-full.png.asset.json";
 import pairIcon from "@/assets/nav-pairings.png.asset.json";
 import scanIcon from "@/assets/nav-scan-heritage.png.asset.json";
 import favIcon from "@/assets/nav-favorites-decanter.png.asset.json";
+import profileIcon from "@/assets/nav-profile.png.asset.json";
 
 type ButtonPreset = "cellar" | "pair" | "add" | "wishlist" | "profile";
 
@@ -17,7 +18,7 @@ const BUTTON_PRESETS: Record<ButtonPreset, { img?: string; label: string; size: 
   pair: { img: pairIcon.url, label: "Pair", size: "h-8 w-8" },
   add: { img: scanIcon.url, label: "New Wine", size: "h-9 w-9" },
   wishlist: { img: favIcon.url, label: "Wishlist", size: "h-8 w-8" },
-  profile: { label: "Profile", size: "h-6 w-6" },
+  profile: { img: profileIcon.url, label: "Profile", size: "h-7 w-7" },
 };
 
 const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButtonProps) => {
