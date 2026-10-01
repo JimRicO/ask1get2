@@ -234,6 +234,22 @@ const Restaurant = () => {
     }
   };
 
+  // Like the film: capture, flash, then the scan starts on its own.
+  const menuCountRef = useRef(0);
+  const listCountRef = useRef(0);
+  useEffect(() => {
+    const grew = menuImages.length > menuCountRef.current;
+    menuCountRef.current = menuImages.length;
+    if (grew && !readingMenu) void readMenu();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menuImages.length]);
+  useEffect(() => {
+    const grew = listImages.length > listCountRef.current;
+    listCountRef.current = listImages.length;
+    if (grew && !readingList) void readList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listImages.length]);
+
   const pair = async () => {
     if (!listResult || listResult.entries.length === 0) return;
     if (dishes.trim().length < 3) {
