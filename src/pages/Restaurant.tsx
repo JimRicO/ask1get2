@@ -452,7 +452,6 @@ const Restaurant = () => {
 
   return (
     <Layout>
-      {flash > 0 && <div key={flash} className="rv-flash" aria-hidden />}
       {toastText && <div className="rv-toast">{toastText}</div>}
 
       <div className="mx-auto max-w-[560px] px-6 pb-10 pt-10">
@@ -830,3 +829,9 @@ function CountUp({ to }: { to: number }) {
 }
 
 export default Restaurant;
+
+/** White capture flash over the photo, .85 to 0 over 450ms. */
+function Flash({ fire }: { fire: number }) {
+  return <div key={fire} aria-hidden style={{ position: "absolute", inset: 0, background: "#fff",
+    zIndex: 21, pointerEvents: "none", animation: "wvFlash .45s linear forwards" }} />;
+}
