@@ -90,6 +90,8 @@ const Restaurant = () => {
   const [listLock, setListLock] = useState(0);
   const [clinkKey, setClinkKey] = useState(0);
   const [clinkY, setClinkY] = useState(0);
+  const [listClinkKey, setListClinkKey] = useState(0);
+  const [listClinkY, setListClinkY] = useState(0);
   const [clinking, setClinking] = useState(false);
   const [skip, setSkip] = useState(false);
   const [dishesShown, setDishesShown] = useState(true);
@@ -116,7 +118,15 @@ const Restaurant = () => {
     setListLock((n) => n + 1);
     window.setTimeout(() => {
       setListShown(true);
-      requestAnimationFrame(() => document.getElementById("rv-list-read")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+      requestAnimationFrame(() => {
+        const card = document.getElementById("rv-list-read"), stage = stageRef.current;
+        if (!card || !stage) return;
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        window.setTimeout(() => {
+          setListClinkY(card.getBoundingClientRect().bottom - stage.getBoundingClientRect().top + 34);
+          setListClinkKey((k) => k + 1);
+        }, 380);
+      });
     }, 340);
   };
 
@@ -518,6 +528,7 @@ const Restaurant = () => {
         onPointerDownCapture={() => { if (clinking) { setSkip(true); } }}
       >
         <WineClink run={clinkKey} y={clinkY} onDone={showDishes} skip={skip} />
+        <WineClink run={listClinkKey} y={listClinkY} />
         {/* STEP 1 */}
         <h1 className="font-serif text-[31px] font-bold leading-tight text-rv-cream">
           At a restaurant
@@ -766,7 +777,7 @@ const Restaurant = () => {
 
         {listResult && listShown && (
           <div className="mt-4 space-y-3">
-            <div className="rv-card rv-rise flex items-baseline justify-between gap-3">
+            <div id="rv-list-read" className="rv-card rv-rise flex items-baseline justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setListOpen((o) => !o)}
