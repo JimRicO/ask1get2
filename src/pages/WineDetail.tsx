@@ -8,7 +8,7 @@ import { removeWineBackground, describeWine } from "@/lib/wine-ai.functions";
 import Layout from "@/components/Layout";
 import { CaveStickyHeader, CaveSheet, Eyebrow, Plate } from "@/components/CaveChrome";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit,, Plus, Sparkles, Upload, X, RefreshCw } from "lucide-react";
+import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Plus, Sparkles, Upload, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";

@@ -10,7 +10,7 @@ import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
 
 
 import Layout from "@/components/Layout";
-import { Heart, Camera,, Loader2, Edit, Upload, X } from "lucide-react";
+import { Heart, Camera, Loader2, Edit, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
