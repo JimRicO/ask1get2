@@ -1,3 +1,4 @@
+import findBottleIcon from "@/assets/find-bottle.png.asset.json";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Session } from "@supabase/supabase-js";
@@ -366,7 +367,7 @@ const Pairing = () => {
         </div>
 
         <Button onClick={() => run()} disabled={loading} className="w-full">
-          {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Pouring...</> : "Find a bottle"}
+          {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Pouring...</> : <><img src={findBottleIcon.url} alt="" className="mr-2 h-6 w-6 object-contain" />Find a bottle</>}
         </Button>
 
 
