@@ -91,7 +91,7 @@
   --radius: 0.25rem;
 
   /* ---- Ground and ink: three tints, no fourth ---- */
-  --background: hsl(0 32% 10%);        /* #211111 canvas */
+  --background: #0F0507;               /* Black Cherry / Deep Oxblood canvas */
   --foreground: hsl(40 60% 95%);       /* #FAF5EB ink */
 
   --card: hsl(0 32% 13%);              /* #2B1616 */
@@ -123,7 +123,7 @@
 
   /* ---- Wine scale, kept and re-pointed ---- */
   --wine-burgundy: hsl(0 32% 13%);
-  --wine-dark: hsl(0 32% 10%);
+  --wine-dark: #0F0507;
   --wine-rose-gold: hsl(25 85% 70%);
   --wine-champagne: hsl(40 40% 70%);   /* #D1BD94 secondary ink */
   --wine-deep: hsl(0 29% 18%);
@@ -140,7 +140,7 @@
   /* ---- Gradients: flattened on purpose. Depth comes from the tints. ---- */
   --gradient-primary: hsl(25 85% 70%);
   --gradient-rose: hsl(25 85% 70%);
-  --gradient-elegant: hsl(0 32% 10%);
+  --gradient-elegant: #0F0507;
   --gradient-card: hsl(0 32% 13%);
   --gradient-shimmer: transparent;
 
