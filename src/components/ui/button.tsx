@@ -9,10 +9,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:opacity-90 active:translate-y-px",
+        default: "btn-plate",
         destructive: "bg-destructive text-destructive-foreground hover:opacity-90 active:translate-y-px",
-        outline: "border border-input bg-transparent text-foreground hover:border-wine-champagne",
-        secondary: "bg-secondary text-secondary-foreground hover:opacity-90 active:translate-y-px",
+        outline: "btn-plate",
+        secondary: "btn-plate",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
