@@ -81,6 +81,34 @@ const Restaurant = () => {
   const [flash, setFlash] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+  const listInputRef = useRef<HTMLInputElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const orderHeaderRef = useRef<HTMLDivElement>(null);
+  // Scan confirmation: lock-on, clink (menu only), then the reveal.
+  const [menuLock, setMenuLock] = useState(0);
+  const [listLock, setListLock] = useState(0);
+  const [clinkKey, setClinkKey] = useState(0);
+  const [clinkY, setClinkY] = useState(0);
+  const [clinking, setClinking] = useState(false);
+  const [skip, setSkip] = useState(false);
+  const [dishesShown, setDishesShown] = useState(true);
+  const [listShown, setListShown] = useState(true);
+
+  const onMenuScanned = () => {
+    setMenuLock((n) => n + 1);
+    const header = orderHeaderRef.current, stage = stageRef.current;
+    if (!header || !stage) { setDishesShown(true); return; }
+    const y = header.getBoundingClientRect().bottom - stage.getBoundingClientRect().top + 34;
+    setClinkY(y);
+    setSkip(false);
+    setClinking(true);
+    setClinkKey((k) => k + 1);
+  };
+  const showDishes = () => { setClinking(false); setDishesShown(true); };
+  const onListScanned = () => {
+    setListLock((n) => n + 1);
+    window.setTimeout(() => setListShown(true), 320);
+  };
 
   useEffect(() => {
     setSheetOpen(!!table);
@@ -200,6 +228,7 @@ const Restaurant = () => {
     setDishes((text) => mergeComposed(text, staleComposed, ""));
     setMenuResult(null);
     setSelected({});
+    setDishesShown(false);
     setTable(null);
     try {
       const data = (await extractMenuFn({ data: { images: menuImages } })) as MenuResult;
@@ -222,6 +251,7 @@ const Restaurant = () => {
     setReadingList(true);
     requestAnimationFrame(() => document.getElementById("rv-list-photo")?.scrollIntoView({ block: "center" }));
     setListResult(null);
+    setListShown(false);
     setTable(null);
     try {
       const data = (await extractListFn({ data: { images: listImages } })) as ListResult;
