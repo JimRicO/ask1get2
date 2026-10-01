@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { extractWineList, extractMenu, pairFromList } from "@/lib/pairing.functions";
 import { wishlistKey } from "@/lib/wishlistKey";
+import { WineClink } from "@/components/WineClink";
 
 type ListResult = Awaited<ReturnType<typeof extractWineList>>;
 type MenuResult = Awaited<ReturnType<typeof extractMenu>>;
@@ -669,7 +670,11 @@ const Restaurant = () => {
         <button
           type="button"
           className="rv-btn mt-6"
-          onClick={() => listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          onClick={() => {
+            listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            // Opens the camera straight away when there is no list photo yet.
+            if (listImages.length === 0 && !preparing) listInputRef.current?.click();
+          }}
         >
           Now the wine list
         </button>
@@ -680,13 +685,20 @@ const Restaurant = () => {
             The wine list
           </h2>
           <div className="rv-viewfinder">
-            <span className="rv-corner rv-corner-tl" />
-            <span className="rv-corner rv-corner-br" />
+            {listImages.length === 0 && (
+              <>
+                <span className="rv-corner rv-corner-tl" />
+                <span className="rv-corner rv-corner-br" />
+              </>
+            )}
             {listImages.length > 0 ? (
-              <div id="rv-list-photo" className="relative overflow-hidden rounded-[4px]">
-                <img src={listImages[0]} alt="Wine list" className="block max-h-[52vh] w-full object-cover object-top" />
-                <ScanLine active={readingList} from={8} to={86} ms={2600} />
-                {flash > 0 && <Flash fire={flash} />}
+              <div className="relative">
+                <div id="rv-list-photo" className="relative overflow-hidden rounded-[4px]">
+                  <img src={listImages[0]} alt="Wine list" className="block max-h-[52vh] w-full object-cover object-top" />
+                  <ScanLine active={readingList} from={8} to={86} ms={2600} onFinished={onListScanned} />
+                  {flash > 0 && <Flash fire={flash} />}
+                </div>
+                <LockCorners lock={listLock} gap={6} />
               </div>
             ) : (
               <label
@@ -695,6 +707,7 @@ const Restaurant = () => {
               >
                 {preparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
                 <input
+                  ref={listInputRef}
                   type="file"
                   accept="image/*"
                   capture="environment"
@@ -742,7 +755,7 @@ const Restaurant = () => {
           )}
         </div>
 
-        {listResult && (
+        {listResult && listShown && (
           <div className="mt-4 space-y-3">
             <div className="rv-card rv-rise flex items-baseline justify-between gap-3">
               <button
