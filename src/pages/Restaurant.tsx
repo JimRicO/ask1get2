@@ -470,7 +470,7 @@ const Restaurant = () => {
 
   return (
     <Layout>
-      {toastText && <div className="rv-toast">{toastText}</div>}
+      {toastText && <div className="rv-toast"><TypeText key={toastText} text={toastText} /></div>}
 
       <div className="mx-auto max-w-[560px] px-6 pb-10 pt-10">
         {/* STEP 1 */}
@@ -485,7 +485,7 @@ const Restaurant = () => {
           <div className="mb-4 flex justify-center">
             <div id="rv-menu-photo" className="relative w-full max-w-[340px] -rotate-1 overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
               <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
-              <ScanLine active={readingMenu} from={4} to={92} />
+              <ScanLine active={readingMenu} from={4} to={92} ms={2400} />
               {flash > 0 && <Flash fire={flash} />}
             </div>
           </div>
@@ -614,13 +614,28 @@ const Restaurant = () => {
             {listImages.length > 0 ? (
               <div id="rv-list-photo" className="relative overflow-hidden rounded-[4px]">
                 <img src={listImages[0]} alt="Wine list" className="block max-h-[52vh] w-full object-cover object-top" />
-                <ScanLine active={readingList} from={8} to={86} ms={1000} />
+                <ScanLine active={readingList} from={8} to={86} ms={2600} />
                 {flash > 0 && <Flash fire={flash} />}
               </div>
             ) : (
-              <div className="flex h-[180px] items-center justify-center text-rv-tan2">
-                <Camera className="h-6 w-6" />
-              </div>
+              <label
+                aria-label="Photograph the list"
+                className="flex h-[180px] cursor-pointer items-center justify-center text-rv-tan2 transition-colors hover:text-rv-peach"
+              >
+                {preparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  multiple
+                  className="hidden"
+                  disabled={preparing}
+                  onChange={(e) => {
+                    firePhoto(e.target.files, listImages, MAX_LIST_IMAGES, setListImages);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
             )}
           </div>
           {listImages.length > 1 && (
@@ -633,15 +648,17 @@ const Restaurant = () => {
               <Thumbs images={listImages} setImages={setListImages} />
             </div>
           )}
-          <div className="mt-3">
-            <CaptureButton
-              images={listImages}
-              max={MAX_LIST_IMAGES}
-              setImages={setListImages}
-              addLabel="Photograph the list"
-              moreLabel="Add another page"
-            />
-          </div>
+          {listImages.length > 0 && (
+            <div className="mt-3">
+              <CaptureButton
+                images={listImages}
+                max={MAX_LIST_IMAGES}
+                setImages={setListImages}
+                addLabel="Photograph the list"
+                moreLabel="Add another page"
+              />
+            </div>
+          )}
           {listImages.length > 0 && (
             <button
               type="button"
@@ -848,4 +865,25 @@ function Flash({ fire }: { fire: number }) {
   // of sticking as a white layer. Sits under the scan line.
   return <div key={fire} aria-hidden style={{ position: "absolute", inset: 0, background: "#fff",
     opacity: 0, zIndex: 2, pointerEvents: "none", animation: "wvFlash .45s linear" }} />;
+}
+
+/** Types the text in one letter at a time (45ms per letter), with a blinking caret. */
+function TypeText({ text }: { text: string }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    setN(0);
+    const id = window.setInterval(() => {
+      setN((v) => {
+        if (v >= text.length) { window.clearInterval(id); return v; }
+        return v + 1;
+      });
+    }, 45);
+    return () => window.clearInterval(id);
+  }, [text]);
+  return (
+    <span aria-label={text}>
+      {text.slice(0, n)}
+      <span aria-hidden className="rv-caret">|</span>
+    </span>
+  );
 }

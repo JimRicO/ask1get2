@@ -494,10 +494,12 @@
 @keyframes rv-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes rv-scan { from { top: var(--rv-from); } to { top: var(--rv-to); } }
 .rv-scanline {
-  position: absolute; left: 10%; right: 10%; height: 2px; z-index: 3;
+  position: absolute; left: 0; right: 0; height: 2px; z-index: 3;
   top: var(--rv-from);
   background: #F2A46C;
   box-shadow: 0 0 18px 4px rgba(242,164,108,.5);
   pointer-events: none;
   animation: rv-scan var(--rv-ms) linear infinite;
 }
+@keyframes rv-blink { 50% { opacity: 0; } }
+.rv-caret { margin-left: 1px; animation: rv-blink 1s steps(1) infinite; }
