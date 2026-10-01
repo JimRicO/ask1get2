@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { ScanLine, LockCorners, Flash } from "@/components/ScanEffects";
 import { Session } from "@supabase/supabase-js";
 import uploadButtonImg from "@/assets/upload-button.png";
 import bottleIcon from "@/assets/bottle-icon.png";
@@ -60,6 +61,12 @@ const Wishlist = () => {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [magicScanCompleted, setMagicScanCompleted] = useState(false);
+  // Same scan effects as Add Wine: flash + sweep on upload, sweep while reading, corners lock after.
+  const [shotFire, setShotFire] = useState<Record<string, number>>({});
+  const [shotScanning, setShotScanning] = useState<Record<string, boolean>>({});
+  const [lockKey, setLockKey] = useState(0);
+  // Bumped per photo; reading starts automatically once the new photo is in state.
+  const [autoScanKey, setAutoScanKey] = useState(0);
   const formSectionRef = useRef<HTMLDivElement>(null);
   
   const [images, setImages] = useState<{
@@ -147,8 +154,12 @@ const Wishlist = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreviews(prev => ({ ...prev, [type]: reader.result as string }));
+        setShotFire(prev => ({ ...prev, [type]: (prev[type] ?? 0) + 1 }));
+        setShotScanning(prev => ({ ...prev, [type]: true }));
+        window.setTimeout(() => setShotScanning(prev => ({ ...prev, [type]: false })), 2400);
       };
       reader.readAsDataURL(file);
+      setAutoScanKey(k => k + 1);
     } else {
       setImages(prev => ({ ...prev, [type]: null }));
       setImagePreviews(prev => ({ ...prev, [type]: null }));
@@ -157,10 +168,7 @@ const Wishlist = () => {
 
 
   const processImageWithAI = async () => {
-    if (!Object.values(images).some(img => img !== null)) {
-      toast.error("Please upload at least one image");
-      return;
-    }
+    if (!Object.values(images).some(img => img !== null)) return;
 
     setAiProcessing(true);
     try {
@@ -197,7 +205,6 @@ const Wishlist = () => {
       });
 
       setMagicScanCompleted(true);
-      toast.success("Wine data extracted successfully!");
 
       // Look the wine up on the web and write a grounded description
       if (wineData.wine_name) {
@@ -230,12 +237,19 @@ const Wishlist = () => {
         formSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     } catch (error: any) {
-      toast.error("Failed to analyze images");
       console.error(error);
     } finally {
       setAiProcessing(false);
+      window.setTimeout(() => setLockKey(k => k + 1), 280);
     }
   };
+
+  useEffect(() => {
+    if (autoScanKey === 0) return;
+    const t = window.setTimeout(() => { void processImageWithAI(); }, 600);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoScanKey]);
 
   const handleSubmit = async () => {
     if (!session) return;
@@ -512,6 +526,9 @@ const Wishlist = () => {
                     className="block cursor-pointer"
                   >
                     <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                      {shotFire.front ? <Flash fire={shotFire.front} /> : null}
+                      <ScanLine active={(aiProcessing && !!images.front) || !!shotScanning.front} from={4} to={92} ms={2400} />
+                      {lockKey > 0 && images.front && <LockCorners lock={lockKey} gap={8} />}
                       {imagePreviews.front ? (
                          <img src={imagePreviews.front} alt="Front" className="w-full h-full object-contain rounded-md" />
                       ) : (
@@ -545,6 +562,9 @@ const Wishlist = () => {
                   />
                   <label htmlFor="upload-back" className="block cursor-pointer">
                     <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                      {shotFire.back ? <Flash fire={shotFire.back} /> : null}
+                      <ScanLine active={(aiProcessing && !!images.back) || !!shotScanning.back} from={4} to={92} ms={2400} />
+                      {lockKey > 0 && images.back && <LockCorners lock={lockKey} gap={8} />}
                       {imagePreviews.back ? (
                          <img src={imagePreviews.back} alt="Back" className="w-full h-full object-contain rounded-md" />
                       ) : (
@@ -578,6 +598,9 @@ const Wishlist = () => {
                   />
                   <label htmlFor="upload-neck" className="block cursor-pointer">
                     <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                      {shotFire.neck ? <Flash fire={shotFire.neck} /> : null}
+                      <ScanLine active={(aiProcessing && !!images.neck) || !!shotScanning.neck} from={4} to={92} ms={2400} />
+                      {lockKey > 0 && images.neck && <LockCorners lock={lockKey} gap={8} />}
                       {imagePreviews.neck ? (
                          <img src={imagePreviews.neck} alt="Neck" className="w-full h-full object-contain rounded-md" />
                       ) : (
@@ -611,6 +634,9 @@ const Wishlist = () => {
                   />
                   <label htmlFor="upload-overall" className="block cursor-pointer">
                     <div className="relative aspect-[3/4] overflow-hidden rounded-md border border-dashed border-border transition-colors duration-[320ms] hover:border-wine-champagne">
+                      {shotFire.overall ? <Flash fire={shotFire.overall} /> : null}
+                      <ScanLine active={(aiProcessing && !!images.overall) || !!shotScanning.overall} from={4} to={92} ms={2400} />
+                      {lockKey > 0 && images.overall && <LockCorners lock={lockKey} gap={8} />}
                       {imagePreviews.overall ? (
                          <img src={imagePreviews.overall} alt="Full Bottle" className="w-full h-full object-contain rounded-md" />
                       ) : (
@@ -634,24 +660,7 @@ const Wishlist = () => {
                 </div>
               </div>
 
-              {/* Magic Scan Button */}
-              <Button
-                onClick={processImageWithAI}
-                disabled={aiProcessing || !Object.values(images).some(img => img !== null)}
-                className="w-full"
-              >
-                {aiProcessing ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Analyzing Images...
-                  </>
-                ) : (
-                  <>
-                    <Camera className="h-5 w-5 mr-2" />
-                    Magic Scan
-                  </>
-                )}
-              </Button>
+              {/* Reading starts on its own after each photo; the scan line on the tiles shows progress. */}
             </div>
 
             {/* Form Fields - Show after Magic Scan */}
