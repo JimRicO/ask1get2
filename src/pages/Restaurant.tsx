@@ -20,6 +20,7 @@ import {
 import { extractWineList, extractMenu, pairFromList } from "@/lib/pairing.functions";
 import { wishlistKey } from "@/lib/wishlistKey";
 import { WineClink } from "@/components/WineClink";
+import { ScanLine, LockCorners, Flash } from "@/components/ScanEffects";
 
 type ListResult = Awaited<ReturnType<typeof extractWineList>>;
 type MenuResult = Awaited<ReturnType<typeof extractMenu>>;
@@ -949,65 +950,6 @@ const Restaurant = () => {
   );
 };
 
-/** Scan sweep, ported from the film. Loops while active. */
-/**
- * Peach scan line, a pure CSS sweep (no animation-frame loop, so it runs even
- * where the preview throttles frames). Sweeps on every device, reduce-motion
- * included. When reading ends it finishes the current pass, then hides.
- */
-function ScanLine({ active, from = 4, to = 92, ms = 900, onFinished }: { active: boolean; from?: number; to?: number; ms?: number; onFinished?: () => void }) {
-  const [phase, setPhase] = useState<"off" | "loop" | "end">(active ? "loop" : "off");
-  const [cur, setCur] = useState("0px");
-  const el = useRef<HTMLDivElement>(null);
-  const finished = useRef(onFinished);
-  finished.current = onFinished;
-  useEffect(() => {
-    if (active) { setPhase("loop"); return; }
-    setPhase((p) => {
-      if (p !== "loop") return p;
-      // Final pass: from wherever the line is, ease into the bottom edge.
-      setCur(el.current ? getComputedStyle(el.current).top : "0px");
-      return "end";
-    });
-  }, [active]);
-  useEffect(() => {
-    if (phase !== "end") return;
-    const t = window.setTimeout(() => { setPhase("off"); finished.current?.(); }, 280);
-    return () => window.clearTimeout(t);
-  }, [phase]);
-  if (phase === "off") return null;
-  return (
-    <div
-      ref={el}
-      aria-hidden
-      className="rv-scanline"
-      style={{
-        ["--rv-from" as string]: phase === "end" ? cur : `${from}%`,
-        ["--rv-to" as string]: phase === "end" ? "calc(100% - 2px)" : `${to}%`,
-        ["--rv-ms" as string]: `${ms}ms`,
-        ...(phase === "end"
-          ? { animation: "rv-scan 250ms cubic-bezier(0.33,1,0.68,1) forwards" }
-          : {}),
-      }}
-    />
-  );
-}
-
-/** Two peach brackets that lock inward onto the photo, 320ms back-out (1.6). */
-function LockCorners({ lock, gap = 10 }: { lock: number; gap?: number }) {
-  const base: React.CSSProperties = { position: "absolute", width: 22, height: 22, zIndex: 4, pointerEvents: "none" };
-  const anim = (dir: number) =>
-    lock > 0
-      ? { animation: "rv-lock 320ms cubic-bezier(0.34,1.6,0.64,1) both", ["--rv-lk" as string]: `${dir * gap}px` }
-      : { transform: `translate(${dir * gap}px, ${dir * gap}px)` };
-  return (
-    <>
-      <span key={`a${lock}`} aria-hidden style={{ ...base, top: 0, left: 0, borderTop: "2px solid #F2A46C", borderLeft: "2px solid #F2A46C", ...anim(-1) }} />
-      <span key={`b${lock}`} aria-hidden style={{ ...base, bottom: 0, right: 0, borderBottom: "2px solid #F2A46C", borderRight: "2px solid #F2A46C", ...anim(1) }} />
-    </>
-  );
-}
-
 /** Counts rows in step with their rise (80ms each), then pops a gold diamond. */
 function DishCounter({ total, instant }: { total: number; instant: boolean }) {
   const [n, setN] = useState(instant ? total : 0);
@@ -1055,14 +997,6 @@ function CountUp({ to }: { to: number }) {
 }
 
 export default Restaurant;
-
-/** White capture flash over the photo, .85 to 0 over 450ms. */
-function Flash({ fire }: { fire: number }) {
-  // Base opacity 0: if motion is frozen the flash simply never shows, instead
-  // of sticking as a white layer. Sits under the scan line.
-  return <div key={fire} aria-hidden style={{ position: "absolute", inset: 0, background: "#fff",
-    opacity: 0, zIndex: 2, pointerEvents: "none", animation: "wvFlash .45s linear" }} />;
-}
 
 /** Types the text in one letter at a time (45ms per letter), with a blinking caret. */
 function TypeText({ text }: { text: string }) {
