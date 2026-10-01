@@ -14,6 +14,8 @@ import {
   ChevronDown,
   ChevronRight,
   Check,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { extractWineList, extractMenu, pairFromList } from "@/lib/pairing.functions";
 import { wishlistKey } from "@/lib/wishlistKey";
