@@ -32,9 +32,9 @@ const Layout = ({ children }: LayoutProps) => {
 
       <motion.main
         key={location.pathname}
-        initial={reduce ? false : { opacity: 0, y: 12, filter: "blur(4px)" }}
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        initial={reduce ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="relative flex-1 pb-32"
       >
         {children}
