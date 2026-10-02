@@ -371,7 +371,7 @@ const Cellar = () => {
       />
 
       <div className="mx-auto max-w-[1180px] px-4 pt-8 pb-6">
-        <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">
+        <h1 className="page-title">
           Cellar
         </h1>
 
@@ -401,13 +401,13 @@ const Cellar = () => {
           </div>
         ) : (
           <button
-            className="group mt-3 flex items-center gap-2 text-left"
+            className="group page-subtitle flex items-center gap-2 text-left"
             onClick={() => {
               setTempSubtitle(subtitle);
               setIsEditingSubtitle(true);
             }}
           >
-            <span className="text-[15px] text-wine-champagne">{subtitle}</span>
+            <span>{(() => { const i = subtitle.lastIndexOf("remember"); return i < 0 ? subtitle : (<>{subtitle.slice(0, i)}<em>remember</em>{subtitle.slice(i + 8)}</>); })()}</span>
             <Pencil className="h-3 w-3 text-muted-foreground opacity-[0.42] transition-opacity duration-[320ms] group-hover:opacity-100" />
           </button>
         )}

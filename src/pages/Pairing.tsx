@@ -324,8 +324,8 @@ const Pairing = () => {
   return (
     <Layout>
       <div className="mx-auto max-w-[1180px] px-4 pt-8 pb-6">
-        <h1 className="mb-2 font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Pair</h1>
-        <p className="mt-3 text-[15px] text-wine-champagne">The cave answers first.</p>
+        <h1 className="page-title">Pair</h1>
+        <p className="page-subtitle">The cave <em>answers first</em>.</p>
       </div>
       <div className="mx-auto max-w-[430px] px-4 pb-6">
         <p className="mb-2 font-serif text-[20px] text-foreground">What are you cooking?</p>
