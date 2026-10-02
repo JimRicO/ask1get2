@@ -19,7 +19,7 @@ const Layout = ({ children }: LayoutProps) => {
   ];
 
   return (
-    <div className="relative isolate flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background">
       {/* Ambient cave light: two blurred pools drifting behind everything, the
           one piece of motion that runs unprompted. Purely decorative, so it is
           inert to pointers and hidden from assistive tech. */}
