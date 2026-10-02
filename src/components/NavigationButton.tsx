@@ -1,4 +1,3 @@
-import { User } from "lucide-react";
 import { motion } from "framer-motion";
 import bottleIcon from "@/assets/nav-cellar.png.asset.json";
 import pairIcon from "@/assets/nav-pair-v2.png.asset.json";
@@ -14,12 +13,12 @@ interface NavigationButtonProps {
   onClick?: () => void;
 }
 
-const BUTTON_PRESETS: Record<ButtonPreset, { img?: string; label: string; size: string }> = {
-  cellar: { img: bottleIcon.url, label: "Cellar", size: "h-[57px] w-[57px] max-w-none" },
-  pair: { img: pairIcon.url, label: "Pair", size: "h-[68px] w-[68px] max-w-none" },
-  add: { img: scanIcon.url, label: "New Wine", size: "h-[72px] w-[72px] max-w-none" },
-  wishlist: { img: favIcon.url, label: "Wishlist", size: "h-[57px] w-[57px] max-w-none" },
-  profile: { img: profileIcon.url, label: "Profile", size: "h-[52px] w-[52px] max-w-none" },
+const BUTTON_PRESETS: Record<ButtonPreset, { img: string; label: string; maxW: string }> = {
+  cellar: { img: bottleIcon.url, label: "Cellar", maxW: "max-w-[52px]" },
+  pair: { img: pairIcon.url, label: "Pair", maxW: "max-w-[52px]" },
+  add: { img: scanIcon.url, label: "New Wine", maxW: "max-w-[50px]" },
+  wishlist: { img: favIcon.url, label: "Wishlist", maxW: "max-w-[52px]" },
+  profile: { img: profileIcon.url, label: "Profile", maxW: "max-w-[42px]" },
 };
 
 const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButtonProps) => {
@@ -33,36 +32,33 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.9 }}
       transition={{ type: "spring", stiffness: 400, damping: 22 }}
-      className="relative flex flex-col items-center justify-center w-[52px] h-[52px] rounded-md bg-transparent"
+      className="relative flex min-w-[56px] flex-col items-center bg-transparent"
     >
-      {config.img ? (
+      <div className="flex h-[46px] w-[52px] items-center justify-center">
         <motion.img
           src={config.img}
           alt=""
           animate={{ scale: isActive ? 1.06 : 1, opacity: isActive ? 1 : 0.8 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className={`${config.size} object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]`}
+          className={`h-[46px] w-auto ${config.maxW} object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]`}
         />
-      ) : (
-        <User
-          className={`${config.size} ${isActive ? "text-foreground" : "text-wine-champagne"}`}
-          strokeWidth={isActive ? 2.4 : 1.8}
-        />
-      )}
+      </div>
       <span
-        className={`absolute -bottom-3 whitespace-nowrap text-[9px] uppercase tracking-[0.15em] leading-none transition-colors duration-300 ${
-          isActive ? "text-[#E8986A]" : "text-[#E8986A]/60"
+        className={`mt-[7px] whitespace-nowrap font-['Fira_Sans'] text-[8.5px] font-medium uppercase leading-none tracking-[0.14em] text-[#E8986A] transition-opacity duration-300 ${
+          isActive ? "opacity-100" : "opacity-55"
         }`}
       >
         {config.label}
       </span>
-      {isActive && (
-        <motion.span
-          layoutId="nav-active-indicator"
-          transition={{ type: "spring", stiffness: 380, damping: 30 }}
-          className="absolute bottom-0 left-0 right-0 h-px bg-primary"
-        />
-      )}
+      <span className="mt-[6px] block h-[1.5px] w-[34px]">
+        {isActive && (
+          <motion.span
+            layoutId="nav-active-indicator"
+            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            className="block h-[1.5px] w-[34px] bg-[#C98A5E] shadow-[0_0_6px_rgba(232,152,106,0.45)]"
+          />
+        )}
+      </span>
     </motion.button>
   );
 };

@@ -62,7 +62,7 @@ const Layout = ({ children }: LayoutProps) => {
           on the canvas, not a strip welded to the bottom of the glass. */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 px-2 pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto max-w-[1180px] rounded-t-md wood-rail">
-          <div className="flex items-center justify-around gap-1.5 px-2 pt-2 pb-5">
+          <div className="flex h-[88px] items-start justify-around gap-1.5 px-2 pt-[10px]">
             {navItems.map(({ preset, path }) => (
               <NavigationButton
                 key={path}
