@@ -382,8 +382,9 @@ const Wishlist = () => {
         <div className="mx-auto max-w-[1180px] bg-background text-primary-foreground px-4 pt-8 pb-6">
           <div className="mb-2 flex items-center gap-3">
             <h1 className="font-serif font-bold leading-[1.02] tracking-[-0.02em] text-foreground text-[clamp(38px,5.6vw,62px)]">Wishlist</h1>
-            <button type="button" onClick={openAddDialog} aria-label="Add a Bottle" className="shrink-0 transition-transform duration-150 hover:brightness-110 active:scale-95">
+            <button type="button" onClick={openAddDialog} aria-label="Add a Bottle" className="shrink-0 flex flex-col items-center gap-1 rounded-md bg-secondary/40 px-2 pt-1 pb-2 transition-colors duration-[320ms]">
               <img src={addBottleButton.url} alt="" className="h-[57px] w-[57px] max-w-none object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]" />
+              <span className="whitespace-nowrap text-[9px] uppercase tracking-[0.15em] leading-none text-[#E8986A]">Add a bottle</span>
             </button>
           </div>
           <p className="mt-3 text-[15px] text-wine-champagne">Wines you want to try, to remember, to buy.</p>
