@@ -14,11 +14,11 @@ interface NavigationButtonProps {
 }
 
 const BUTTON_PRESETS: Record<ButtonPreset, { img: string; label: string; maxW: string }> = {
-  cellar: { img: bottleIcon.url, label: "Cellar", maxW: "max-w-[52px]" },
-  pair: { img: pairIcon.url, label: "Pair", maxW: "max-w-[52px]" },
-  add: { img: scanIcon.url, label: "New Wine", maxW: "max-w-[50px]" },
-  wishlist: { img: favIcon.url, label: "Wishlist", maxW: "max-w-[52px]" },
-  profile: { img: profileIcon.url, label: "Profile", maxW: "max-w-[42px]" },
+  cellar: { img: bottleIcon.url, label: "Cellar", maxW: "max-w-[57px]" },
+  pair: { img: pairIcon.url, label: "Pair", maxW: "max-w-[57px]" },
+  add: { img: scanIcon.url, label: "New Wine", maxW: "max-w-[55px]" },
+  wishlist: { img: favIcon.url, label: "Wishlist", maxW: "max-w-[57px]" },
+  profile: { img: profileIcon.url, label: "Profile", maxW: "max-w-[46px]" },
 };
 
 const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButtonProps) => {
@@ -34,13 +34,13 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
       transition={{ type: "spring", stiffness: 400, damping: 22 }}
       className="relative flex min-w-[56px] flex-col items-center bg-transparent"
     >
-      <div className="flex h-[46px] w-[52px] items-center justify-center">
+      <div className="flex h-[51px] w-[57px] items-center justify-center">
         <motion.img
           src={config.img}
           alt=""
           animate={{ scale: isActive ? 1.06 : 1, opacity: isActive ? 1 : 0.8 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className={`h-[46px] w-auto ${config.maxW} object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]`}
+          className={`h-[51px] w-auto ${config.maxW} object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]`}
         />
       </div>
       <span
