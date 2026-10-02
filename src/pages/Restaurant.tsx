@@ -762,10 +762,11 @@ const Restaurant = () => {
               </div>
             ) : (
               <label
-                aria-label="Photograph the list"
-                className="flex h-[180px] cursor-pointer items-center justify-center text-rv-tan2 transition-colors hover:text-rv-peach"
+                aria-label="Scan the wine list"
+                className="flex h-[180px] cursor-pointer flex-col items-center justify-center gap-2 text-rv-tan2 transition-colors hover:text-rv-peach"
               >
                 {preparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <img src={scanIcon.url} alt="" className="h-[57px] w-[57px] max-w-none object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]" />}
+                <span className="rv-eyebrow !text-current">Scan the wine list</span>
                 <input
                   ref={listInputRef}
                   type="file"
