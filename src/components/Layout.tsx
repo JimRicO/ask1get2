@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { useLocation, useNavigate } from "@/lib/router-compat";
 import NavigationButton from "./NavigationButton";
 
@@ -10,7 +9,6 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const reduce = useReducedMotion();
 
   const navItems = [
     { preset: "cellar" as const, path: "/cellar" },
@@ -30,15 +28,7 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="cave-glow cave-glow-b" />
       </div>
 
-      <motion.main
-        key={location.pathname}
-        initial={reduce ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="relative flex-1 pb-32"
-      >
-        {children}
-      </motion.main>
+      <main className="relative flex-1 pb-32">{children}</main>
 
       {/* Centred and inset rather than edge to edge: the bar is a seated panel
           on the canvas, not a strip welded to the bottom of the glass. */}
