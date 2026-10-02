@@ -545,11 +545,11 @@ const Restaurant = () => {
         <WineClink motif="cutlery" run={clinkKey} y={clinkY} onDone={showDishes} skip={skip} />
         <WineClink motif="glasses" run={listClinkKey} y={listClinkY} />
         {/* STEP 1 */}
-        <h1 className="font-serif text-[31px] font-bold leading-tight text-rv-cream">
+        <h1 className="page-title">
           At a restaurant
         </h1>
-        <p className="mb-5 mt-1 text-[13.5px] leading-[1.5] text-rv-tan">
-          1- Scan the menu. Tick what the table ordered.
+        <p className="page-subtitle mb-5">
+          1- Scan the menu. <em>Tick what the table ordered</em>.
           <br />
           2- Scan the Winelist and get pairing recommandations
         </p>

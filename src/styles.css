@@ -597,3 +597,22 @@
 @layer components {
   .btn-plate.btn-plate-light { color: var(--foreground) !important; }
 }
+
+@utility page-title {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 34px;
+  line-height: 1.05;
+  color: #F4A871;
+  text-shadow: 0 2px 2px rgba(0, 0, 0, 0.6);
+}
+@utility page-subtitle {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.25;
+  color: #FAF5EB;
+  margin-top: 6px;
+  & em { font-style: italic; color: #F4A871; }
+}
