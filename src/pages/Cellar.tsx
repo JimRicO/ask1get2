@@ -368,7 +368,7 @@ const Cellar = () => {
     <Layout>
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-[0.12]"
+        className="pointer-events-none fixed inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-[0.25]"
         style={{ backgroundImage: `url(${cellarBackground.url})` }}
       />
       <CaveStickyHeader
