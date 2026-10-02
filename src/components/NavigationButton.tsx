@@ -1,4 +1,5 @@
 import { User } from "lucide-react";
+import { motion } from "framer-motion";
 import bottleIcon from "@/assets/nav-cellar.png.asset.json";
 import pairIcon from "@/assets/nav-pair-v2.png.asset.json";
 import scanIcon from "@/assets/nav-scan-v4.png.asset.json";
@@ -25,19 +26,22 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
   const config = BUTTON_PRESETS[preset];
 
   return (
-    <button
+    <motion.button
       onClick={onClick}
       aria-label={config.label}
       aria-current={isActive ? "page" : undefined}
-      className={`relative flex flex-col items-center justify-center w-[52px] h-[52px] rounded-md transition-colors duration-[320ms] ease-[var(--ease-cave)] ${
-        isActive ? "bg-transparent" : "bg-transparent hover:bg-secondary/40"
-      }`}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.9 }}
+      transition={{ type: "spring", stiffness: 400, damping: 22 }}
+      className="relative flex flex-col items-center justify-center w-[52px] h-[52px] rounded-md bg-transparent"
     >
       {config.img ? (
-        <img
+        <motion.img
           src={config.img}
           alt=""
-          className={`${config.size} object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)] transition-opacity duration-[320ms] ${isActive ? "opacity-100" : "opacity-80"}`}
+          animate={{ scale: isActive ? 1.06 : 1, opacity: isActive ? 1 : 0.8 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className={`${config.size} object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]`}
         />
       ) : (
         <User
@@ -46,14 +50,20 @@ const NavigationButton = ({ preset, isActive = false, onClick }: NavigationButto
         />
       )}
       <span
-        className={`absolute -bottom-3 whitespace-nowrap text-[9px] uppercase tracking-[0.15em] leading-none ${
+        className={`absolute -bottom-3 whitespace-nowrap text-[9px] uppercase tracking-[0.15em] leading-none transition-colors duration-300 ${
           isActive ? "text-[#E8986A]" : "text-[#E8986A]/60"
         }`}
       >
         {config.label}
       </span>
-      {isActive && <span className="absolute bottom-0 left-0 right-0 h-px bg-primary" />}
-    </button>
+      {isActive && (
+        <motion.span
+          layoutId="nav-active-indicator"
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          className="absolute bottom-0 left-0 right-0 h-px bg-primary"
+        />
+      )}
+    </motion.button>
   );
 };
 
