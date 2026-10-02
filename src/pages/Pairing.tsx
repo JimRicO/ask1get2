@@ -356,7 +356,6 @@ const Pairing = () => {
           <div className="flex flex-wrap gap-2">
             <Chip active={scope === "cellar"} onClick={() => setScope("cellar")}>My cave</Chip>
             <Chip active={scope === "cellar_wishlist"} onClick={() => setScope("cellar_wishlist")}>Cave + wishlist</Chip>
-            <Chip active={scope === "anything"} onClick={() => setScope("anything")}>Anything</Chip>
           </div>
 
 
