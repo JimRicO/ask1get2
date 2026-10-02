@@ -345,7 +345,7 @@ const Pairing = () => {
             className="btn-plate btn-plate-light inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold whitespace-nowrap"
           >
             <UtensilsCrossed className="h-4 w-4" />
-            At a restaurant?
+            ARE YOU AT A RESTAURANT?
           </button>
         </div>
 
