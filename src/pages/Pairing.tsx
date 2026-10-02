@@ -371,7 +371,7 @@ const Pairing = () => {
           onClick={() => run()}
           disabled={loading}
           aria-label="Find a bottle"
-          className="mx-auto flex flex-col items-center gap-1 rounded-md bg-transparent px-2 pt-1 pb-2 transition-colors duration-[320ms] hover:bg-secondary/40 disabled:opacity-60"
+          className="mx-auto flex flex-col items-center gap-1 rounded-md bg-secondary/40 px-2 pt-1 pb-2 transition-colors duration-[320ms] disabled:opacity-60"
         >
           {loading ? (
             <Loader2 className="h-[57px] w-[57px] animate-spin text-[#E8986A]" />
