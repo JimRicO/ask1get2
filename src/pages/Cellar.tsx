@@ -11,7 +11,7 @@ import { normalizeGrape } from "@/lib/normalizeGrape";
 import { Session } from "@supabase/supabase-js";
 import { CaveStickyHeader, Eyebrow, Plate } from "@/components/CaveChrome";
 import { revealDelay } from "@/lib/cave-motion";
-import cellarBackground from "@/assets/cellar-background.png.asset.json";
+import cellarBackground from "@/assets/cellar-background-white.png.asset.json";
 
 interface WineData {
   id: string;
