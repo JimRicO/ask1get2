@@ -1,9 +1,10 @@
 // WineClink.tsx
 // Scan-confirmation "clink". Port of the approved Clink demo. No dependencies.
+// Drawn in the app icon style: copper outline, smoked bronze fill, soft copper glow.
 // motif="cutlery": fork and knife swing in and cross into an X (menu scan),
-//   metal double-tap sound, tan crumbs / gold diamonds / peach sparks.
+//   metal double-tap sound, bronze crumbs / gold flecks / peach sparks.
 // motif="glasses": two glasses toast (wine list scan),
-//   glass ting, wine drops / gold diamonds / peach sparks.
+//   glass ting, rose-copper drops / gold flecks / peach sparks.
 //
 // Usage: place inside a position:relative container (the restaurant screen).
 //   <WineClink motif="cutlery" run={clinkKey} y={clinkY} onDone={() => setShowList(true)} />
@@ -19,21 +20,34 @@ import { useEffect, useRef } from "react";
 
 export type ClinkMotif = "cutlery" | "glasses";
 
-const GLASS = `<svg viewBox="0 0 40 80" fill="none" style="width:100%;height:100%;overflow:visible">
-<path d="M10.2 20 H29.8 C29.4 30 26.6 35.4 20 37 C13.4 35.4 10.6 30 10.2 20 Z" fill="#7C2033" opacity=".9"/>
-<path d="M8 3 H32 C33 22 30 34 20 38 C10 34 7 22 8 3 Z" stroke="#F4ECE1" stroke-width="1.6" stroke-linejoin="round"/>
-<path d="M20 38 V69" stroke="#F4ECE1" stroke-width="1.6" stroke-linecap="round"/>
-<path d="M10 72 C14 69.5 26 69.5 30 72" stroke="#F4ECE1" stroke-width="1.6" stroke-linecap="round"/>
-<path d="M12.5 8 C12.5 16 13.5 23 15.5 27" stroke="#F4ECE1" stroke-width="1" stroke-linecap="round" opacity=".45"/></svg>`;
+// Copper/bronze versions matching the app's icon set (copper outline, smoked bronze fill, inner highlight)
+const CU = "#E39468";
+const DEFS = (k: string) => `<defs>
+<linearGradient id="br${k}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B4038"/><stop offset=".55" stop-color="#2E201E"/><stop offset="1" stop-color="#1A1112"/></linearGradient>
+<linearGradient id="gl${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A3A37" stop-opacity=".55"/><stop offset="1" stop-color="#1D1213" stop-opacity=".85"/></linearGradient>
+<linearGradient id="wn${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E0A584"/><stop offset="1" stop-color="#A9664D"/></linearGradient></defs>`;
+const SK = `stroke="${CU}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"`;
+const HL = `stroke="#FFE8D6" stroke-opacity=".28" stroke-width="1" stroke-linecap="round" fill="none"`;
+const GLASS = (k: string) => `<svg viewBox="0 0 40 80" fill="none" style="width:100%;height:100%;overflow:visible">${DEFS(k)}
+<path d="M10 4 C4 14 5 30 12 36 C15 38.5 18 39 20 39 C22 39 25 38.5 28 36 C35 30 36 14 30 4 Z" fill="url(#gl${k})"/>
+<path d="M6.3 23 C6.8 29.5 9 33.5 12 36 C15 38.5 18 39 20 39 C22 39 25 38.5 28 36 C31 33.5 33.2 29.5 33.7 23 Z" fill="url(#wn${k})" opacity=".92"/>
+<path d="M6.3 23 H33.7" stroke="#F3C3A4" stroke-opacity=".6" stroke-width=".8"/>
+<path d="M10 4 C4 14 5 30 12 36 C15 38.5 18 39 20 39 C22 39 25 38.5 28 36 C35 30 36 14 30 4 Z" ${SK}/>
+<path d="M11.5 9 C9 16 9 24 11.5 30" ${HL}/>
+<path d="M20 39 V70" ${SK}/><path d="M9 72.5 C13 69.8 27 69.8 31 72.5 C27 74 13 74 9 72.5 Z" fill="url(#br${k})" ${SK}/></svg>`;
+const FORK = (k: string) => `<svg viewBox="0 0 24 100" fill="none" style="width:100%;height:100%;overflow:visible">${DEFS(k)}
+<path d="M5 3 V20 C5 28 8.5 32 10.6 33.2 V57 H13.4 V33.2 C15.5 32 19 28 19 20 V3" fill="url(#br${k})"/>
+<path d="M5 3 V20 C5 28 8.5 32 10.6 33.2 V57 M19 3 V20 C19 28 15.5 32 13.4 33.2 V57 M9.7 3 V19 M14.3 3 V19" ${SK}/>
+<path d="M10.2 58 C9.5 72 9.8 90 12 96 C14.2 90 14.5 72 13.8 58 Z" fill="url(#br${k})" ${SK}/><path d="M11.3 63 C11 74 11.2 84 11.8 90" ${HL}/></svg>`;
+const KNIFE = (k: string) => `<svg viewBox="0 0 24 100" fill="none" style="width:100%;height:100%;overflow:visible">${DEFS(k)}
+<path d="M9.5 3 C15.8 7.5 16.8 30 15.6 52 H9.5 Z" fill="url(#br${k})" ${SK}/><path d="M11.2 9 C12.6 20 12.8 34 12.3 46" ${HL}/>
+<path d="M8.3 55 H15.7" ${SK}/>
+<path d="M9.8 58 C9.2 74 9.6 90 12 96 C14.4 90 14.8 74 14.2 58 Z" fill="url(#br${k})" ${SK}/><path d="M11.2 63 C11 74 11.2 84 11.8 90" ${HL}/></svg>`;
 
-const ST = 'stroke="#F4ECE1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
-const SVGW = 'viewBox="0 0 24 100" fill="none" style="width:100%;height:100%;overflow:visible"';
-const FORK = `<svg ${SVGW}><path d="M6 4 V22 M10 4 V22 M14 4 V22 M18 4 V22" ${ST}/>
-<path d="M5 21 C5 29 8.5 32.5 12 33.5 C15.5 32.5 19 29 19 21" ${ST}/><path d="M12 33.5 V58" ${ST}/>
-<path d="M10.2 58 C9.6 72 9.8 90 12 96 C14.2 90 14.4 72 13.8 58 Z" ${ST} fill="#F4ECE1" fill-opacity=".12"/></svg>`;
-const KNIFE = `<svg ${SVGW}><path d="M9.5 4 C15.5 8 16.5 30 15.5 52 H9.5 Z" ${ST} fill="#F4ECE1" fill-opacity=".12"/>
-<path d="M8.5 55 H15.5" ${ST}/><path d="M9.8 58 C9.3 74 9.6 90 12 96 C14.4 90 14.7 74 14.2 58 Z" ${ST} fill="#F4ECE1" fill-opacity=".12"/></svg>`;
 
+
+
+const GLOW = "drop-shadow(0 0 4px rgba(227,148,104,.35))";
 const clamp = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const P = (t: number, a: number, b: number) => clamp((t - a) / (b - a));
 const ei = (x: number) => x * x * x;
@@ -103,7 +117,7 @@ export function WineClink({ motif = "glasses", run, y, onDone, sound = true, ski
   useEffect(() => {
     if (!run) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    void reduced; if (skip) { onDone?.(); return; }
+    if (reduced || skip) { onDone?.(); return; }
     const parts = makeParts(motif);
     const cut = motif === "cutlery";
     const t0 = performance.now();
@@ -152,10 +166,10 @@ export function WineClink({ motif = "glasses", run, y, onDone, sound = true, ski
           ctx.globalAlpha = 1 - ei(h / p.life);
           if (p.kind === "drop") {
             ctx.save(); ctx.translate(x, py); ctx.rotate(Math.atan2(p.vy + GRAVITY * s, p.vx));
-            ctx.fillStyle = "#9A2A40"; ctx.beginPath(); ctx.ellipse(0, 0, p.s * 1.7, p.s, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+            ctx.fillStyle = "#D9A07F"; ctx.beginPath(); ctx.ellipse(0, 0, p.s * 1.7, p.s, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
           } else if (p.kind === "crumb") {
             ctx.save(); ctx.translate(x, py); ctx.rotate(p.rot + s * 4);
-            ctx.fillStyle = "#CDA985"; ctx.fillRect(-p.s * 0.6, -p.s * 0.5, p.s * 1.2, p.s); ctx.restore();
+            ctx.fillStyle = "#B9805F"; ctx.fillRect(-p.s * 0.6, -p.s * 0.5, p.s * 1.2, p.s); ctx.restore();
           } else if (p.kind === "dia") {
             ctx.save(); ctx.translate(x, py); ctx.rotate(Math.PI / 4 + p.rot * s);
             ctx.fillStyle = "#D9B45F"; ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s); ctx.restore();
@@ -176,12 +190,12 @@ export function WineClink({ motif = "glasses", run, y, onDone, sound = true, ski
 
   const cut = motif === "cutlery";
   const glassStyle: React.CSSProperties = cut
-    ? { position: "absolute", width: 24, height: 100, transformOrigin: "50% 50%", opacity: 0 }
-    : { position: "absolute", width: 40, height: 80, transformOrigin: "50% 100%", opacity: 0 };
+    ? { position: "absolute", width: 24, height: 100, transformOrigin: "50% 50%", opacity: 0, filter: GLOW }
+    : { position: "absolute", width: 40, height: 80, transformOrigin: "50% 100%", opacity: 0, filter: GLOW };
   return (
     <div ref={wrap} style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 20 }}>
-      <div ref={gl} style={glassStyle} dangerouslySetInnerHTML={{ __html: cut ? FORK : GLASS }} />
-      <div ref={gr} style={glassStyle} dangerouslySetInnerHTML={{ __html: cut ? KNIFE : GLASS }} />
+      <div ref={gl} style={glassStyle} dangerouslySetInnerHTML={{ __html: cut ? FORK("a") : GLASS("a") }} />
+      <div ref={gr} style={glassStyle} dangerouslySetInnerHTML={{ __html: cut ? KNIFE("b") : GLASS("b") }} />
       <canvas ref={cv} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
     </div>
   );
