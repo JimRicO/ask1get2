@@ -480,7 +480,7 @@ const Wishlist = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-secondary"
+                      className="h-8 w-8 bg-secondary text-red-400 hover:bg-secondary hover:text-red-400"
                       onClick={(e) => {
                         e.stopPropagation();
                         confirmDelete(item.id, item.wine_name);
