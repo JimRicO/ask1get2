@@ -3,7 +3,7 @@ import bottleIcon from "@/assets/nav-cellar.png.asset.json";
 import pairIcon from "@/assets/nav-pair-v2.png.asset.json";
 import scanIcon from "@/assets/nav-scan-heritage.png.asset.json";
 import favIcon from "@/assets/nav-wishlist-v2.png.asset.json";
-import profileIcon from "@/assets/nav-profile.png.asset.json";
+import profileIcon from "@/assets/nav-profile-v2.png.asset.json";
 
 type ButtonPreset = "cellar" | "pair" | "add" | "wishlist" | "profile";
 
