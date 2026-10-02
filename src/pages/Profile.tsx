@@ -150,7 +150,7 @@ But on what? Wine, poetry, or virtue, as you wish."
                 <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full border border-border">
                   <User className="h-7 w-7 text-wine-champagne" strokeWidth={1.6} />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="truncate font-serif text-[21px] leading-tight text-foreground">
                     {session?.user?.user_metadata?.full_name || session?.user?.email}
                   </div>
@@ -158,12 +158,16 @@ But on what? Wine, poetry, or virtue, as you wish."
                     {session?.user?.email}
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  aria-label="Sign out"
+                  title="Sign out"
+                  className="shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:text-[#E8986A]"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
               </div>
-
-              <Button onClick={handleSignOut} variant="outline" className="mt-6 w-full">
-                <LogOut className="h-4 w-4" />
-                Sign out
-              </Button>
             </div>
           </div>
         </div>
