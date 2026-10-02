@@ -366,9 +366,22 @@ const Pairing = () => {
           )}
         </div>
 
-        <Button onClick={() => run()} disabled={loading} className="w-full">
-          {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Pouring...</> : <><img src={findBottleIcon.url} alt="" className="-my-3 mr-2 h-[57px] w-[57px] max-w-none object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]" />Find a bottle</>}
-        </Button>
+        <button
+          type="button"
+          onClick={() => run()}
+          disabled={loading}
+          aria-label="Find a bottle"
+          className="mx-auto flex flex-col items-center gap-1 rounded-md bg-transparent px-2 pt-1 pb-2 transition-colors duration-[320ms] hover:bg-secondary/40 disabled:opacity-60"
+        >
+          {loading ? (
+            <Loader2 className="h-[57px] w-[57px] animate-spin text-[#E8986A]" />
+          ) : (
+            <img src={findBottleIcon.url} alt="" className="h-[57px] w-[57px] max-w-none object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]" />
+          )}
+          <span className="whitespace-nowrap text-[9px] uppercase tracking-[0.15em] leading-none text-[#E8986A]">
+            {loading ? "Pouring…" : "Find a bottle"}
+          </span>
+        </button>
 
 
         {result && (
