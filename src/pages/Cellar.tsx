@@ -536,6 +536,7 @@ const Cellar = () => {
               type="button"
               onClick={() => setShowArchive(!showArchive)}
               className="btn-plate mt-6 h-10 w-full rounded-md px-4 text-sm font-medium"
+              style={{ background: "#141414", borderColor: "#E8986A", color: "#E8986A" }}
             >
               {showArchive ? "Hide archive" : `View archive (${archivedWines.length})`}
             </button>
