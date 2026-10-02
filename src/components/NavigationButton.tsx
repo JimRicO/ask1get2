@@ -1,5 +1,5 @@
 import { User } from "lucide-react";
-import bottleIcon from "@/assets/nav-bottle-full.png.asset.json";
+import bottleIcon from "@/assets/nav-cellar.png.asset.json";
 import pairIcon from "@/assets/nav-pairings.png.asset.json";
 import scanIcon from "@/assets/nav-scan-heritage.png.asset.json";
 import favIcon from "@/assets/nav-favorites-decanter.png.asset.json";
