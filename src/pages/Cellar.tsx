@@ -11,6 +11,7 @@ import { normalizeGrape } from "@/lib/normalizeGrape";
 import { Session } from "@supabase/supabase-js";
 import { CaveStickyHeader, Eyebrow, Plate } from "@/components/CaveChrome";
 import { revealDelay } from "@/lib/cave-motion";
+import cellarBackground from "@/assets/cellar-background.png.asset.json";
 
 interface WineData {
   id: string;
@@ -365,6 +366,11 @@ const Cellar = () => {
 
   return (
     <Layout>
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 bg-center bg-no-repeat bg-contain opacity-[0.12]"
+        style={{ backgroundImage: `url(${cellarBackground.url})` }}
+      />
       <CaveStickyHeader
         title="Wine & Virtue"
         status={`${filteredWines.length} shown`}
