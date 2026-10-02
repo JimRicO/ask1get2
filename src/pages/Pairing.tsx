@@ -342,7 +342,8 @@ const Pairing = () => {
         <div className="mb-4 flex justify-start">
           <button
             onClick={() => navigate("/restaurant")}
-            className="btn-plate btn-plate-light inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold whitespace-nowrap"
+            className="btn-plate inline-flex h-10 items-center gap-2 rounded-md px-4 whitespace-nowrap"
+            style={{ background: "color-mix(in srgb, var(--secondary) 40%, transparent)", border: "none", boxShadow: "none", color: "#E8986A" }}
           >
             <UtensilsCrossed className="h-4 w-4" />
             ARE YOU AT A RESTAURANT?
