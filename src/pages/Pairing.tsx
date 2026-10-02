@@ -1,4 +1,4 @@
-import findBottleIcon from "@/assets/find-bottle.png.asset.json";
+import findBottleIcon from "@/assets/find-bottle-v2.png.asset.json";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Session } from "@supabase/supabase-js";
