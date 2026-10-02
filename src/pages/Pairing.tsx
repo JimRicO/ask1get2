@@ -52,8 +52,8 @@ const Chip = ({ active, onClick, children }: { active: boolean; onClick: () => v
     onClick={onClick}
     className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.07em] transition-colors duration-[320ms] ease-[var(--ease-cave)] ${
       active
-        ? "border-foreground bg-foreground text-background"
-        : "border-border text-muted-foreground hover:text-foreground"
+        ? "border-[#E8986A] bg-secondary text-[#E8986A]"
+        : "border-border bg-secondary/40 text-[#E8986A]/60 hover:text-[#E8986A]"
     }`}
   >
     {children}
