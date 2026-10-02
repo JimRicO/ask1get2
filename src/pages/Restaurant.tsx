@@ -549,7 +549,9 @@ const Restaurant = () => {
           At a restaurant
         </h1>
         <p className="mb-5 mt-1 text-[13.5px] leading-[1.5] text-rv-tan">
-          Snap the menu. Tick what the table ordered.
+          1- Snap the menu. Tick what the table ordered.
+          <br />
+          2- Scan the Winelist and get pairing recommandations
         </p>
 
         {menuImages.length > 0 ? (
