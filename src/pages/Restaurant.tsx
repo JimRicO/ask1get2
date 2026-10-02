@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import scanIcon from "@/assets/nav-scan-heritage.png.asset.json";
 import { useServerFn } from "@tanstack/react-start";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -570,7 +571,7 @@ const Restaurant = () => {
               aria-label="Scan the menu"
               className="flex h-[180px] cursor-pointer flex-col items-center justify-center gap-2 text-rv-tan2 transition-colors hover:text-rv-peach"
             >
-              {preparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+              {preparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <img src={scanIcon.url} alt="" className="h-[57px] w-[57px] max-w-none object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]" />}
               <span className="rv-eyebrow !text-current">Scan the menu</span>
               <input
                 type="file"
@@ -762,7 +763,7 @@ const Restaurant = () => {
                 aria-label="Photograph the list"
                 className="flex h-[180px] cursor-pointer items-center justify-center text-rv-tan2 transition-colors hover:text-rv-peach"
               >
-                {preparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+                {preparing ? <Loader2 className="h-6 w-6 animate-spin" /> : <img src={scanIcon.url} alt="" className="h-[57px] w-[57px] max-w-none object-contain drop-shadow-[0_3px_3px_rgba(0,0,0,0.7)]" />}
                 <input
                   ref={listInputRef}
                   type="file"
