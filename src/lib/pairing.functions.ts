@@ -786,6 +786,82 @@ Return ONLY valid JSON, no markdown fences:
   });
 
 /* ------------------------------------------------------------------------ */
+/* Restaurant mode, follow-up: 2nd and 3rd picks, given the 1st pick.         */
+/* ------------------------------------------------------------------------ */
+
+export const pairAlternatives = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        entries: z.array(listEntrySchema).min(1).max(MAX_LIST_ENTRIES),
+        dishes: z.string().trim().min(3).max(600),
+        firstId: z.string().min(1).max(16),
+        firstWhy: z.string().max(400).optional(),
+        lang: z.string().trim().max(35).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const byId = new Map(data.entries.map((e) => [e.id, e]));
+    const first = byId.get(data.firstId);
+    const listRows = data.entries.map((e) => ({
+      id: e.id,
+      name: e.name,
+      producer: e.producer,
+      vintage: e.vintage,
+      region: e.region,
+      colour: e.colour,
+      price: e.price,
+      by_the_glass: e.byTheGlass,
+    }));
+
+    const prompt = `You are the sommelier at this restaurant, advising one table.
+
+The table is eating: ${data.dishes}
+
+THE WINE LIST (everything available, nothing else exists):
+${JSON.stringify(listRows)}
+
+Your colleague already chose the FIRST PICK: id "${data.firstId}"${first ? ` (${first.name}${first.producer ? `, ${first.producer}` : ""})` : ""}.${data.firstWhy ? ` Reason given: ${data.firstWhy}` : ""}
+
+Now give a SECOND and a THIRD pick for the same table. Both must be different from the first pick and from each other, chosen ONLY from the list above by exact "id". Make them genuinely different alternatives from the first (another style, another price point, or a bolder idea), still serving the table well. Name any compromise honestly.
+
+${data.lang ? `Answer entirely in the language with BCP 47 code "${data.lang}".` : "Answer entirely in the language of the dishes."}
+
+Return ONLY valid JSON, no markdown fences:
+{"picks": [{"id": "", "why": "why this bottle works for the table", "compromise": "which dish it serves least well, or null"}, {"id": "", "why": "", "compromise": null}]}`;
+
+    const result = await callGateway({
+      model: MODELS.FAST,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const text = result.choices?.[0]?.message?.content?.trim();
+    if (!text) throw new Error("No alternatives returned by AI");
+    const parsed = parseJsonBlock(text);
+
+    const seen = new Set<string>([data.firstId]);
+    const picks = (Array.isArray(parsed?.picks) ? parsed!.picks : [])
+      .filter((p: Record<string, unknown>) => {
+        const id = p?.id;
+        if (typeof id !== "string" || !byId.has(id) || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      .slice(0, 2)
+      .map((p: Record<string, unknown>) => ({
+        entry: byId.get(p.id as string)!,
+        why: String(p.why ?? "").slice(0, 300),
+        compromise:
+          typeof p.compromise === "string" && p.compromise.trim()
+            ? p.compromise.trim().slice(0, 300)
+            : null,
+      }));
+
+    return { picks };
+  });
+
+/* ------------------------------------------------------------------------ */
 /* Restaurant mode, pass three: read the food menu so the table can tap what  */
 /* it ordered. pairFromList is untouched: the selection composes into the     */
 /* same free-text dishes string it already takes.                             */
