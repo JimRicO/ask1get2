@@ -41,6 +41,54 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_sessions: {
+        Row: {
+          created_at: string
+          dishes_text: string | null
+          id: string
+          loved_wines: Json
+          menu_dishes: Json
+          menu_images: string[]
+          ordered_dishes: Json
+          recommendations: Json | null
+          restaurant_name: string | null
+          updated_at: string
+          user_id: string
+          wine_list_entries: Json
+          wine_list_images: string[]
+        }
+        Insert: {
+          created_at?: string
+          dishes_text?: string | null
+          id?: string
+          loved_wines?: Json
+          menu_dishes?: Json
+          menu_images?: string[]
+          ordered_dishes?: Json
+          recommendations?: Json | null
+          restaurant_name?: string | null
+          updated_at?: string
+          user_id?: string
+          wine_list_entries?: Json
+          wine_list_images?: string[]
+        }
+        Update: {
+          created_at?: string
+          dishes_text?: string | null
+          id?: string
+          loved_wines?: Json
+          menu_dishes?: Json
+          menu_images?: string[]
+          ordered_dishes?: Json
+          recommendations?: Json | null
+          restaurant_name?: string | null
+          updated_at?: string
+          user_id?: string
+          wine_list_entries?: Json
+          wine_list_images?: string[]
+        }
+        Relationships: []
+      }
       tasting_notes: {
         Row: {
           created_at: string | null
