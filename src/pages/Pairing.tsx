@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { UtensilsCrossed, Loader2, Heart, Grape, AlertTriangle, MapPin, Plus } from "lucide-react";
 import { pairFromCellar, discoverBottles } from "@/lib/pairing.functions";
 import { wishlistKey } from "@/lib/wishlistKey";
+import PastVisits from "@/components/PastVisits";
 
 /* ------------------------------------------------------------------ market */
 /* Seeded silently from the browser locale, editable from the line under the
@@ -650,6 +651,7 @@ const Pairing = () => {
           </div>
         )}
       </div>
+      <PastVisits />
     </Layout>
   );
 };
