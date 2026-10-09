@@ -186,10 +186,14 @@ export default function PastVisits() {
             {[...open.menu_images, ...open.wine_list_images].length > 0 && (
               <>
                 <h4 className="mt-4 text-[11px] uppercase tracking-[0.14em] text-[#E8986A]">Menu & wine list</h4>
-                <div className="mt-2 grid grid-cols-3 gap-2">
+                <div
+                  data-swipe-ignore
+                  className="-mx-5 mt-2 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none]"
+                  style={{ touchAction: "pan-x pan-y" }}
+                >
                   {[...open.menu_images, ...open.wine_list_images].map((src) => (
-                    <a key={src} href={src} target="_blank" rel="noreferrer">
-                      <img src={src} alt="" className="aspect-[3/4] w-full rounded object-cover" />
+                    <a key={src} href={src} target="_blank" rel="noreferrer" className="w-[82%] shrink-0 snap-center">
+                      <img src={src} alt="" className="aspect-[3/4] w-full rounded object-contain bg-background/40" />
                     </a>
                   ))}
                 </div>
