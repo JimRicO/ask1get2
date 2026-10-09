@@ -928,6 +928,29 @@ const Restaurant = () => {
 
               {first && (
                 <div>
+                  <div className="mb-3 flex gap-2">
+                    {["1st pick", "2nd pick", "3rd pick"].map((label, i) => {
+                      const ready = i < picks.length;
+                      const loading = !ready && altsLoading;
+                      if (!ready && !loading) return null;
+                      return (
+                        <button
+                          key={label}
+                          type="button"
+                          disabled={!ready}
+                          onClick={() => setPickIdx(i)}
+                          className={`rv-eyebrow inline-flex items-center gap-1 rounded-md border px-3 py-1.5 transition-colors ${
+                            pickIdx === i
+                              ? "border-rv-peach bg-secondary !text-rv-peach"
+                              : "border-rv-line bg-secondary/40 !text-rv-tan2"
+                          }`}
+                        >
+                          {loading && <Loader2 className="h-3 w-3 animate-spin" />}
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
                   <p className="rv-eyebrow !text-rv-peach">One bottle for the table</p>
                   <p className="mt-1 font-serif text-[24px] font-bold leading-tight text-rv-cream">
                     {first.entry.name}
