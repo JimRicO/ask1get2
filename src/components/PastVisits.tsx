@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,7 @@ export default function PastVisits() {
   const recallFn = useServerFn(recallVisits);
   const [visits, setVisits] = useState<Visit[] | null>(null);
   const [open, setOpen] = useState<Visit | null>(null);
+  const [viewer, setViewer] = useState<number | null>(null);
   const [q, setQ] = useState("");
   const [asking, setAsking] = useState(false);
   const [answer, setAnswer] = useState<{ text: string | null; ids: string[] } | null>(null);
@@ -191,10 +192,10 @@ export default function PastVisits() {
                   className="-mx-5 mt-2 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none]"
                   style={{ touchAction: "pan-x pan-y" }}
                 >
-                  {[...open.menu_images, ...open.wine_list_images].map((src) => (
-                    <a key={src} href={src} target="_blank" rel="noreferrer" className="w-[82%] shrink-0 snap-center">
+                  {[...open.menu_images, ...open.wine_list_images].map((src, i) => (
+                    <button key={src} type="button" onClick={() => setViewer(i)} className="w-[82%] shrink-0 snap-center">
                       <img src={src} alt="" className="aspect-[3/4] w-full rounded object-contain bg-background/40" />
-                    </a>
+                    </button>
                   ))}
                 </div>
               </>
@@ -202,6 +203,55 @@ export default function PastVisits() {
           </div>
         </div>
       )}
+      {open && viewer !== null && (
+        <Lightbox
+          images={[...open.menu_images, ...open.wine_list_images]}
+          start={viewer}
+          onClose={() => setViewer(null)}
+        />
+      )}
     </section>
+  );
+}
+
+function Lightbox({ images, start, onClose }: { images: string[]; start: number; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [idx, setIdx] = useState(start);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) el.scrollLeft = start * el.clientWidth;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [start, onClose]);
+  return (
+    <div className="fixed inset-0 z-[100] flex flex-col bg-background/95" data-swipe-ignore onClick={onClose}>
+      <div className="flex items-center justify-between px-4 py-3 text-[13px] text-foreground">
+        <span>{idx + 1} of {images.length}</span>
+        <button type="button" aria-label="Close" onClick={onClose} className="p-2 text-[#E8986A]">
+          <X className="h-6 w-6" />
+        </button>
+      </div>
+      <div
+        ref={ref}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          setIdx(Math.round(el.scrollLeft / el.clientWidth));
+        }}
+        className="flex flex-1 snap-x snap-mandatory overflow-x-auto [scrollbar-width:none]"
+        style={{ touchAction: "pan-x pan-y pinch-zoom" }}
+      >
+        {images.map((src) => (
+          <div key={src} className="flex h-full w-full shrink-0 snap-center items-center justify-center p-2">
+            <img src={src} alt="" onClick={(e) => e.stopPropagation()} className="max-h-full max-w-full object-contain" />
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-center gap-2 py-4">
+        {images.map((src, i) => (
+          <span key={src} className={`h-1.5 w-1.5 rounded-full ${i === idx ? "bg-[#E8986A]" : "bg-[#E8986A]/30"}`} />
+        ))}
+      </div>
+    </div>
   );
 }
