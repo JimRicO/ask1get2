@@ -18,7 +18,7 @@ import {
   Minus,
   Plus,
 } from "lucide-react";
-import { extractWineList, extractMenu, pairFromList } from "@/lib/pairing.functions";
+import { extractWineList, extractMenu, pairFromList, pairAlternatives } from "@/lib/pairing.functions";
 import { wishlistKey } from "@/lib/wishlistKey";
 import { WineClink } from "@/components/WineClink";
 import { ScanLine, LockCorners, Flash } from "@/components/ScanEffects";
@@ -26,6 +26,7 @@ import { ScanLine, LockCorners, Flash } from "@/components/ScanEffects";
 type ListResult = Awaited<ReturnType<typeof extractWineList>>;
 type MenuResult = Awaited<ReturnType<typeof extractMenu>>;
 type TableResult = Awaited<ReturnType<typeof pairFromList>>;
+type AltsResult = Awaited<ReturnType<typeof pairAlternatives>>;
 type ListEntry = ListResult["entries"][number];
 type Dish = MenuResult["dishes"][number];
 
@@ -55,6 +56,7 @@ const Restaurant = () => {
   const extractListFn = useServerFn(extractWineList);
   const extractMenuFn = useServerFn(extractMenu);
   const pairFn = useServerFn(pairFromList);
+  const altsFn = useServerFn(pairAlternatives);
 
   const [session, setSession] = useState<Session | null>(null);
 
@@ -80,6 +82,10 @@ const Restaurant = () => {
   const [placeTouched, setPlaceTouched] = useState(false);
   const [pairing, setPairing] = useState(false);
   const [table, setTable] = useState<TableResult | null>(null);
+  const [alts, setAlts] = useState<AltsResult["picks"] | null>(null);
+  const [altsLoading, setAltsLoading] = useState(false);
+  const [pickIdx, setPickIdx] = useState(0);
+  const altsReq = useRef(0);
 
   const [savedBottles, setSavedBottles] = useState<Record<string, boolean>>({});
   const [savingBottle, setSavingBottle] = useState<string | null>(null);
@@ -315,10 +321,29 @@ const Restaurant = () => {
     setPairing(true);
     setTable(null);
     try {
+      const lang = navigator.language || "en";
       const data = (await pairFn({
-        data: { entries: listResult.entries, dishes: dishes.trim(), lang: navigator.language || "en" },
+        data: { entries: listResult.entries, dishes: dishes.trim(), lang },
       })) as TableResult;
       setTable(data);
+      setPickIdx(0);
+      setAlts(null);
+      if (data.single) {
+        const req = ++altsReq.current;
+        setAltsLoading(true);
+        altsFn({
+          data: {
+            entries: listResult.entries,
+            dishes: dishes.trim(),
+            firstId: data.single.entry.id,
+            firstWhy: data.single.why.slice(0, 400),
+            lang,
+          },
+        })
+          .then((r) => { if (req === altsReq.current) setAlts((r as AltsResult).picks); })
+          .catch((e) => { console.error(e); if (req === altsReq.current) setAlts([]); })
+          .finally(() => { if (req === altsReq.current) setAltsLoading(false); });
+      }
       // Both lists fold away once there is an answer, but stay one tap from
       // view so a misread can be caught before the recommendation is trusted.
       setListOpen(false);
@@ -531,7 +556,8 @@ const Restaurant = () => {
 
   if (!session) return null;
 
-  const first = table?.single ?? null;
+  const picks = table?.single ? [table.single, ...(alts ?? [])] : [];
+  const first = picks[pickIdx] ?? table?.single ?? null;
 
   return (
     <Layout>
@@ -902,6 +928,29 @@ const Restaurant = () => {
 
               {first && (
                 <div>
+                  <div className="mb-3 flex gap-2">
+                    {["1st pick", "2nd pick", "3rd pick"].map((label, i) => {
+                      const ready = i < picks.length;
+                      const loading = !ready && altsLoading;
+                      if (!ready && !loading) return null;
+                      return (
+                        <button
+                          key={label}
+                          type="button"
+                          disabled={!ready}
+                          onClick={() => setPickIdx(i)}
+                          className={`rv-eyebrow inline-flex items-center gap-1 rounded-md border px-3 py-1.5 transition-colors ${
+                            pickIdx === i
+                              ? "border-rv-peach bg-secondary !text-rv-peach"
+                              : "border-rv-line bg-secondary/40 !text-rv-tan2"
+                          }`}
+                        >
+                          {loading && <Loader2 className="h-3 w-3 animate-spin" />}
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
                   <p className="rv-eyebrow !text-rv-peach">One bottle for the table</p>
                   <p className="mt-1 font-serif text-[24px] font-bold leading-tight text-rv-cream">
                     {first.entry.name}
