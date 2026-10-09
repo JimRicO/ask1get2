@@ -91,6 +91,60 @@ const Restaurant = () => {
   const [savingBottle, setSavingBottle] = useState<string | null>(null);
   const [flash, setFlash] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  /* Auto-save: once a recommendation exists, the whole visit (photos, both
+     transcriptions, ordered plates, every pick, loved bottles) is upserted so
+     it can be recalled later from Pair. One row per visit; photos upload once. */
+  const visitIdRef = useRef<string | null>(null);
+  const uploadedRef = useRef<Map<string, string>>(new Map());
+  useEffect(() => {
+    if (!session || !table) return;
+    const uid = session.user.id;
+    const timer = window.setTimeout(async () => {
+      try {
+        if (!visitIdRef.current) visitIdRef.current = crypto.randomUUID();
+        const visitId = visitIdRef.current;
+        const upload = async (src: string, kind: string, i: number) => {
+          const hit = uploadedRef.current.get(src);
+          if (hit) return hit;
+          const blob = await (await fetch(src)).blob();
+          const path = `${uid}/restaurant/${visitId}/${kind}-${i}-${Date.now()}.jpg`;
+          const { error } = await supabase.storage
+            .from("wine-images")
+            .upload(path, blob, { contentType: "image/jpeg" });
+          if (error) throw error;
+          const url = supabase.storage.from("wine-images").getPublicUrl(path).data.publicUrl;
+          uploadedRef.current.set(src, url);
+          return url;
+        };
+        const menuUrls = await Promise.all(menuImages.map((s, i) => upload(s, "menu", i)));
+        const listUrls = await Promise.all(listImages.map((s, i) => upload(s, "list", i)));
+        const entries = listResult?.entries ?? [];
+        const loved = entries.filter((e) => savedBottles[wishlistKey(e.name, e.producer)]);
+        const ordered = (menuResult?.dishes ?? [])
+          .filter((d) => (selected[d.id] ?? 0) > 0)
+          .map((d) => ({ name: d.name, qty: selected[d.id] }));
+        const { error } = await supabase.from("restaurant_sessions").upsert({
+          id: visitId,
+          user_id: uid,
+          restaurant_name: place.trim() || null,
+          dishes_text: dishes.trim() || null,
+          menu_images: menuUrls,
+          wine_list_images: listUrls,
+          menu_dishes: JSON.parse(JSON.stringify(menuResult?.dishes ?? [])),
+          ordered_dishes: ordered,
+          wine_list_entries: JSON.parse(JSON.stringify(entries)),
+          recommendations: JSON.parse(JSON.stringify({ table, alternatives: alts ?? [] })),
+          loved_wines: JSON.parse(JSON.stringify(loved)),
+        });
+        if (error) throw error;
+      } catch (e) {
+        console.error("Could not save this visit", e);
+      }
+    }, 800);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, table, alts, savedBottles]);
   const listRef = useRef<HTMLDivElement>(null);
   const listInputRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
