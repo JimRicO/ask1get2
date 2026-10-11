@@ -891,6 +891,8 @@ Transcribe only what is printed. Never invent a dish, and never expand an ingred
 
 Keep the full descriptive line together with the dish name. Menus write "Pork schnitzel, maxibel beans, cucumber and buttermilk", and every one of those words decides the pairing. Do not shorten that to "Pork schnitzel".
 
+Several photographs are pages of the same menu: read every one of them and return one continuous list covering all pages. Never stop after the first photograph.
+
 Include every section, in printed order, under the heading the menu itself uses.
 
 Ignore prices entirely. They are not needed here.

@@ -298,11 +298,24 @@ const Restaurant = () => {
     }
   };
 
-  const readMenu = async () => {
+  const menuImgsRef = useRef<string[]>([]);
+  menuImgsRef.current = menuImages;
+  const listImgsRef = useRef<string[]>([]);
+  listImgsRef.current = listImages;
+  const menuBusyRef = useRef(false);
+  const menuDirtyRef = useRef(false);
+  const listBusyRef = useRef(false);
+  const listDirtyRef = useRef(false);
+
+  const readMenu = async (): Promise<void> => {
+    if (menuBusyRef.current) { menuDirtyRef.current = true; return; }
+    const menuImages = menuImgsRef.current;
     if (menuImages.length === 0) {
       toast.error("Photograph the menu first");
       return;
     }
+    menuBusyRef.current = true;
+    menuDirtyRef.current = false;
     setReadingMenu(true);
     requestAnimationFrame(() => document.getElementById("rv-menu-photo")?.scrollIntoView({ block: "center" }));
     // The old ids point at dishes that will not exist after this call, so the
@@ -323,15 +336,21 @@ const Restaurant = () => {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Could not read that menu");
     } finally {
+      menuBusyRef.current = false;
       setReadingMenu(false);
+      if (menuDirtyRef.current && menuImgsRef.current.length > 0) void readMenu();
     }
   };
 
-  const readList = async () => {
+  const readList = async (): Promise<void> => {
+    if (listBusyRef.current) { listDirtyRef.current = true; return; }
+    const listImages = listImgsRef.current;
     if (listImages.length === 0) {
       toast.error("Photograph the wine list first");
       return;
     }
+    listBusyRef.current = true;
+    listDirtyRef.current = false;
     setReadingList(true);
     requestAnimationFrame(() => document.getElementById("rv-list-photo")?.scrollIntoView({ block: "center" }));
     setListResult(null);
@@ -346,25 +365,30 @@ const Restaurant = () => {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Could not read that wine list");
     } finally {
+      listBusyRef.current = false;
       setReadingList(false);
+      if (listDirtyRef.current && listImgsRef.current.length > 0) void readList();
     }
   };
 
   // Like the film: capture, flash, then the scan starts on its own.
-  const menuCountRef = useRef(0);
-  const listCountRef = useRef(0);
+  // Any add, retake or removal re-reads every page; mid-scan changes queue a rerun.
+  const menuKey = menuImages.map((s) => s.length + ":" + s.slice(-24)).join("|");
+  const listKey = listImages.map((s) => s.length + ":" + s.slice(-24)).join("|");
+  const menuKeyRef = useRef("");
+  const listKeyRef = useRef("");
   useEffect(() => {
-    const grew = menuImages.length > menuCountRef.current;
-    menuCountRef.current = menuImages.length;
-    if (grew && !readingMenu) void readMenu();
+    if (menuKey === menuKeyRef.current) return;
+    menuKeyRef.current = menuKey;
+    if (menuImages.length > 0) void readMenu();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menuImages.length]);
+  }, [menuKey]);
   useEffect(() => {
-    const grew = listImages.length > listCountRef.current;
-    listCountRef.current = listImages.length;
-    if (grew && !readingList) void readList();
+    if (listKey === listKeyRef.current) return;
+    listKeyRef.current = listKey;
+    if (listImages.length > 0) void readList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listImages.length]);
+  }, [listKey]);
 
   const pair = async () => {
     if (!listResult || listResult.entries.length === 0) return;
@@ -638,7 +662,7 @@ const Restaurant = () => {
           <div className="mb-4 flex justify-center">
             <div className="relative w-full max-w-[340px] -rotate-1">
               <div id="rv-menu-photo" className="relative overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
-                <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
+                <img src={menuImages[menuImages.length - 1]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
                 <ScanLine active={readingMenu} from={4} to={92} ms={2400} onFinished={onMenuScanned} />
                 {flash > 0 && <Flash fire={flash} />}
               </div>
@@ -685,7 +709,7 @@ const Restaurant = () => {
           />
         )}
 
-        {menuImages.length > 0 && !(menuResult && dishesShown) && (
+        {menuImages.length > 0 && (!(menuResult && dishesShown) || readingMenu) && (
           <button
             type="button"
             onClick={() => void readMenu()}
