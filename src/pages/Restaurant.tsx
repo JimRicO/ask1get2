@@ -373,7 +373,7 @@ const Restaurant = () => {
         }
         const merged = mergeMenu(menuImgsRef.current);
         setMenuResult(merged);
-        if (merged) { setMenuOpen(true); setDishesShown(true); }
+        if (merged) setMenuOpen(true);
       }
       menuPagesRef.current = imgs;
     } finally {
