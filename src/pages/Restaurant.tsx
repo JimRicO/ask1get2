@@ -850,9 +850,7 @@ const Restaurant = () => {
             {Thumbs({images: menuImages, setImages: setMenuImages,})}
           </div>
         )}
-        {menuImages.length > 0 && (
-          {CaptureButton({ images: menuImages, max: MAX_MENU_IMAGES, setImages: setMenuImages, addLabel: "Scan the menu", moreLabel: "Add another page" })}
-        )}
+        {menuImages.length > 0 && CaptureButton({ images: menuImages, max: MAX_MENU_IMAGES, setImages: setMenuImages, addLabel: "Scan the menu", moreLabel: "Add another page" })}
 
         {menuImages.length > 0 && (!(menuResult && dishesShown) || readingMenu) && (
           <button
