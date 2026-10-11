@@ -91,6 +91,7 @@ const Restaurant = () => {
   const [savingBottle, setSavingBottle] = useState<string | null>(null);
   const [flash, setFlash] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [dockOpen, setDockOpen] = useState(true);
 
   /* Auto-save: once a recommendation exists, the whole visit (photos, both
      transcriptions, ordered plates, every pick, loved bottles) is upserted so
@@ -298,11 +299,24 @@ const Restaurant = () => {
     }
   };
 
-  const readMenu = async () => {
+  const menuImgsRef = useRef<string[]>([]);
+  menuImgsRef.current = menuImages;
+  const listImgsRef = useRef<string[]>([]);
+  listImgsRef.current = listImages;
+  const menuBusyRef = useRef(false);
+  const menuDirtyRef = useRef(false);
+  const listBusyRef = useRef(false);
+  const listDirtyRef = useRef(false);
+
+  const readMenu = async (): Promise<void> => {
+    if (menuBusyRef.current) { menuDirtyRef.current = true; return; }
+    const menuImages = menuImgsRef.current;
     if (menuImages.length === 0) {
       toast.error("Photograph the menu first");
       return;
     }
+    menuBusyRef.current = true;
+    menuDirtyRef.current = false;
     setReadingMenu(true);
     requestAnimationFrame(() => document.getElementById("rv-menu-photo")?.scrollIntoView({ block: "center" }));
     // The old ids point at dishes that will not exist after this call, so the
@@ -323,15 +337,21 @@ const Restaurant = () => {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Could not read that menu");
     } finally {
+      menuBusyRef.current = false;
       setReadingMenu(false);
+      if (menuDirtyRef.current && menuImgsRef.current.length > 0) void readMenu();
     }
   };
 
-  const readList = async () => {
+  const readList = async (): Promise<void> => {
+    if (listBusyRef.current) { listDirtyRef.current = true; return; }
+    const listImages = listImgsRef.current;
     if (listImages.length === 0) {
       toast.error("Photograph the wine list first");
       return;
     }
+    listBusyRef.current = true;
+    listDirtyRef.current = false;
     setReadingList(true);
     requestAnimationFrame(() => document.getElementById("rv-list-photo")?.scrollIntoView({ block: "center" }));
     setListResult(null);
@@ -346,25 +366,30 @@ const Restaurant = () => {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Could not read that wine list");
     } finally {
+      listBusyRef.current = false;
       setReadingList(false);
+      if (listDirtyRef.current && listImgsRef.current.length > 0) void readList();
     }
   };
 
   // Like the film: capture, flash, then the scan starts on its own.
-  const menuCountRef = useRef(0);
-  const listCountRef = useRef(0);
+  // Any add, retake or removal re-reads every page; mid-scan changes queue a rerun.
+  const menuKey = menuImages.map((s) => s.length + ":" + s.slice(-24)).join("|");
+  const listKey = listImages.map((s) => s.length + ":" + s.slice(-24)).join("|");
+  const menuKeyRef = useRef("");
+  const listKeyRef = useRef("");
   useEffect(() => {
-    const grew = menuImages.length > menuCountRef.current;
-    menuCountRef.current = menuImages.length;
-    if (grew && !readingMenu) void readMenu();
+    if (menuKey === menuKeyRef.current) return;
+    menuKeyRef.current = menuKey;
+    if (menuImages.length > 0) void readMenu();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menuImages.length]);
+  }, [menuKey]);
   useEffect(() => {
-    const grew = listImages.length > listCountRef.current;
-    listCountRef.current = listImages.length;
-    if (grew && !readingList) void readList();
+    if (listKey === listKeyRef.current) return;
+    listKeyRef.current = listKey;
+    if (listImages.length > 0) void readList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listImages.length]);
+  }, [listKey]);
 
   const pair = async () => {
     if (!listResult || listResult.entries.length === 0) return;
@@ -613,6 +638,86 @@ const Restaurant = () => {
   const picks = table?.single ? [table.single, ...(alts ?? [])] : [];
   const first = picks[pickIdx] ?? table?.single ?? null;
 
+  const recoBody = (
+    <>
+          {table && (
+            <div className="space-y-5">
+              {table.tableRead && <p className="text-[12px] leading-[1.5] text-rv-tan">{table.tableRead}</p>}
+
+              {first && (
+                <div>
+                  <div className="mb-3 flex gap-2">
+                    {["1st pick", "2nd pick", "3rd pick"].map((label, i) => {
+                      const ready = i < picks.length;
+                      const loading = !ready && altsLoading;
+                      if (!ready && !loading) return null;
+                      return (
+                        <button
+                          key={label}
+                          type="button"
+                          disabled={!ready}
+                          onClick={() => setPickIdx(i)}
+                          className={`rv-eyebrow inline-flex items-center gap-1 rounded-md border px-3 py-1.5 transition-colors ${
+                            pickIdx === i
+                              ? "border-rv-peach bg-secondary !text-rv-peach"
+                              : "border-rv-line bg-secondary/40 !text-rv-tan2"
+                          }`}
+                        >
+                          {loading && <Loader2 className="h-3 w-3 animate-spin" />}
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="rv-eyebrow !text-rv-peach">One bottle for the table</p>
+                  <p className="mt-1 font-serif text-[24px] font-bold leading-tight text-rv-cream">
+                    {first.entry.name}
+                  </p>
+                  <p className="text-[12px] text-rv-tan2">
+                    {[first.entry.producer, first.entry.vintage, first.entry.region, first.entry.price]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  <p className="mt-2 text-[13px] leading-[1.5] text-rv-cream">{first.why}</p>
+                  {first.compromise && (
+                    <p className="mt-2 text-[12.5px] leading-[1.5] text-rv-peach">⚠ {first.compromise}</p>
+                  )}
+                  <div className="mt-3">
+                    <LovedPill entry={first.entry} why={first.why} />
+                  </div>
+                </div>
+              )}
+
+              {table.split && (
+                <div className="space-y-4 border-t border-rv-line pt-4">
+                  <p className="rv-eyebrow !text-rv-peach">{first ? "Or two bottles" : "Two bottles for the table"}</p>
+                  {table.split.rationale && (
+                    <p className="text-[12px] leading-[1.5] text-rv-tan">{table.split.rationale}</p>
+                  )}
+                  {table.split.bottles.map((b, i) => (
+                    <div key={i}>
+                      <p className="font-serif text-[19px] font-bold leading-tight text-rv-cream">{b.entry.name}</p>
+                      <p className="text-[12px] text-rv-tan2">
+                        {[b.entry.producer, b.entry.vintage, b.entry.region, b.entry.price].filter(Boolean).join(" · ")}
+                      </p>
+                      {b.serves && <p className="mt-1 text-[12px] text-rv-peach">{b.serves}</p>}
+                      <p className="mt-1 text-[13px] leading-[1.5] text-rv-cream">{b.why}</p>
+                      <div className="mt-2">
+                        <LovedPill entry={b.entry} why={b.why} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {table.verdict && (
+                <p className="border-t border-rv-line pt-4 text-[12px] leading-[1.5] text-rv-tan">{table.verdict}</p>
+              )}
+            </div>
+          )}
+    </>
+  );
+
   return (
     <Layout>
       {toastText && <div className="rv-toast"><TypeText key={toastText} text={toastText} /></div>}
@@ -638,7 +743,7 @@ const Restaurant = () => {
           <div className="mb-4 flex justify-center">
             <div className="relative w-full max-w-[340px] -rotate-1">
               <div id="rv-menu-photo" className="relative overflow-hidden rounded-[3px] shadow-[0_14px_30px_-12px_#000]">
-                <img src={menuImages[0]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
+                <img src={menuImages[menuImages.length - 1]} alt="Menu" className="block max-h-[52vh] w-full object-cover object-top" />
                 <ScanLine active={readingMenu} from={4} to={92} ms={2400} onFinished={onMenuScanned} />
                 {flash > 0 && <Flash fire={flash} />}
               </div>
@@ -685,7 +790,7 @@ const Restaurant = () => {
           />
         )}
 
-        {menuImages.length > 0 && !(menuResult && dishesShown) && (
+        {menuImages.length > 0 && (!(menuResult && dishesShown) || readingMenu) && (
           <button
             type="button"
             onClick={() => void readMenu()}
@@ -834,7 +939,7 @@ const Restaurant = () => {
             {listImages.length > 0 ? (
               <div className="relative">
                 <div id="rv-list-photo" className="relative overflow-hidden rounded-[4px]">
-                  <img src={listImages[0]} alt="Wine list" className="block max-h-[52vh] w-full object-cover object-top" />
+                  <img src={listImages[listImages.length - 1]} alt="Wine list" className="block max-h-[52vh] w-full object-cover object-top" />
                   <ScanLine active={readingList} from={8} to={86} ms={2600} onFinished={onListScanned} />
                   {flash > 0 && <Flash fire={flash} />}
                 </div>
@@ -954,10 +1059,25 @@ const Restaurant = () => {
           </div>
         )}
 
-        {table && !sheetOpen && (
-          <button type="button" className="rv-btn-ghost mt-4" onClick={() => setSheetOpen(true)}>
-            Show the recommendation
-          </button>
+        {table && (
+          <div id="rv-recommendation" className="mt-6 rounded-[10px] border border-rv-line bg-secondary/30">
+            <div className="flex items-center justify-between gap-2 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => setDockOpen((v) => !v)}
+                className="flex flex-1 items-center gap-2 text-left"
+                aria-expanded={dockOpen}
+              >
+                {dockOpen ? <ChevronDown className="h-4 w-4 text-rv-peach" /> : <ChevronRight className="h-4 w-4 text-rv-peach" />}
+                <span className="font-serif text-[18px] text-rv-cream">Sommelier recommendation</span>
+                <span className="rv-eyebrow !text-rv-tan2">{picks.length} {picks.length === 1 ? "pick" : "picks"}</span>
+              </button>
+              <button type="button" className="rv-eyebrow !text-rv-peach" onClick={() => setSheetOpen(true)}>
+                Pop up
+              </button>
+            </div>
+            {dockOpen && !sheetOpen && <div className="border-t border-rv-line px-4 pb-4 pt-4">{recoBody}</div>}
+          </div>
         )}
       </div>
 
@@ -971,86 +1091,16 @@ const Restaurant = () => {
           type="button"
           aria-label="Close"
           tabIndex={table && sheetOpen ? 0 : -1}
-          onClick={() => setSheetOpen(false)}
+          onClick={() => {
+            setSheetOpen(false);
+            setDockOpen(true);
+            window.setTimeout(() => document.getElementById("rv-recommendation")?.scrollIntoView({ behavior: "smooth", block: "start" }), 450);
+          }}
           className={`absolute inset-0 bg-[rgba(20,9,9,0.6)] transition-opacity duration-500 ${table && sheetOpen ? "opacity-100" : "opacity-0"}`}
         />
         <div className="rv-sheet" data-open={!!(table && sheetOpen)} role="dialog">
           <div className="mx-auto mb-4 h-[3px] w-9 rounded-full bg-rv-line" />
-          {table && (
-            <div className="space-y-5">
-              {table.tableRead && <p className="text-[12px] leading-[1.5] text-rv-tan">{table.tableRead}</p>}
-
-              {first && (
-                <div>
-                  <div className="mb-3 flex gap-2">
-                    {["1st pick", "2nd pick", "3rd pick"].map((label, i) => {
-                      const ready = i < picks.length;
-                      const loading = !ready && altsLoading;
-                      if (!ready && !loading) return null;
-                      return (
-                        <button
-                          key={label}
-                          type="button"
-                          disabled={!ready}
-                          onClick={() => setPickIdx(i)}
-                          className={`rv-eyebrow inline-flex items-center gap-1 rounded-md border px-3 py-1.5 transition-colors ${
-                            pickIdx === i
-                              ? "border-rv-peach bg-secondary !text-rv-peach"
-                              : "border-rv-line bg-secondary/40 !text-rv-tan2"
-                          }`}
-                        >
-                          {loading && <Loader2 className="h-3 w-3 animate-spin" />}
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="rv-eyebrow !text-rv-peach">One bottle for the table</p>
-                  <p className="mt-1 font-serif text-[24px] font-bold leading-tight text-rv-cream">
-                    {first.entry.name}
-                  </p>
-                  <p className="text-[12px] text-rv-tan2">
-                    {[first.entry.producer, first.entry.vintage, first.entry.region, first.entry.price]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                  <p className="mt-2 text-[13px] leading-[1.5] text-rv-cream">{first.why}</p>
-                  {first.compromise && (
-                    <p className="mt-2 text-[12.5px] leading-[1.5] text-rv-peach">⚠ {first.compromise}</p>
-                  )}
-                  <div className="mt-3">
-                    <LovedPill entry={first.entry} why={first.why} />
-                  </div>
-                </div>
-              )}
-
-              {table.split && (
-                <div className="space-y-4 border-t border-rv-line pt-4">
-                  <p className="rv-eyebrow !text-rv-peach">{first ? "Or two bottles" : "Two bottles for the table"}</p>
-                  {table.split.rationale && (
-                    <p className="text-[12px] leading-[1.5] text-rv-tan">{table.split.rationale}</p>
-                  )}
-                  {table.split.bottles.map((b, i) => (
-                    <div key={i}>
-                      <p className="font-serif text-[19px] font-bold leading-tight text-rv-cream">{b.entry.name}</p>
-                      <p className="text-[12px] text-rv-tan2">
-                        {[b.entry.producer, b.entry.vintage, b.entry.region, b.entry.price].filter(Boolean).join(" · ")}
-                      </p>
-                      {b.serves && <p className="mt-1 text-[12px] text-rv-peach">{b.serves}</p>}
-                      <p className="mt-1 text-[13px] leading-[1.5] text-rv-cream">{b.why}</p>
-                      <div className="mt-2">
-                        <LovedPill entry={b.entry} why={b.why} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {table.verdict && (
-                <p className="border-t border-rv-line pt-4 text-[12px] leading-[1.5] text-rv-tan">{table.verdict}</p>
-              )}
-            </div>
-          )}
+          {recoBody}
         </div>
       </div>
     </Layout>
