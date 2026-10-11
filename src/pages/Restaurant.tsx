@@ -358,6 +358,7 @@ const Restaurant = () => {
     }
     const pending = imgs.filter((i) => !menuCacheRef.current.has(i));
     if (pending.length > 0) {
+      if (!imgs.some((i) => menuCacheRef.current.has(i))) setDishesShown(false);
       setReadingMenu(true);
       requestAnimationFrame(() => document.getElementById("rv-menu-photo")?.scrollIntoView({ block: "center" }));
     }
@@ -395,6 +396,7 @@ const Restaurant = () => {
     const pending = imgs.filter((i) => !listCacheRef.current.has(i));
     setListResult(mergeList(imgs));
     if (pending.length > 0) {
+      if (!imgs.some((i) => listCacheRef.current.has(i))) setListShown(false);
       setReadingList(true);
       requestAnimationFrame(() => document.getElementById("rv-list-photo")?.scrollIntoView({ block: "center" }));
     }
