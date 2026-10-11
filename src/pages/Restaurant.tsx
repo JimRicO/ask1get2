@@ -38,17 +38,37 @@ const MAX_MENU_IMAGES = 4;
    lists are dense type, which is where downscaling starts costing accuracy. */
 const MAX_EDGE = 2000;
 
+async function decode(file: File): Promise<{ src: CanvasImageSource; w: number; h: number; done: () => void }> {
+  try {
+    const b = await createImageBitmap(file, { imageOrientation: "from-image" });
+    return { src: b, w: b.width, h: b.height, done: () => b.close() };
+  } catch {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.decoding = "async";
+    await new Promise<void>((res, rej) => {
+      img.onload = () => res();
+      img.onerror = () => rej(new Error("Could not read that photo"));
+      img.src = url;
+    });
+    return { src: img, w: img.naturalWidth, h: img.naturalHeight, done: () => URL.revokeObjectURL(url) };
+  }
+}
+
 async function toScaledDataUrl(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Could not read that image");
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return canvas.toDataURL("image/jpeg", 0.85);
+  const d = await decode(file);
+  try {
+    const scale = Math.min(1, MAX_EDGE / Math.max(d.w, d.h));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(d.w * scale);
+    canvas.height = Math.round(d.h * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not read that image");
+    ctx.drawImage(d.src, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } finally {
+    d.done();
+  }
 }
 
 const Restaurant = () => {
@@ -274,12 +294,12 @@ const Restaurant = () => {
   }, [menuResult]);
 
   const addFiles = async (
-    files: FileList | null,
+    files: File[],
     current: string[],
     max: number,
     set: (updater: (prev: string[]) => string[]) => void,
   ) => {
-    if (!files || files.length === 0) return;
+    if (files.length === 0) return;
     const room = max - current.length;
     if (room <= 0) {
       toast.error(`${max} photos is the limit`);
@@ -287,7 +307,7 @@ const Restaurant = () => {
     }
     setPreparing(true);
     try {
-      const picked = Array.from(files).slice(0, room);
+      const picked = files.slice(0, room);
       const encoded = await Promise.all(picked.map(toScaledDataUrl));
       set((prev) => [...prev, ...encoded]);
       if (files.length > room) toast(`Only the first ${room} were added`);
@@ -567,8 +587,9 @@ const Restaurant = () => {
     max: number,
     setImages: (updater: (prev: string[]) => string[]) => void,
   ) => {
-    if (files && files.length > 0) setFlash((n) => n + 1);
-    void addFiles(files, images, max, setImages);
+    const copy = files ? Array.from(files) : [];
+    if (copy.length > 0) setFlash((n) => n + 1);
+    void addFiles(copy, images, max, setImages);
   };
 
   const CaptureButton = ({
@@ -600,7 +621,7 @@ const Restaurant = () => {
           accept="image/*"
           capture="environment"
           multiple
-          className="hidden"
+          className="sr-only"
           disabled={preparing}
           onChange={(e) => {
             firePhoto(e.target.files, images, max, setImages);
@@ -814,7 +835,7 @@ const Restaurant = () => {
                 accept="image/*"
                 capture="environment"
                 multiple
-                className="hidden"
+                className="sr-only"
                 disabled={preparing}
                 onChange={(e) => {
                   firePhoto(e.target.files, menuImages, MAX_MENU_IMAGES, setMenuImages);
@@ -826,17 +847,11 @@ const Restaurant = () => {
         )}
         {menuImages.length > 0 && (
           <div className="mb-3">
-            <Thumbs images={menuImages} setImages={setMenuImages} />
+            {Thumbs({images: menuImages, setImages: setMenuImages,})}
           </div>
         )}
         {menuImages.length > 0 && (
-          <CaptureButton
-            images={menuImages}
-            max={MAX_MENU_IMAGES}
-            setImages={setMenuImages}
-            addLabel="Scan the menu"
-            moreLabel="Add another page"
-          />
+          {CaptureButton({ images: menuImages, max: MAX_MENU_IMAGES, setImages: setMenuImages, addLabel: "Scan the menu", moreLabel: "Add another page" })}
         )}
 
         {menuImages.length > 0 && (!(menuResult && dishesShown) || readingMenu) && (
@@ -1007,7 +1022,7 @@ const Restaurant = () => {
                   accept="image/*"
                   capture="environment"
                   multiple
-                  className="hidden"
+                  className="sr-only"
                   disabled={preparing}
                   onChange={(e) => {
                     firePhoto(e.target.files, listImages, MAX_LIST_IMAGES, setListImages);
@@ -1019,23 +1034,17 @@ const Restaurant = () => {
           </div>
           {listImages.length > 1 && (
             <div className="mt-3">
-              <Thumbs images={listImages} setImages={setListImages} skipFirst />
+              {Thumbs({images: listImages, setImages: setListImages, skipFirst: true})}
             </div>
           )}
           {listImages.length === 1 && (
             <div className="mt-3">
-              <Thumbs images={listImages} setImages={setListImages} />
+              {Thumbs({images: listImages, setImages: setListImages,})}
             </div>
           )}
           {listImages.length > 0 && (
             <div className="mt-3">
-              <CaptureButton
-                images={listImages}
-                max={MAX_LIST_IMAGES}
-                setImages={setListImages}
-                addLabel="Photograph the list"
-                moreLabel="Add another page"
-              />
+              {CaptureButton({ images: listImages, max: MAX_LIST_IMAGES, setImages: setListImages, addLabel: "Photograph the list", moreLabel: "Add another page" })}
             </div>
           )}
           {listImages.length > 0 && (
