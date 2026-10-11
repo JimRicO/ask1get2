@@ -308,34 +308,74 @@ const Restaurant = () => {
   const listBusyRef = useRef(false);
   const listDirtyRef = useRef(false);
 
+  /* One call per photo, at full quality. Each page's result is cached by the
+     photo itself, so adding page 2 only sends page 2, and earlier dishes and
+     ticks stay put. Ids are prefixed with a per-photo token so they stay stable. */
+  const menuCacheRef = useRef(new Map<string, { tok: number; data: MenuResult }>());
+  const listCacheRef = useRef(new Map<string, { tok: number; data: ListResult }>());
+  const pageTokRef = useRef(0);
+  const menuPagesRef = useRef<string[]>([]);
+
+  const mergeMenu = (imgs: string[]): MenuResult | null => {
+    const parts = imgs.map((i) => menuCacheRef.current.get(i)).filter(Boolean) as { tok: number; data: MenuResult }[];
+    if (parts.length === 0) return null;
+    return {
+      ...parts[0].data,
+      dishes: parts.flatMap((p) => p.data.dishes.map((d) => ({ ...d, id: `p${p.tok}-${d.id}` }))),
+      restaurantName: parts.map((p) => p.data.restaurantName).find(Boolean) ?? null,
+      selectionPrompt: parts.map((p) => p.data.selectionPrompt).find(Boolean) ?? parts[0].data.selectionPrompt,
+      unreadable: parts.some((p) => p.data.unreadable),
+    } as MenuResult;
+  };
+  const mergeList = (imgs: string[]): ListResult | null => {
+    const parts = imgs.map((i) => listCacheRef.current.get(i)).filter(Boolean) as { tok: number; data: ListResult }[];
+    if (parts.length === 0) return null;
+    return {
+      ...parts[0].data,
+      entries: parts.flatMap((p) => p.data.entries.map((e) => ({ ...e, id: `p${p.tok}-${e.id}` }))),
+      restaurantName: parts.map((p) => p.data.restaurantName).find(Boolean) ?? null,
+      unreadable: parts.some((p) => p.data.unreadable),
+    } as ListResult;
+  };
+
   const readMenu = async (): Promise<void> => {
     if (menuBusyRef.current) { menuDirtyRef.current = true; return; }
-    const menuImages = menuImgsRef.current;
-    if (menuImages.length === 0) {
+    const imgs = menuImgsRef.current;
+    if (imgs.length === 0) {
       toast.error("Photograph the menu first");
       return;
     }
     menuBusyRef.current = true;
     menuDirtyRef.current = false;
-    setReadingMenu(true);
-    requestAnimationFrame(() => document.getElementById("rv-menu-photo")?.scrollIntoView({ block: "center" }));
-    // The old ids point at dishes that will not exist after this call, so the
-    // selection goes — and its composed run comes out of the text with it,
-    // leaving anything typed by hand in place.
-    const staleComposed = composeFrom(selected);
-    setDishes((text) => mergeComposed(text, staleComposed, ""));
-    setMenuResult(null);
-    setSelected({});
-    setDishesShown(false);
-    setTable(null);
+    // A removed or retaken page invalidates its dishes: drop the ticks.
+    const removed = menuPagesRef.current.some((p) => !imgs.includes(p));
+    if (removed) {
+      const staleComposed = composeFrom(selected);
+      setDishes((text) => mergeComposed(text, staleComposed, ""));
+      setSelected({});
+      setTable(null);
+      setMenuResult(mergeMenu(imgs));
+    }
+    const pending = imgs.filter((i) => !menuCacheRef.current.has(i));
+    if (pending.length > 0) {
+      setReadingMenu(true);
+      requestAnimationFrame(() => document.getElementById("rv-menu-photo")?.scrollIntoView({ block: "center" }));
+    }
     try {
-      const data = (await extractMenuFn({ data: { images: menuImages } })) as MenuResult;
-      setMenuResult(data);
-      setMenuOpen(true);
-      if (data.dishes.length === 0) toast.error("Nothing readable on that menu");
-    } catch (e) {
-      console.error(e);
-      toast.error(e instanceof Error ? e.message : "Could not read that menu");
+      for (const img of pending) {
+        try {
+          const data = (await extractMenuFn({ data: { images: [img] } })) as MenuResult;
+          menuCacheRef.current.set(img, { tok: ++pageTokRef.current, data });
+          if (data.dishes.length === 0) toast.error("Nothing readable on that page");
+        } catch (e) {
+          console.error(e);
+          toast.error(e instanceof Error ? e.message : "Could not read that page");
+        }
+        const merged = mergeMenu(menuImgsRef.current);
+        setMenuResult(merged);
+        if (merged) { setMenuOpen(true); setDishesShown(true); }
+      }
+      menuPagesRef.current = imgs;
     } finally {
       menuBusyRef.current = false;
       setReadingMenu(false);
@@ -345,26 +385,33 @@ const Restaurant = () => {
 
   const readList = async (): Promise<void> => {
     if (listBusyRef.current) { listDirtyRef.current = true; return; }
-    const listImages = listImgsRef.current;
-    if (listImages.length === 0) {
+    const imgs = listImgsRef.current;
+    if (imgs.length === 0) {
       toast.error("Photograph the wine list first");
       return;
     }
     listBusyRef.current = true;
     listDirtyRef.current = false;
-    setReadingList(true);
-    requestAnimationFrame(() => document.getElementById("rv-list-photo")?.scrollIntoView({ block: "center" }));
-    setListResult(null);
-    setListShown(false);
-    setTable(null);
+    const pending = imgs.filter((i) => !listCacheRef.current.has(i));
+    setListResult(mergeList(imgs));
+    if (pending.length > 0) {
+      setReadingList(true);
+      requestAnimationFrame(() => document.getElementById("rv-list-photo")?.scrollIntoView({ block: "center" }));
+    }
     try {
-      const data = (await extractListFn({ data: { images: listImages } })) as ListResult;
-      setListResult(data);
-      setListOpen(true);
-      if (data.entries.length === 0) toast.error("Nothing readable on that list");
-    } catch (e) {
-      console.error(e);
-      toast.error(e instanceof Error ? e.message : "Could not read that wine list");
+      for (const img of pending) {
+        try {
+          const data = (await extractListFn({ data: { images: [img] } })) as ListResult;
+          listCacheRef.current.set(img, { tok: ++pageTokRef.current, data });
+          if (data.entries.length === 0) toast.error("Nothing readable on that page");
+        } catch (e) {
+          console.error(e);
+          toast.error(e instanceof Error ? e.message : "Could not read that page");
+        }
+        const merged = mergeList(listImgsRef.current);
+        setListResult(merged);
+        if (merged) setListOpen(true);
+      }
     } finally {
       listBusyRef.current = false;
       setReadingList(false);
