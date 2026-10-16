@@ -43,7 +43,7 @@ interface WineData {
   current_stock: number;
   price_per_bottle: number | null;
   storage_location: string | null;
-  storage_locations?: Array<{location: string; quantity: number}>;
+  storage_locations?: Array<{location: string; rack?: string; quantity: number}>;
   ai_tasting_notes: string | null;
   ai_food_pairings: string[] | null;
   optimal_drinking_window: string | null;
@@ -84,7 +84,7 @@ const WineDetail = () => {
   const [processingBackground, setProcessingBackground] = useState(false);
   const [savedLocations, setSavedLocations] = useState<string[]>([]);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
-  const [newLocation, setNewLocation] = useState({ location: "", quantity: 1 });
+  const [newLocation, setNewLocation] = useState<{ location: string; rack?: string; quantity: number }>({ location: "", rack: "", quantity: 1 });
   const [editingLocationIndex, setEditingLocationIndex] = useState<number | null>(null);
 
   // Flip card state
@@ -176,7 +176,7 @@ const WineDetail = () => {
       const wineData = {
         ...data,
         storage_locations: Array.isArray(data.storage_locations) 
-          ? data.storage_locations as Array<{location: string; quantity: number}>
+          ? data.storage_locations as Array<{location: string; rack?: string; quantity: number}>
           : []
       } as unknown as WineData;
       setWine(wineData);
