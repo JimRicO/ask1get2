@@ -493,7 +493,7 @@ const Cellar = () => {
               onClick={s.onClick}
               aria-pressed={s.active}
               className={`brass-plaque flex-[1_1_100px] px-4 py-4 text-left transition-shadow ${
-                s.active ? "ring-2 ring-primary shadow-[0_0_14px_hsl(var(--primary)/0.45)]" : "opacity-85"
+                s.active ? "ring-2 ring-primary shadow-wine" : "opacity-85"
               }`}
             >
               <div className="font-serif text-[32px] font-semibold leading-none text-foreground">
