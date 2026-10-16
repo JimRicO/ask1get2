@@ -54,6 +54,7 @@ interface WineData {
   description?: string | null;
   description_sources?: string[] | null;
   domain_description?: string | null;
+  domain_sources?: string[] | null;
   notes?: string | null;
 }
 interface TastingNote {

@@ -248,10 +248,11 @@ const AddWine = () => {
                 country: data.extracted.country ?? null,
                 grape_varietals: data.extracted.grape_varietals ?? null
               }
-            })) as { description: string; sources?: string[]; grape_varietals?: string | null; domain_description?: string | null };
+            })) as { description: string; sources?: string[]; grape_varietals?: string | null; domain_description?: string | null; domain_sources?: string[] };
             if (described?.domain_description) {
               const dd = described.domain_description;
               setFormData(prev => ({ ...prev, domain_description: dd }));
+              domainSourcesRef.current = Array.isArray(described.domain_sources) ? described.domain_sources : [];
             }
             if (!data.extracted.grape_varietals && described?.grape_varietals) {
               const g = described.grape_varietals.split(',').map(x => x.trim()).filter(Boolean);
@@ -416,6 +417,7 @@ const AddWine = () => {
         description: formData.description || null,
         description_sources: descriptionSources.length > 0 ? descriptionSources : null,
         domain_description: formData.domain_description || null,
+        domain_sources: formData.domain_description && domainSourcesRef.current.length > 0 ? domainSourcesRef.current : null,
         notes: formData.notes || null
       };
       if (updateExisting && existingWine) {
@@ -452,7 +454,8 @@ const AddWine = () => {
           storage_locations: mergedLocations,
           description: formData.description || existingWine.description,
           description_sources: descriptionSources.length > 0 ? descriptionSources : existingWine.description_sources,
-          domain_description: formData.domain_description || existingWine.domain_description || null
+          domain_description: formData.domain_description || existingWine.domain_description || null,
+          domain_sources: formData.domain_description && domainSourcesRef.current.length > 0 ? domainSourcesRef.current : existingWine.domain_sources ?? null
         };
 
         // Only update fields that are currently null/empty
