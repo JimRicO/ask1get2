@@ -51,7 +51,7 @@ const AddWine = () => {
   const [customLoc, setCustomLoc] = useState<Record<number, boolean>>({});
   const [researching, setResearching] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
-  const [existingWine, setExistingWine] = useState<any>(null);
+  const [existingWineState, setExistingWine] = useState<any>(null);
   const [images, setImages] = useState<{
     front: File | null;
     back: File | null;
@@ -339,7 +339,8 @@ const AddWine = () => {
       submittingRef.current = false;
     }
   };
-  const submitWine = async (updateExisting = false) => {
+  const submitWine = async (updateExisting = false, dupWine?: any) => {
+    const existingWine = dupWine ?? existingWineState;
     if (!session) return;
 
     // Validate input data before processing
