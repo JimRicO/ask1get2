@@ -51,7 +51,7 @@ const AddWine = () => {
   const [customLoc, setCustomLoc] = useState<Record<number, boolean>>({});
   const [researching, setResearching] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
-  const [existingWine, setExistingWine] = useState<any>(null);
+  const [existingWineState, setExistingWine] = useState<any>(null);
   const [images, setImages] = useState<{
     front: File | null;
     back: File | null;
@@ -315,33 +315,32 @@ const AddWine = () => {
   }, [images, rescanTick, session]);
   const checkForDuplicates = async () => {
     if (!session || !formData.wine_name) return null;
-
-    // Normalize the wine name for comparison (lowercase, trim whitespace)
-    const normalizedSearchName = formData.wine_name.toLowerCase().trim();
-    const {
-      data: allWines
-    } = await supabase.from("wines").select("*").eq("user_id", session.user.id);
-
-    // Find wines with matching normalized names
-    const duplicate = allWines?.find(wine => wine.wine_name.toLowerCase().trim() === normalizedSearchName);
-    return duplicate || null;
+    // Same bottle = same name + producer + vintage + type (case/space-insensitive).
+    const norm = (v: unknown) => String(v ?? "").toLowerCase().trim().replace(/\s+/g, " ");
+    const key = [formData.wine_name, formData.producer, formData.vintage_year, formData.wine_type].map(norm).join("|");
+    const { data: allWines } = await supabase.from("wines").select("*").eq("user_id", session.user.id);
+    return allWines?.find(w => [w.wine_name, w.producer, w.vintage_year, w.wine_type].map(norm).join("|") === key) || null;
   };
+  const submittingRef = useRef(false);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session) return;
-
-    // Check for duplicates if wine name was entered manually (not from AI scan)
-    if (!showDuplicateDialog) {
+    if (!session || submittingRef.current) return;
+    submittingRef.current = true;
+    try {
       const duplicate = await checkForDuplicates();
       if (duplicate) {
+        // Never create a second card for the same bottle: add to the existing one.
         setExistingWine(duplicate);
-        setShowDuplicateDialog(true);
+        await submitWine(true, duplicate);
         return;
       }
+      await submitWine();
+    } finally {
+      submittingRef.current = false;
     }
-    await submitWine();
   };
-  const submitWine = async (updateExisting = false) => {
+  const submitWine = async (updateExisting = false, dupWine?: any) => {
+    const existingWine = dupWine ?? existingWineState;
     if (!session) return;
 
     // Validate input data before processing
