@@ -96,6 +96,11 @@ const FilterGroup = ({
     <div className="cave-expand" data-open={open}>
       <div>
         <div className="pb-3">
+          <div className="grid grid-cols-[1fr_2rem_2rem] gap-2 pb-1 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">
+            <span />
+            <span className="text-right">Ref</span>
+            <span className="text-right">Btl</span>
+          </div>
           {[{ value: "all", label: "All", count: total }, ...options].map(
             (o) => {
               const selected = value === o.value;
@@ -104,14 +109,13 @@ const FilterGroup = ({
                   key={o.value}
                   type="button"
                   onClick={() => onPick(o.value)}
-                  className={`flex w-full items-baseline justify-between gap-3 border-t border-muted py-2 text-left transition-[color,padding] duration-[320ms] ease-[var(--ease-cave)] ${
+                  className={`grid w-full grid-cols-[1fr_2rem_2rem] items-baseline gap-2 border-t border-muted py-2 text-left transition-[color,padding] duration-[320ms] ease-[var(--ease-cave)] ${
                     selected ? "pl-1.5 text-primary" : "text-wine-champagne hover:text-foreground"
                   }`}
                 >
-                  <span className="min-w-0 truncate text-[13px]">{o.label}</span>
-                  <span className="shrink-0 whitespace-nowrap font-mono text-[10px] text-muted-foreground">
-                    {o.count.ref} ref · {o.count.btls} {o.count.btls === 1 ? "btl" : "btls"}
-                  </span>
+                  <span className="min-w-0 break-words text-[13px] leading-tight">{o.label}</span>
+                  <span className="text-right font-mono text-[11px] tabular-nums text-muted-foreground">{o.count.ref}</span>
+                  <span className="text-right font-mono text-[11px] tabular-nums text-muted-foreground">{o.count.btls}</span>
                 </button>
               );
             },
