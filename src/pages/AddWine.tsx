@@ -47,6 +47,8 @@ const AddWine = () => {
   const [lockKey, setLockKey] = useState(0);
   const [magicScanCompleted, setMagicScanCompleted] = useState(false);
   const [savedLocations, setSavedLocations] = useState<string[]>([]);
+  const [customLoc, setCustomLoc] = useState<Record<number, boolean>>({});
+  const [researching, setResearching] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [existingWine, setExistingWine] = useState<any>(null);
   const [images, setImages] = useState<{
@@ -130,14 +132,17 @@ const AddWine = () => {
         data
       } = await supabase.from("wines").select("storage_locations").eq("user_id", session.user.id);
       if (data) {
-        const allLocations = data.flatMap(w => {
-          if (Array.isArray(w.storage_locations)) {
-            return w.storage_locations.map((loc: any) => loc.location);
+        const seen = new Map<string, string>();
+        for (const w of data) {
+          if (!Array.isArray(w.storage_locations)) continue;
+          for (const loc of w.storage_locations as any[]) {
+            const name = String(loc?.location ?? "").trim().replace(/\s+/g, " ");
+            if (!name) continue;
+            const key = name.toLowerCase();
+            if (!seen.has(key)) seen.set(key, name);
           }
-          return [];
-        });
-        const uniqueLocations = [...new Set(allLocations.filter(Boolean))] as string[];
-        setSavedLocations(uniqueLocations);
+        }
+        setSavedLocations([...seen.values()]);
       }
     };
     fetchLocations();
@@ -225,10 +230,12 @@ const AddWine = () => {
           grape_varietals: mainGrape,
           custom_grape_varietals: additionalGrapes
         }));
-        setMagicScanCompleted(true);
+        // Labels read: stop the scan lines now; web research runs as its own phase.
+        setAiProcessing(false);
 
         // Look the wine up on the web and write a grounded description
         if (data.extracted.wine_name) {
+          setResearching(true);
           try {
             const described = (await describeWineFn({
               data: {
@@ -259,8 +266,11 @@ const AddWine = () => {
             }
           } catch (err) {
             console.error("Description lookup failed:", err);
+          } finally {
+            setResearching(false);
           }
         }
+        setMagicScanCompleted(true);
 
         // Scroll to the form
         setTimeout(() => {
@@ -536,11 +546,14 @@ const AddWine = () => {
 
             {/* Full width and gold, dimmed until a shot exists rather than
                 hidden, so the next step is visible before it is available. */}
-            <Button type="button" onClick={processImageWithAI} disabled={aiProcessing || !hasAnyShot} className="mt-6 w-full disabled:opacity-45">
+            <Button type="button" onClick={processImageWithAI} disabled={aiProcessing || researching || !hasAnyShot} className="mt-6 w-full disabled:opacity-45">
                 {aiProcessing ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Reading the labels…
-                  </> : magicScanCompleted ? (allFourShot ? "All 4 views read · read again" : "Scanned · read again") : "Magic scan"}
+                  </> : researching ? <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Scan ready · Performing web research…
+                  </> : magicScanCompleted ? (allFourShot ? "All 4 views read · read again" : "Scan ready · read again") : "Magic scan"}
               </Button>
             {!hasAnyShot && <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
                 Photograph at least one label first
@@ -726,12 +739,14 @@ const AddWine = () => {
                 {storageLocations.map((storage, index) => <div key={index} className="grid grid-cols-[1fr,100px,auto] gap-2 items-end">
                     <div className="space-y-2">
                       <Label htmlFor={`location_${index}`} className="text-foreground text-sm">Location</Label>
-                      {savedLocations.length > 0 ? <Select value={storage.location} onValueChange={value => {
+                      {savedLocations.length > 0 ? <Select value={customLoc[index] ? "custom" : storage.location} onValueChange={value => {
                     const newLocations = [...storageLocations];
                     if (value === "custom") {
                       newLocations[index].location = "";
+                      setCustomLoc(c => ({ ...c, [index]: true }));
                     } else {
                       newLocations[index].location = value;
+                      setCustomLoc(c => ({ ...c, [index]: false }));
                     }
                     setStorageLocations(newLocations);
                   }}>
@@ -745,7 +760,7 @@ const AddWine = () => {
                             <SelectItem value="custom">+ New Location</SelectItem>
                           </SelectContent>
                         </Select> : null}
-                      {(!storage.location || !savedLocations.includes(storage.location)) && <Input id={`location_${index}`} value={storage.location} onChange={e => {
+                      {(savedLocations.length === 0 || customLoc[index]) && <Input id={`location_${index}`} value={storage.location} onChange={e => {
                     const newLocations = [...storageLocations];
                     newLocations[index].location = e.target.value;
                     setStorageLocations(newLocations);
