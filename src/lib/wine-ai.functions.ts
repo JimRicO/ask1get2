@@ -263,6 +263,7 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
     if (!text) throw new Error("No description returned by AI");
 
     let description = text;
+    let grapeVarietals: string | null = null;
     const rawSources: string[] = [];
 
     const fenced = text.match(/```json\n?([\s\S]*?)\n?```/);
@@ -273,7 +274,11 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
         const parsed = JSON.parse(candidate.trim()) as {
           description?: unknown;
           sources?: unknown;
+          grape_varietals?: unknown;
         };
+        if (typeof parsed.grape_varietals === "string" && parsed.grape_varietals.trim()) {
+          grapeVarietals = parsed.grape_varietals.trim();
+        }
         if (typeof parsed.description === "string" && parsed.description.trim()) {
           description = parsed.description.trim();
         }
@@ -322,7 +327,7 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
       if (sources.length >= 3) break;
     }
 
-    return { description, sources };
+    return { description, sources, grape_varietals: grapeVarietals };
 
   });
 
