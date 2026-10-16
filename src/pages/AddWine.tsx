@@ -93,6 +93,7 @@ const AddWine = () => {
   });
   const [useCustomGrape, setUseCustomGrape] = useState(false);
   const [descriptionSources, setDescriptionSources] = useState<string[]>([]);
+  const domainSourcesRef = useRef<string[]>([]);
   const [storageLocations, setStorageLocations] = useState<Array<{
     location: string;
     rack: string;
