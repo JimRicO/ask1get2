@@ -500,12 +500,13 @@ const WineDetail = () => {
       const grapes = Array.isArray(wine.grape_varietals) ? wine.grape_varietals.join(", ") : wine.grape_varietals ?? null;
       const result = (await describeWineFn({
         data: { wine_name: wine.wine_name, producer: wine.producer, vintage_year: wine.vintage_year, region: wine.region, country: wine.country, grape_varietals: grapes }
-      })) as { domain_description?: string | null };
+      })) as { domain_description?: string | null; domain_sources?: string[] };
       const dd = result?.domain_description;
       if (!dd) { toast.error("Nothing reliable found about this estate"); return; }
-      const { error } = await supabase.from("wines").update({ domain_description: dd }).eq("id", wine.id);
+      const ds = Array.isArray(result.domain_sources) && result.domain_sources.length > 0 ? result.domain_sources : null;
+      const { error } = await supabase.from("wines").update({ domain_description: dd, domain_sources: ds }).eq("id", wine.id);
       if (error) throw error;
-      setWine(prev => prev ? { ...prev, domain_description: dd } : prev);
+      setWine(prev => prev ? { ...prev, domain_description: dd, domain_sources: ds } : prev);
     } catch (error: any) {
       console.error("Domain research failed:", error);
       toast.error(error?.message || "Failed to research the estate");
@@ -786,6 +787,15 @@ const WineDetail = () => {
             <p className={`mt-4 max-w-[70ch] text-[16px] leading-[1.65] text-wine-champagne transition-opacity duration-[420ms] ${researchingDomain ? "opacity-45" : ""}`}>
               {wine.domain_description || "Nothing about the estate yet. Tap Research the domaine to look it up."}
             </p>
+            {wine.domain_description && wine.domain_sources && wine.domain_sources.length > 0 && <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+                {wine.domain_sources.map(url => {
+                  let label = url;
+                  try { label = new URL(url).hostname.replace(/^www\./, ""); } catch { label = url; }
+                  return <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="border-b border-border font-mono text-[10px] tracking-[0.05em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground">
+                      {label}
+                    </a>;
+                })}
+              </div>}
           </section>
 
           {/* 2. What the model knows */}
