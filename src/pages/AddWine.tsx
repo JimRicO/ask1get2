@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { extractWineData, describeWine } from "@/lib/wine-ai.functions";
+import { extractWineData, describeWine, removeWineBackground } from "@/lib/wine-ai.functions";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
 import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
@@ -38,6 +38,7 @@ const AddWine = () => {
   const navigate = useNavigate();
   const extractWineDataFn = useServerFn(extractWineData);
   const describeWineFn = useServerFn(describeWine);
+  const removeWineBackgroundFn = useServerFn(removeWineBackground);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
@@ -347,21 +348,36 @@ const AddWine = () => {
       const imageUrls: any = {};
 
       // Upload all images immediately
-      for (const [type, file] of Object.entries(images)) {
-        if (file) {
-          const fileExt = file.name.split(".").pop();
-          const fileName = `${session.user.id}/${type}_${Date.now()}.${fileExt}`;
-          const {
-            error: uploadError
-          } = await supabase.storage.from("wine-images").upload(fileName, file);
-          if (uploadError) throw uploadError;
-          const {
-            data: {
-              publicUrl
-            }
-          } = supabase.storage.from("wine-images").getPublicUrl(fileName);
-          imageUrls[type] = publicUrl;
+      // Clean backgrounds on front/back/neck (never the full bottle); keep original on any failure.
+      const toDataUrl = (f: File) => new Promise<string>((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result as string);
+        r.onerror = () => rej(r.error);
+        r.readAsDataURL(f);
+      });
+      const entries = Object.entries(images).filter(([, f]) => !!f) as [string, File][];
+      const prepared = await Promise.allSettled(entries.map(async ([type, file]) => {
+        if (type === "overall") return { type, file };
+        try {
+          const { processedImage } = await removeWineBackgroundFn({ data: { imageUrl: await toDataUrl(file) } });
+          const blob = await (await fetch(processedImage)).blob();
+          if (!blob.size) return { type, file };
+          return { type, file: new File([blob], `${type}.png`, { type: blob.type || "image/png" }) };
+        } catch (err) {
+          console.error(`Background removal failed for ${type}:`, err);
+          return { type, file };
         }
+      }));
+      for (let i = 0; i < entries.length; i++) {
+        const p = prepared[i];
+        const type = entries[i][0];
+        const file = p.status === "fulfilled" ? p.value.file : entries[i][1];
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${session.user.id}/${type}_${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from("wine-images").upload(fileName, file);
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage.from("wine-images").getPublicUrl(fileName);
+        imageUrls[type] = publicUrl;
       }
       const allGrapes = normalizeGrapeList([formData.grape_varietals, ...(formData.custom_grape_varietals ? formData.custom_grape_varietals.split(',') : [])]);
 
