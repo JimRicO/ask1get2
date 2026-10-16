@@ -30,6 +30,7 @@ interface WineData {
   optimal_drinking_window?: string | null;
   storage_locations?: Array<{
     location: string;
+    rack?: string;
     quantity: number;
   }>;
 }
@@ -230,7 +231,7 @@ const Cellar = () => {
       const transformedWines = (data || []).map((wine) => ({
         ...wine,
         storage_locations: Array.isArray(wine.storage_locations)
-          ? (wine.storage_locations as Array<{ location: string; quantity: number }>)
+          ? (wine.storage_locations as Array<{ location: string; rack?: string; quantity: number }>)
           : [],
       })) as unknown as WineData[];
       setWines(transformedWines);
@@ -259,7 +260,7 @@ const Cellar = () => {
         wine.appellation?.toLowerCase().includes(searchLower) ||
         wine.storage_location?.toLowerCase().includes(searchLower) ||
         (wine.storage_locations &&
-          wine.storage_locations.some((loc) => loc.location.toLowerCase().includes(searchLower))) ||
+          wine.storage_locations.some((loc) => loc.location.toLowerCase().includes(searchLower) || (loc.rack ?? "").toLowerCase().includes(searchLower))) ||
         grapeNames(wine.grape_varietals).some((g) => g.toLowerCase().includes(searchLower));
 
       const matchesType = filterType === "all" || wine.wine_type === filterType;

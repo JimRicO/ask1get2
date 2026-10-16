@@ -284,19 +284,21 @@ const WineDetail = () => {
 
     try {
       const currentLocations = wine.storage_locations || [];
+      const rack = (newLocation.rack ?? "").trim();
+      const entry = { location: newLocation.location.trim(), ...(rack ? { rack } : {}), quantity: newLocation.quantity };
       let updatedLocations;
       let newTotalStock = wine.current_stock;
 
       if (editingLocationIndex !== null) {
         // Editing existing location
         updatedLocations = currentLocations.map((loc, idx) => 
-          idx === editingLocationIndex ? newLocation : loc
+          idx === editingLocationIndex ? entry : loc
         );
         // Recalculate total stock
         newTotalStock = updatedLocations.reduce((sum, loc) => sum + loc.quantity, 0);
       } else {
         // Adding new location
-        updatedLocations = [...currentLocations, newLocation];
+        updatedLocations = [...currentLocations, entry];
         newTotalStock = wine.current_stock + newLocation.quantity;
       }
 
@@ -800,7 +802,7 @@ const WineDetail = () => {
                   >
                     <span className="flex items-center gap-2 text-[14px] text-foreground">
                       <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                      {loc.location}
+                      {loc.location}{loc.rack ? ` · ${loc.rack}` : ""}
                     </span>
                     <span className="font-mono text-[11px] tracking-[0.05em] text-wine-champagne">
                       {loc.quantity} bottles
@@ -1409,6 +1411,15 @@ const WineDetail = () => {
                       className={`bg-card border-border text-foreground ${savedLocations.length > 0 ? "mt-2" : ""}`}
                     />
                   )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-foreground">Rack / shelf (optional)</Label>
+                  <Input
+                    value={newLocation.rack ?? ""}
+                    onChange={e => setNewLocation({ ...newLocation, rack: e.target.value })}
+                    placeholder="e.g., Shelf 3, Rack B"
+                    className="bg-card border-border text-foreground"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground">Quantity</Label>
