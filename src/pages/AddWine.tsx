@@ -725,6 +725,14 @@ const AddWine = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="domain_description" className="text-foreground">Domaine</Label>
+                <Textarea id="domain_description" value={formData.domain_description} onChange={e => setFormData({
+                ...formData,
+                domain_description: e.target.value
+              })} placeholder="About the estate (auto-filled by web research)" rows={3} />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="notes" className="text-foreground">Notes</Label>
                 <Textarea id="notes" value={formData.notes} onChange={e => setFormData({
                 ...formData,

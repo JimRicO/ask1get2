@@ -53,6 +53,7 @@ interface WineData {
   created_at: string;
   description?: string | null;
   description_sources?: string[] | null;
+  domain_description?: string | null;
   notes?: string | null;
 }
 interface TastingNote {
@@ -71,6 +72,7 @@ const WineDetail = () => {
   const removeWineBackgroundFn = useServerFn(removeWineBackground);
   const describeWineFn = useServerFn(describeWine);
   const [rewritingDescription, setRewritingDescription] = useState(false);
+  const [researchingDomain, setResearchingDomain] = useState(false);
   const [wine, setWine] = useState<WineData | null>(null);
   const [tastingNotes, setTastingNotes] = useState<TastingNote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -491,6 +493,26 @@ const WineDetail = () => {
       setRewritingDescription(false);
     }
   };
+  const handleResearchDomain = async () => {
+    if (!wine) return;
+    setResearchingDomain(true);
+    try {
+      const grapes = Array.isArray(wine.grape_varietals) ? wine.grape_varietals.join(", ") : wine.grape_varietals ?? null;
+      const result = (await describeWineFn({
+        data: { wine_name: wine.wine_name, producer: wine.producer, vintage_year: wine.vintage_year, region: wine.region, country: wine.country, grape_varietals: grapes }
+      })) as { domain_description?: string | null };
+      const dd = result?.domain_description;
+      if (!dd) { toast.error("Nothing reliable found about this estate"); return; }
+      const { error } = await supabase.from("wines").update({ domain_description: dd }).eq("id", wine.id);
+      if (error) throw error;
+      setWine(prev => prev ? { ...prev, domain_description: dd } : prev);
+    } catch (error: any) {
+      console.error("Domain research failed:", error);
+      toast.error(error?.message || "Failed to research the estate");
+    } finally {
+      setResearchingDomain(false);
+    }
+  };
   const handleRemoveBackground = async () => {
     const frontUrl = wine?.images?.front;
     if (!wine || !frontUrl) {
@@ -746,6 +768,24 @@ const WineDetail = () => {
                     </a>;
                 })}
               </div>}
+          </section>
+
+          {/* Domaine */}
+          <section className="mt-11">
+            <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-2">
+              <Eyebrow>Domaine</Eyebrow>
+              <button
+                onClick={handleResearchDomain}
+                disabled={researchingDomain}
+                className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground transition-colors duration-[320ms] hover:text-foreground disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3 w-3 ${researchingDomain ? "animate-spin" : ""}`} />
+                {researchingDomain ? "Researching…" : wine.domain_description ? "Rewrite domaine" : "Research the domaine"}
+              </button>
+            </div>
+            <p className={`mt-4 max-w-[70ch] text-[16px] leading-[1.65] text-wine-champagne transition-opacity duration-[420ms] ${researchingDomain ? "opacity-45" : ""}`}>
+              {wine.domain_description || "Nothing about the estate yet. Tap Research the domaine to look it up."}
+            </p>
           </section>
 
           {/* 2. What the model knows */}
