@@ -208,6 +208,43 @@ Return ONLY valid JSON, no other text.`,
     return { wineData: parsed ?? { ...fallback, wine_name: text } };
   });
 
+function toHttpsUrl(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw.trim()) return null;
+  try {
+    const url = new URL(raw.trim());
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Follow grounding redirects, dedupe by host, keep order (first wins). */
+async function resolveSources(raw: string[], max: number): Promise<string[]> {
+  const resolved = await Promise.all(
+    raw.slice(0, 6).map(async (url) => {
+      if (!url.includes("grounding-api-redirect")) return url;
+      try {
+        const head = await fetch(url, { method: "GET", redirect: "manual" });
+        const location = head.headers.get("location");
+        return location && location.startsWith("https://") ? location : url;
+      } catch {
+        return url;
+      }
+    }),
+  );
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const url of resolved) {
+    let host: string;
+    try { host = new URL(url).host; } catch { continue; }
+    if (seen.has(host)) continue;
+    seen.add(host);
+    out.push(url);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
 /** Research a wine on the web and write a grounded description. */
 export const describeWine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
