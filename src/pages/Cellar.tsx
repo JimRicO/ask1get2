@@ -709,6 +709,30 @@ const Cellar = () => {
                           <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">
                             in stock
                           </div>
+                          <div className="mt-3 flex items-center justify-end gap-2">
+                            {([-1, 1] as const).map((d) => (
+                              <span
+                                key={d}
+                                role="button"
+                                tabIndex={0}
+                                aria-label={d < 0 ? "One bottle less" : "One bottle more"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void changeStock(wine, d);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    void changeStock(wine, d);
+                                  }
+                                }}
+                                className="flex h-8 w-8 items-center justify-center rounded-full border border-wine-champagne/40 text-wine-champagne transition-colors active:bg-secondary"
+                              >
+                                {d < 0 ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </button>
 
