@@ -11,6 +11,7 @@ import { normalizeGrape } from "@/lib/normalizeGrape";
 import { Session } from "@supabase/supabase-js";
 import { CaveStickyHeader, Eyebrow, Plate } from "@/components/CaveChrome";
 import { revealDelay } from "@/lib/cave-motion";
+import { formatRack } from "@/lib/rackLabel";
 
 interface WineData {
   id: string;
@@ -653,11 +654,25 @@ const Cellar = () => {
                               .filter(Boolean)
                               .join(" · ")}
                           </p>
-                          {(grapes.length > 0 || wine.storage_location) && (
+                          {grapes.length > 0 && (
                             <p className="mt-1 font-mono text-[10px] tracking-[0.05em] text-muted-foreground">
-                              {[grapes.join(", "), wine.storage_location].filter(Boolean).join(" · ")}
+                              {grapes.join(", ")}
                             </p>
                           )}
+                          {(() => {
+                            const locs = (wine.storage_locations ?? []).filter((l) => l.location?.trim());
+                            const text = locs.length > 0
+                              ? locs
+                                  .map((l) => {
+                                    const base = l.rack?.trim() ? `${l.location} · ${formatRack(l.rack)}` : l.location;
+                                    return locs.length > 1 ? `${base} (${l.quantity})` : base;
+                                  })
+                                  .join(" · ")
+                              : wine.storage_location;
+                            return text ? (
+                              <p className="mt-1 font-mono text-[10px] tracking-[0.05em] text-wine-copper">{text}</p>
+                            ) : null;
+                          })()}
                         </div>
 
                         <div className="shrink-0 text-right">
