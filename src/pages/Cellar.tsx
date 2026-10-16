@@ -290,7 +290,7 @@ const Cellar = () => {
   const filteredWines = wines
     .filter((wine) => {
       const isArchived = wine.current_stock === 0;
-      if (!showArchive && isArchived) return false;
+      if (showArchive !== isArchived) return false;
 
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
@@ -352,7 +352,7 @@ const Cellar = () => {
   /* Options carry a live count, so the rail says how much a filter would
      leave behind before it is tapped. Counted over the archive-visible set,
      which is what the list is drawn from. */
-  const inScope = wines.filter((w) => showArchive || w.current_stock > 0);
+  const inScope = wines.filter((w) => (showArchive ? w.current_stock === 0 : w.current_stock > 0));
   const countBy = (
     pred: (w: WineData) => boolean,
     btlsOf: (w: WineData) => number = (w) => w.current_stock || 0,
