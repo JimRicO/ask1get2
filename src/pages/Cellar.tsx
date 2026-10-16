@@ -70,10 +70,12 @@ const FilterGroup = ({
   onPick,
   open,
   onToggle,
+  total,
 }: {
   label: string;
   value: string;
-  options: Array<{ value: string; label: string; count: number }>;
+  total: { ref: number; btls: number };
+  options: Array<{ value: string; label: string; count: { ref: number; btls: number } }>;
   onPick: (v: string) => void;
   open: boolean;
   onToggle: () => void;
@@ -94,7 +96,7 @@ const FilterGroup = ({
     <div className="cave-expand" data-open={open}>
       <div>
         <div className="pb-3">
-          {[{ value: "all", label: "All", count: options.reduce((n, o) => n + o.count, 0) }, ...options].map(
+          {[{ value: "all", label: "All", count: total }, ...options].map(
             (o) => {
               const selected = value === o.value;
               return (
@@ -106,8 +108,10 @@ const FilterGroup = ({
                     selected ? "pl-1.5 text-primary" : "text-wine-champagne hover:text-foreground"
                   }`}
                 >
-                  <span className="truncate text-[13px]">{o.label}</span>
-                  <span className="font-mono text-[10px] text-muted-foreground">{o.count}</span>
+                  <span className="min-w-0 truncate text-[13px]">{o.label}</span>
+                  <span className="shrink-0 whitespace-nowrap font-mono text-[10px] text-muted-foreground">
+                    {o.count.ref} ref · {o.count.btls} {o.count.btls === 1 ? "btl" : "btls"}
+                  </span>
                 </button>
               );
             },
@@ -349,7 +353,14 @@ const Cellar = () => {
      leave behind before it is tapped. Counted over the archive-visible set,
      which is what the list is drawn from. */
   const inScope = wines.filter((w) => showArchive || w.current_stock > 0);
-  const countBy = (pred: (w: WineData) => boolean) => inScope.filter(pred).length;
+  const countBy = (
+    pred: (w: WineData) => boolean,
+    btlsOf: (w: WineData) => number = (w) => w.current_stock || 0,
+  ) => {
+    const hit = inScope.filter(pred);
+    return { ref: hit.length, btls: hit.reduce((n, w) => n + btlsOf(w), 0) };
+  };
+  const scopeTotal = countBy(() => true);
 
   const uniqueTypes = Array.from(
     new Set(wines.map((w) => w.wine_type).filter((v): v is string => Boolean(v))),
@@ -491,6 +502,7 @@ const Cellar = () => {
 
             <div className="mt-5">
               <FilterGroup
+                total={scopeTotal}
                 label="Type"
                 value={filterType}
                 open={openGroup === "type"}
@@ -503,6 +515,7 @@ const Cellar = () => {
                 }))}
               />
               <FilterGroup
+                total={scopeTotal}
                 label="Country"
                 value={filterCountry}
                 open={openGroup === "country"}
@@ -515,6 +528,7 @@ const Cellar = () => {
                 }))}
               />
               <FilterGroup
+                total={scopeTotal}
                 label="Grape"
                 value={filterGrape}
                 open={openGroup === "grape"}
@@ -533,6 +547,7 @@ const Cellar = () => {
               {/* Kept from the shipped screen: the spec's rail lists four groups,
                   but dropping Year would remove a filter the app already has. */}
               <FilterGroup
+                total={scopeTotal}
                 label="Vintage"
                 value={filterYear}
                 open={openGroup === "year"}
@@ -545,6 +560,7 @@ const Cellar = () => {
                 }))}
               />
               <FilterGroup
+                total={scopeTotal}
                 label="Location"
                 value={filterLocation}
                 open={openGroup === "location"}
@@ -557,6 +573,12 @@ const Cellar = () => {
                     (w) =>
                       w.storage_location === l ||
                       !!w.storage_locations?.some((loc) => loc.location === l),
+                    (w) =>
+                      w.storage_locations?.length
+                        ? w.storage_locations
+                            .filter((loc) => loc.location === l)
+                            .reduce((n, loc) => n + (Number(loc.quantity) || 0), 0)
+                        : w.current_stock || 0,
                   ),
                 }))}
               />
