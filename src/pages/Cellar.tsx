@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@/lib/router-compat";
 import Layout from "@/components/Layout";
-import { Wine, Plus, Search, Pencil, Check, X } from "lucide-react";
+import { Wine, Plus, Minus, Search, Pencil, Check, X } from "lucide-react";
 import cellarSeal from "@/assets/wine-virtue-seal.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -241,6 +241,33 @@ const Cellar = () => {
       console.error("Fetch wines error:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Quick +/- on the card. Adjusts the filtered location if any, else the first one.
+  const changeStock = async (wine: WineData, delta: number) => {
+    const locs = [...(wine.storage_locations ?? [])];
+    let next: number;
+    if (locs.length > 0) {
+      let i = filterLocation !== "all" ? locs.findIndex((l) => l.location === filterLocation) : -1;
+      if (i < 0) i = delta < 0 ? locs.findIndex((l) => l.quantity > 0) : 0;
+      if (i < 0) return;
+      locs[i] = { ...locs[i], quantity: Math.max(0, locs[i].quantity + delta) };
+      next = locs.reduce((s, l) => s + l.quantity, 0);
+    } else {
+      next = Math.max(0, wine.current_stock + delta);
+    }
+    if (next === wine.current_stock) return;
+    if (next === 0 && !confirm("Last bottle — move this wine to the archive?")) return;
+    const prev = wines;
+    setWines((ws) => ws.map((w) => (w.id === wine.id ? { ...w, current_stock: next, storage_locations: locs } : w)));
+    const { error } = await supabase
+      .from("wines")
+      .update({ current_stock: next, ...(locs.length > 0 ? { storage_locations: locs } : {}) })
+      .eq("id", wine.id);
+    if (error) {
+      setWines(prev);
+      toast.error("Failed to update quantity");
     }
   };
 
@@ -681,6 +708,30 @@ const Cellar = () => {
                           </div>
                           <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">
                             in stock
+                          </div>
+                          <div className="mt-3 flex items-center justify-end gap-2">
+                            {([-1, 1] as const).map((d) => (
+                              <span
+                                key={d}
+                                role="button"
+                                tabIndex={0}
+                                aria-label={d < 0 ? "One bottle less" : "One bottle more"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void changeStock(wine, d);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    void changeStock(wine, d);
+                                  }
+                                }}
+                                className="flex h-8 w-8 items-center justify-center rounded-full border border-wine-champagne/40 text-wine-champagne transition-colors active:bg-secondary"
+                              >
+                                {d < 0 ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                              </span>
+                            ))}
                           </div>
                         </div>
                       </button>
