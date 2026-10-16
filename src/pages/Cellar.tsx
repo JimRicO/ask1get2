@@ -409,10 +409,30 @@ const Cellar = () => {
     setIsEditingSubtitle(false);
   };
 
-  const stats = [
-    { label: "Bottles", value: totalBottles },
-    { label: "Active", value: activeWines.length },
-    { label: "Archived", value: archivedWines.length },
+  const bottlesOf = (t: string) =>
+    activeWines.filter((w) => w.wine_type === t).reduce((s, w) => s + w.current_stock, 0);
+  const stats: { key: string; label: string; value: number; active: boolean; onClick: () => void }[] = [
+    {
+      key: "all",
+      label: "Total bottles",
+      value: totalBottles,
+      active: !showArchive && filterType === "all",
+      onClick: () => { setShowArchive(false); setFilterType("all"); },
+    },
+    ...(["sparkling", "white", "red"] as const).map((t) => ({
+      key: t,
+      label: t,
+      value: bottlesOf(t),
+      active: !showArchive && filterType === t,
+      onClick: () => { setShowArchive(false); setFilterType(filterType === t && !showArchive ? "all" : t); },
+    })),
+    {
+      key: "archived",
+      label: "Archived",
+      value: archivedWines.length,
+      active: showArchive,
+      onClick: () => { setShowArchive(!showArchive); setFilterType("all"); },
+    },
   ];
 
   return (
@@ -467,14 +487,22 @@ const Cellar = () => {
         {/* Stats: ruled top and bottom, all three derived from the collection. */}
         <div className="mt-9 flex flex-wrap gap-3">
           {stats.map((s) => (
-            <div key={s.label} className="brass-plaque flex-[1_1_120px] px-4 py-4">
-              <div className="font-serif text-[36px] font-semibold leading-none text-foreground">
+            <button
+              key={s.key}
+              type="button"
+              onClick={s.onClick}
+              aria-pressed={s.active}
+              className={`brass-plaque flex-[1_1_100px] px-4 py-4 text-left transition-shadow ${
+                s.active ? "ring-2 ring-primary shadow-[0_0_14px_hsl(var(--primary)/0.45)]" : "opacity-85"
+              }`}
+            >
+              <div className="font-serif text-[32px] font-semibold leading-none text-foreground">
                 {s.value}
               </div>
               <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">
                 {s.label}
               </div>
-            </div>
+            </button>
           ))}
         </div>
 
