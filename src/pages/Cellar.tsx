@@ -670,7 +670,7 @@ const Cellar = () => {
                                   .join(" · ")
                               : wine.storage_location;
                             return text ? (
-                              <p className="mt-1 font-mono text-[10px] tracking-[0.05em] text-wine-copper">{text}</p>
+                              <p className="mt-1 font-mono text-[10px] tracking-[0.05em] text-wine-champagne/80">{text}</p>
                             ) : null;
                           })()}
                         </div>
