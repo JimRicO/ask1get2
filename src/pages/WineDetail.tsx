@@ -43,7 +43,7 @@ interface WineData {
   current_stock: number;
   price_per_bottle: number | null;
   storage_location: string | null;
-  storage_locations?: Array<{location: string; quantity: number}>;
+  storage_locations?: Array<{location: string; rack?: string; quantity: number}>;
   ai_tasting_notes: string | null;
   ai_food_pairings: string[] | null;
   optimal_drinking_window: string | null;
@@ -84,7 +84,7 @@ const WineDetail = () => {
   const [processingBackground, setProcessingBackground] = useState(false);
   const [savedLocations, setSavedLocations] = useState<string[]>([]);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
-  const [newLocation, setNewLocation] = useState({ location: "", quantity: 1 });
+  const [newLocation, setNewLocation] = useState<{ location: string; rack?: string; quantity: number }>({ location: "", rack: "", quantity: 1 });
   const [editingLocationIndex, setEditingLocationIndex] = useState<number | null>(null);
 
   // Flip card state
@@ -176,7 +176,7 @@ const WineDetail = () => {
       const wineData = {
         ...data,
         storage_locations: Array.isArray(data.storage_locations) 
-          ? data.storage_locations as Array<{location: string; quantity: number}>
+          ? data.storage_locations as Array<{location: string; rack?: string; quantity: number}>
           : []
       } as unknown as WineData;
       setWine(wineData);
@@ -284,19 +284,21 @@ const WineDetail = () => {
 
     try {
       const currentLocations = wine.storage_locations || [];
+      const rack = (newLocation.rack ?? "").trim();
+      const entry = { location: newLocation.location.trim(), ...(rack ? { rack } : {}), quantity: newLocation.quantity };
       let updatedLocations;
       let newTotalStock = wine.current_stock;
 
       if (editingLocationIndex !== null) {
         // Editing existing location
         updatedLocations = currentLocations.map((loc, idx) => 
-          idx === editingLocationIndex ? newLocation : loc
+          idx === editingLocationIndex ? entry : loc
         );
         // Recalculate total stock
         newTotalStock = updatedLocations.reduce((sum, loc) => sum + loc.quantity, 0);
       } else {
         // Adding new location
-        updatedLocations = [...currentLocations, newLocation];
+        updatedLocations = [...currentLocations, entry];
         newTotalStock = wine.current_stock + newLocation.quantity;
       }
 
@@ -800,7 +802,7 @@ const WineDetail = () => {
                   >
                     <span className="flex items-center gap-2 text-[14px] text-foreground">
                       <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                      {loc.location}
+                      {loc.location}{loc.rack ? ` · ${loc.rack}` : ""}
                     </span>
                     <span className="font-mono text-[11px] tracking-[0.05em] text-wine-champagne">
                       {loc.quantity} bottles
@@ -1409,6 +1411,15 @@ const WineDetail = () => {
                       className={`bg-card border-border text-foreground ${savedLocations.length > 0 ? "mt-2" : ""}`}
                     />
                   )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-foreground">Rack / shelf (optional)</Label>
+                  <Input
+                    value={newLocation.rack ?? ""}
+                    onChange={e => setNewLocation({ ...newLocation, rack: e.target.value })}
+                    placeholder="e.g., Shelf 3, Rack B"
+                    className="bg-card border-border text-foreground"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground">Quantity</Label>
