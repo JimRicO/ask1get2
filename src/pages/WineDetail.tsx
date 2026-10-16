@@ -1,3 +1,4 @@
+import { formatRack, sameLocation, sameRack } from "@/lib/rackLabel";
 import { BinIcon } from "@/components/BinIcon";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "@/lib/router-compat";
@@ -285,22 +286,38 @@ const WineDetail = () => {
     try {
       const currentLocations = wine.storage_locations || [];
       const rack = (newLocation.rack ?? "").trim();
-      const entry = { location: newLocation.location.trim(), ...(rack ? { rack } : {}), quantity: newLocation.quantity };
-      let updatedLocations;
-      let newTotalStock = wine.current_stock;
+      const locName = newLocation.location.trim();
+      const entry = { location: locName, ...(rack ? { rack } : {}), quantity: newLocation.quantity };
+      let updatedLocations: typeof currentLocations;
+      let message = editingLocationIndex !== null ? "Location updated!" : "Location added!";
 
       if (editingLocationIndex !== null) {
-        // Editing existing location
-        updatedLocations = currentLocations.map((loc, idx) => 
-          idx === editingLocationIndex ? entry : loc
-        );
-        // Recalculate total stock
-        newTotalStock = updatedLocations.reduce((sum, loc) => sum + loc.quantity, 0);
+        // If the edit now matches another row exactly, merge into it.
+        const dup = currentLocations.findIndex((l, i) => i !== editingLocationIndex && sameLocation(l.location, locName) && sameRack(l.rack, rack));
+        if (dup >= 0) {
+          updatedLocations = currentLocations
+            .map((l, i) => (i === dup ? { ...l, quantity: l.quantity + entry.quantity } : l))
+            .filter((_, i) => i !== editingLocationIndex);
+          message = "Merged with the existing location";
+        } else {
+          updatedLocations = currentLocations.map((loc, idx) => (idx === editingLocationIndex ? entry : loc));
+        }
       } else {
-        // Adding new location
-        updatedLocations = [...currentLocations, entry];
-        newTotalStock = wine.current_stock + newLocation.quantity;
+        const exact = currentLocations.findIndex(l => sameLocation(l.location, locName) && sameRack(l.rack, rack));
+        const noRack = rack ? currentLocations.findIndex(l => sameLocation(l.location, locName) && !(l.rack ?? "").trim()) : -1;
+        if (exact >= 0) {
+          updatedLocations = currentLocations.map((l, i) => (i === exact ? { ...l, quantity: l.quantity + entry.quantity } : l));
+          message = "Added to the existing location";
+        } else if (noRack >= 0) {
+          // Assign the rack to the existing bottles instead of creating a second row.
+          updatedLocations = currentLocations.map((l, i) => (i === noRack ? { ...l, rack } : l));
+          message = `Moved to ${formatRack(rack)}`;
+        } else {
+          updatedLocations = [...currentLocations, entry];
+        }
       }
+      const newTotalStock = updatedLocations.reduce((sum, loc) => sum + loc.quantity, 0);
+
 
       const { error } = await supabase
         .from("wines")
@@ -312,7 +329,7 @@ const WineDetail = () => {
 
       if (error) throw error;
 
-      toast.success(editingLocationIndex !== null ? "Location updated!" : "Location added!");
+      toast.success(message);
       setLocationDialogOpen(false);
       setNewLocation({ location: "", quantity: 1 });
       setEditingLocationIndex(null);
@@ -802,7 +819,8 @@ const WineDetail = () => {
                   >
                     <span className="flex items-center gap-2 text-[14px] text-foreground">
                       <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                      {loc.location}{loc.rack ? ` · ${loc.rack}` : ""}
+                      {loc.location}{loc.rack ? ` · ${formatRack(loc.rack)}` : ""}
+                      <Edit className="h-3 w-3 text-muted-foreground" aria-label="Edit location" />
                     </span>
                     <span className="font-mono text-[11px] tracking-[0.05em] text-wine-champagne">
                       {loc.quantity} bottles
