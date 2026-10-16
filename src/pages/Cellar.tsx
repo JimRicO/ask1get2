@@ -271,6 +271,18 @@ const Cellar = () => {
     }
   };
 
+  const hasFilters =
+    searchQuery !== "" ||
+    [filterType, filterYear, filterGrape, filterCountry, filterLocation].some((f) => f !== "all");
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilterType("all");
+    setFilterYear("all");
+    setFilterGrape("all");
+    setFilterCountry("all");
+    setFilterLocation("all");
+  };
+
   const filteredWines = wines
     .filter((wine) => {
       const isArchived = wine.current_stock === 0;
@@ -540,6 +552,15 @@ const Cellar = () => {
                 }))}
               />
             </div>
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-4 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-primary"
+              >
+                <X className="h-3 w-3" /> Clear filters
+              </button>
+            )}
 
             <div className="mt-7 border-t border-border pt-4">
               <Eyebrow className="text-[9px]">Sort</Eyebrow>
@@ -593,9 +614,10 @@ const Cellar = () => {
                 ) : (
                   <>
                     <p className="font-serif text-[26px] text-foreground">Nothing matches that.</p>
-                    <p className="mt-2 text-[15px] text-wine-champagne">
-                      Clear the search, or widen a filter.
-                    </p>
+                    <Button onClick={clearFilters} className="mt-6">
+                      <X className="h-4 w-4" />
+                      Clear filters
+                    </Button>
                   </>
                 )}
               </div>
