@@ -479,6 +479,15 @@ const Cellar = () => {
                 className="w-full bg-transparent py-1 text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
             </div>
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-3 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-primary"
+              >
+                <X className="h-3 w-3" /> Clear filters
+              </button>
+            )}
 
             <div className="mt-5">
               <FilterGroup
@@ -552,15 +561,6 @@ const Cellar = () => {
                 }))}
               />
             </div>
-            {hasFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="mt-4 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.11em] text-primary"
-              >
-                <X className="h-3 w-3" /> Clear filters
-              </button>
-            )}
 
             <div className="mt-7 border-t border-border pt-4">
               <Eyebrow className="text-[9px]">Sort</Eyebrow>
