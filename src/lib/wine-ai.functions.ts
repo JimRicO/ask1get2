@@ -208,6 +208,43 @@ Return ONLY valid JSON, no other text.`,
     return { wineData: parsed ?? { ...fallback, wine_name: text } };
   });
 
+function toHttpsUrl(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw.trim()) return null;
+  try {
+    const url = new URL(raw.trim());
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Follow grounding redirects, dedupe by host, keep order (first wins). */
+async function resolveSources(raw: string[], max: number): Promise<string[]> {
+  const resolved = await Promise.all(
+    raw.slice(0, 6).map(async (url) => {
+      if (!url.includes("grounding-api-redirect")) return url;
+      try {
+        const head = await fetch(url, { method: "GET", redirect: "manual" });
+        const location = head.headers.get("location");
+        return location && location.startsWith("https://") ? location : url;
+      } catch {
+        return url;
+      }
+    }),
+  );
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const url of resolved) {
+    let host: string;
+    try { host = new URL(url).host; } catch { continue; }
+    if (seen.has(host)) continue;
+    seen.add(host);
+    out.push(url);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
 /** Research a wine on the web and write a grounded description. */
 export const describeWine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -250,10 +287,12 @@ Rules:
 
 - Also return "grape_varietals": the grape varieties of this cuvée as a comma-separated string, main grape first (e.g. "Pinot Noir" or "Cabernet Sauvignon, Merlot, Cabernet Franc"), only if found in sources or given above; otherwise null. No percentages in this field.
 
-- Also return "domain_description": 2 to 4 sentences about the producer/estate itself (not this cuvée): where it is located (village, appellation, region), its size or holdings if found, its history (founding, family, generations) and its reputation or standing in the region. Only state facts found in sources. If the producer is unknown or nothing reliable is found, return null. Never invent history or reputation.
+- Also return "domain_description": 2 to 4 sentences about the producer/estate itself (not this cuvée): where it is located (village, appellation, region), its size or holdings if found, its history (founding, family, generations) and its reputation or standing in the region. Only state facts found in sources. Prefer the estate's own official website as the primary source when it exists. If the producer is unknown or nothing reliable is found, return null. Never invent history or reputation.
+- Also return "domain_official_site": the full URL of the estate's own official website if you actually found it, otherwise null. Never guess a domain name.
+- Also return "domain_sources": the full URLs of the pages you used for domain_description, official site first, at most 3. Never invent a URL. Empty list if none.
 
 Return ONLY valid JSON in this exact shape, no markdown fences:
-{"description": "the description text with no citations inside it", "domain_description": "text about the estate" or null, "grape_varietals": "Pinot Noir" or null, "sources": ["https://...", "https://..."]}`;
+{"description": "the description text with no citations inside it", "domain_description": "text about the estate" or null, "domain_official_site": "https://..." or null, "domain_sources": ["https://..."], "grape_varietals": "Pinot Noir" or null, "sources": ["https://...", "https://..."]}`;
 
     const result = await callGateway({
       model: "google/gemini-3.7-flash",
@@ -268,6 +307,8 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
     let grapeVarietals: string | null = null;
     let domainDescription: string | null = null;
     const rawSources: string[] = [];
+    const rawDomainSources: string[] = [];
+    let officialSite: string | null = null;
 
     const fenced = text.match(/```json\n?([\s\S]*?)\n?```/);
     const braced = text.match(/\{[\s\S]*\}/);
@@ -279,9 +320,18 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
           sources?: unknown;
           grape_varietals?: unknown;
           domain_description?: unknown;
+          domain_sources?: unknown;
+          domain_official_site?: unknown;
         };
         if (typeof parsed.domain_description === "string" && parsed.domain_description.trim()) {
           domainDescription = parsed.domain_description.trim();
+        }
+        officialSite = toHttpsUrl(parsed.domain_official_site);
+        if (Array.isArray(parsed.domain_sources)) {
+          for (const raw of parsed.domain_sources) {
+            const u = toHttpsUrl(raw);
+            if (u) rawDomainSources.push(u);
+          }
         }
         if (typeof parsed.grape_varietals === "string" && parsed.grape_varietals.trim()) {
           grapeVarietals = parsed.grape_varietals.trim();
@@ -305,36 +355,14 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
       }
     }
 
-    // Search grounding returns redirect URLs; follow them to the real page.
-    const resolved = await Promise.all(
-      rawSources.slice(0, 6).map(async (url) => {
-        if (!url.includes("grounding-api-redirect")) return url;
-        try {
-          const head = await fetch(url, { method: "GET", redirect: "manual" });
-          const location = head.headers.get("location");
-          return location && location.startsWith("https://") ? location : url;
-        } catch {
-          return url;
-        }
-      }),
-    );
-
-    const seenHosts = new Set<string>();
-    const sources: string[] = [];
-    for (const url of resolved) {
-      let host: string;
-      try {
-        host = new URL(url).host;
-      } catch {
-        continue;
-      }
-      if (seenHosts.has(host)) continue;
-      seenHosts.add(host);
-      sources.push(url);
-      if (sources.length >= 3) break;
+    const sources = await resolveSources(rawSources, 3);
+    let domainSources: string[] = [];
+    if (domainDescription) {
+      const ordered = officialSite ? [officialSite, ...rawDomainSources] : rawDomainSources;
+      domainSources = await resolveSources(ordered, 3);
     }
 
-    return { description, sources, grape_varietals: grapeVarietals, domain_description: domainDescription };
+    return { description, sources, grape_varietals: grapeVarietals, domain_description: domainDescription, domain_sources: domainSources };
 
   });
 
