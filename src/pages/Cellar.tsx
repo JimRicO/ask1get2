@@ -502,6 +502,7 @@ const Cellar = () => {
 
             <div className="mt-5">
               <FilterGroup
+                total={scopeTotal}
                 label="Type"
                 value={filterType}
                 open={openGroup === "type"}
@@ -514,6 +515,7 @@ const Cellar = () => {
                 }))}
               />
               <FilterGroup
+                total={scopeTotal}
                 label="Country"
                 value={filterCountry}
                 open={openGroup === "country"}
@@ -526,6 +528,7 @@ const Cellar = () => {
                 }))}
               />
               <FilterGroup
+                total={scopeTotal}
                 label="Grape"
                 value={filterGrape}
                 open={openGroup === "grape"}
@@ -544,6 +547,7 @@ const Cellar = () => {
               {/* Kept from the shipped screen: the spec's rail lists four groups,
                   but dropping Year would remove a filter the app already has. */}
               <FilterGroup
+                total={scopeTotal}
                 label="Vintage"
                 value={filterYear}
                 open={openGroup === "year"}
@@ -556,6 +560,7 @@ const Cellar = () => {
                 }))}
               />
               <FilterGroup
+                total={scopeTotal}
                 label="Location"
                 value={filterLocation}
                 open={openGroup === "location"}
