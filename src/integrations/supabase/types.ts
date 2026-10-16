@@ -146,6 +146,7 @@ export type Database = {
           current_stock: number | null
           description: string | null
           description_sources: string[] | null
+          domain_description: string | null
           grape_varietals: Json | null
           id: string
           images: Json | null
@@ -175,6 +176,7 @@ export type Database = {
           current_stock?: number | null
           description?: string | null
           description_sources?: string[] | null
+          domain_description?: string | null
           grape_varietals?: Json | null
           id?: string
           images?: Json | null
@@ -204,6 +206,7 @@ export type Database = {
           current_stock?: number | null
           description?: string | null
           description_sources?: string[] | null
+          domain_description?: string | null
           grape_varietals?: Json | null
           id?: string
           images?: Json | null
@@ -229,6 +232,7 @@ export type Database = {
           created_at: string
           description: string | null
           description_sources: string[] | null
+          domain_description: string | null
           grape_varietals: string | null
           id: string
           images: Json | null
@@ -245,6 +249,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           description_sources?: string[] | null
+          domain_description?: string | null
           grape_varietals?: string | null
           id?: string
           images?: Json | null
@@ -261,6 +266,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           description_sources?: string[] | null
+          domain_description?: string | null
           grape_varietals?: string | null
           id?: string
           images?: Json | null

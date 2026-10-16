@@ -250,8 +250,10 @@ Rules:
 
 - Also return "grape_varietals": the grape varieties of this cuvée as a comma-separated string, main grape first (e.g. "Pinot Noir" or "Cabernet Sauvignon, Merlot, Cabernet Franc"), only if found in sources or given above; otherwise null. No percentages in this field.
 
+- Also return "domain_description": 2 to 4 sentences about the producer/estate itself (not this cuvée): where it is located (village, appellation, region), its size or holdings if found, its history (founding, family, generations) and its reputation or standing in the region. Only state facts found in sources. If the producer is unknown or nothing reliable is found, return null. Never invent history or reputation.
+
 Return ONLY valid JSON in this exact shape, no markdown fences:
-{"description": "the description text with no citations inside it", "grape_varietals": "Pinot Noir" or null, "sources": ["https://...", "https://..."]}`;
+{"description": "the description text with no citations inside it", "domain_description": "text about the estate" or null, "grape_varietals": "Pinot Noir" or null, "sources": ["https://...", "https://..."]}`;
 
     const result = await callGateway({
       model: "google/gemini-3.7-flash",
@@ -264,6 +266,7 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
 
     let description = text;
     let grapeVarietals: string | null = null;
+    let domainDescription: string | null = null;
     const rawSources: string[] = [];
 
     const fenced = text.match(/```json\n?([\s\S]*?)\n?```/);
@@ -275,7 +278,11 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
           description?: unknown;
           sources?: unknown;
           grape_varietals?: unknown;
+          domain_description?: unknown;
         };
+        if (typeof parsed.domain_description === "string" && parsed.domain_description.trim()) {
+          domainDescription = parsed.domain_description.trim();
+        }
         if (typeof parsed.grape_varietals === "string" && parsed.grape_varietals.trim()) {
           grapeVarietals = parsed.grape_varietals.trim();
         }
@@ -327,7 +334,7 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
       if (sources.length >= 3) break;
     }
 
-    return { description, sources, grape_varietals: grapeVarietals };
+    return { description, sources, grape_varietals: grapeVarietals, domain_description: domainDescription };
 
   });
 
