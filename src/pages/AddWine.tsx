@@ -88,6 +88,7 @@ const AddWine = () => {
     grape_varietals: "",
     custom_grape_varietals: "",
     description: "",
+    domain_description: "",
     notes: ""
   });
   const [useCustomGrape, setUseCustomGrape] = useState(false);
@@ -247,7 +248,11 @@ const AddWine = () => {
                 country: data.extracted.country ?? null,
                 grape_varietals: data.extracted.grape_varietals ?? null
               }
-            })) as { description: string; sources?: string[]; grape_varietals?: string | null };
+            })) as { description: string; sources?: string[]; grape_varietals?: string | null; domain_description?: string | null };
+            if (described?.domain_description) {
+              const dd = described.domain_description;
+              setFormData(prev => ({ ...prev, domain_description: dd }));
+            }
             if (!data.extracted.grape_varietals && described?.grape_varietals) {
               const g = described.grape_varietals.split(',').map(x => x.trim()).filter(Boolean);
               if (g.length) setFormData(prev => prev.grape_varietals ? prev : ({
@@ -410,6 +415,7 @@ const AddWine = () => {
         images: Object.keys(imageUrls).length > 0 ? imageUrls : null,
         description: formData.description || null,
         description_sources: descriptionSources.length > 0 ? descriptionSources : null,
+        domain_description: formData.domain_description || null,
         notes: formData.notes || null
       };
       if (updateExisting && existingWine) {
@@ -445,7 +451,8 @@ const AddWine = () => {
           current_stock: newTotalStock,
           storage_locations: mergedLocations,
           description: formData.description || existingWine.description,
-          description_sources: descriptionSources.length > 0 ? descriptionSources : existingWine.description_sources
+          description_sources: descriptionSources.length > 0 ? descriptionSources : existingWine.description_sources,
+          domain_description: formData.domain_description || existingWine.domain_description || null
         };
 
         // Only update fields that are currently null/empty
