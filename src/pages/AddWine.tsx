@@ -164,6 +164,10 @@ const AddWine = () => {
     }
   };
 
+  const scanBusyRef = useRef(false);
+  const scanDirtyRef = useRef(false);
+  const [rescanTick, setRescanTick] = useState(0);
+  const allFourShot = Object.values(images).filter(Boolean).length === 4;
   const processImageWithAI = async () => {
     if (!session) return;
 
@@ -235,7 +239,15 @@ const AddWine = () => {
                 country: data.extracted.country ?? null,
                 grape_varietals: data.extracted.grape_varietals ?? null
               }
-            })) as { description: string; sources?: string[] };
+            })) as { description: string; sources?: string[]; grape_varietals?: string | null };
+            if (!data.extracted.grape_varietals && described?.grape_varietals) {
+              const g = described.grape_varietals.split(',').map(x => x.trim()).filter(Boolean);
+              if (g.length) setFormData(prev => prev.grape_varietals ? prev : ({
+                ...prev,
+                grape_varietals: g[0],
+                custom_grape_varietals: g.slice(1).join(', ')
+              }));
+            }
             if (Array.isArray(described?.sources)) {
               setDescriptionSources(described.sources);
             }
@@ -262,9 +274,27 @@ const AddWine = () => {
       console.error("AI processing error:", error);
     } finally {
       setAiProcessing(false);
+      scanBusyRef.current = false;
       window.setTimeout(() => setLockKey(k => k + 1), 280);
+      if (scanDirtyRef.current) {
+        scanDirtyRef.current = false;
+        setRescanTick(t => t + 1);
+      }
     }
   };
+
+  // Auto-scan whenever photos change; refine as more views are added.
+  useEffect(() => {
+    if (!session) return;
+    if (!Object.values(images).some(Boolean)) return;
+    const t = window.setTimeout(() => {
+      if (scanBusyRef.current) { scanDirtyRef.current = true; return; }
+      scanBusyRef.current = true;
+      processImageWithAI();
+    }, 1200);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images, rescanTick, session]);
   const checkForDuplicates = async () => {
     if (!session || !formData.wine_name) return null;
 
@@ -510,7 +540,7 @@ const AddWine = () => {
                 {aiProcessing ? <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Reading the labels…
-                  </> : magicScanCompleted ? "Scanned · read again" : "Magic scan"}
+                  </> : magicScanCompleted ? (allFourShot ? "All 4 views read · read again" : "Scanned · read again") : "Magic scan"}
               </Button>
             {!hasAnyShot && <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.09em] text-muted-foreground">
                 Photograph at least one label first

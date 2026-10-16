@@ -109,6 +109,7 @@ IMPORTANT INSTRUCTIONS:
 3. Combine information from all images to provide the most complete data possible
 4. Pay special attention to small text that might contain ABV or grape information
 5. **CRITICAL**: wine_type MUST be lowercase and ONLY one of: "red", "white", "rose", "sparkling", "dessert", "fortified"
+6. If no grape is printed but the appellation legally or near-universally implies a single variety (e.g. red Burgundy village/cru such as Fixin, Gevrey-Chambertin → Pinot Noir; Chablis or white Burgundy → Chardonnay; Barolo/Barbaresco → Nebbiolo; Sancerre blanc → Sauvignon Blanc; Beaujolais crus → Gamay; Brunello di Montalcino → Sangiovese), fill grape_varietals with that variety. Do NOT guess blends for multi-grape appellations (Bordeaux, Rhône, Champagne...) — use null there.
 
 Return ONLY valid JSON with these exact keys: wine_name, producer, vintage_year, wine_type, country, region, alcohol_content, grape_varietals.
 - For grape_varietals: return as a string with varieties separated by commas
@@ -247,8 +248,10 @@ Rules:
 - If the web search finds nothing specific about this wine, write a short factual description based only on the facts given above, and say nothing you cannot support.
 - Cite your sources: list the full URLs of the web pages you actually used, at most 3. Never invent a URL. If you used no web page, return an empty list.
 
+- Also return "grape_varietals": the grape varieties of this cuvée as a comma-separated string, main grape first (e.g. "Pinot Noir" or "Cabernet Sauvignon, Merlot, Cabernet Franc"), only if found in sources or given above; otherwise null. No percentages in this field.
+
 Return ONLY valid JSON in this exact shape, no markdown fences:
-{"description": "the description text with no citations inside it", "sources": ["https://...", "https://..."]}`;
+{"description": "the description text with no citations inside it", "grape_varietals": "Pinot Noir" or null, "sources": ["https://...", "https://..."]}`;
 
     const result = await callGateway({
       model: "google/gemini-3.7-flash",
@@ -260,6 +263,7 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
     if (!text) throw new Error("No description returned by AI");
 
     let description = text;
+    let grapeVarietals: string | null = null;
     const rawSources: string[] = [];
 
     const fenced = text.match(/```json\n?([\s\S]*?)\n?```/);
@@ -270,7 +274,11 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
         const parsed = JSON.parse(candidate.trim()) as {
           description?: unknown;
           sources?: unknown;
+          grape_varietals?: unknown;
         };
+        if (typeof parsed.grape_varietals === "string" && parsed.grape_varietals.trim()) {
+          grapeVarietals = parsed.grape_varietals.trim();
+        }
         if (typeof parsed.description === "string" && parsed.description.trim()) {
           description = parsed.description.trim();
         }
@@ -319,7 +327,7 @@ Return ONLY valid JSON in this exact shape, no markdown fences:
       if (sources.length >= 3) break;
     }
 
-    return { description, sources };
+    return { description, sources, grape_varietals: grapeVarietals };
 
   });
 
