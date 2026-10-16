@@ -90,9 +90,11 @@ const AddWine = () => {
   const [descriptionSources, setDescriptionSources] = useState<string[]>([]);
   const [storageLocations, setStorageLocations] = useState<Array<{
     location: string;
+    rack: string;
     quantity: string;
   }>>([{
     location: "",
+    rack: "",
     quantity: "1"
   }]);
   useEffect(() => {
@@ -324,9 +326,10 @@ const AddWine = () => {
 
       // Coerce typed quantities to valid numbers (minimum 1)
       const normalizedLocations = storageLocations.map(loc => ({
-        location: loc.location,
+        location: loc.location.trim(),
+        ...(loc.rack.trim() ? { rack: loc.rack.trim() } : {}),
         quantity: Math.max(1, parseInt(loc.quantity, 10) || 1)
-      }));
+      })) as Array<{ location: string; rack?: string; quantity: number }>;
 
       // Calculate total stock from all locations
       const totalStock = normalizedLocations.reduce((sum, loc) => sum + loc.quantity, 0);
@@ -362,14 +365,15 @@ const AddWine = () => {
         // Merge storage locations
         const existingLocations = (existingWine.storage_locations || []) as Array<{
           location: string;
+          rack?: string;
           quantity: number;
         }>;
-        const newLocations = [...normalizedLocations];
+        const newLocations = [...validStorageLocations];
 
-        // Merge locations: add quantities for same location, append new locations
+        // Merge locations: add quantities for same location+rack, append new ones
         const mergedLocations = [...existingLocations];
         newLocations.forEach(newLoc => {
-          const existingIndex = mergedLocations.findIndex(loc => loc.location === newLoc.location);
+          const existingIndex = mergedLocations.findIndex(loc => loc.location === newLoc.location && (loc.rack || "") === (newLoc.rack || ""));
           if (existingIndex >= 0) {
             mergedLocations[existingIndex].quantity += newLoc.quantity;
           } else {
@@ -682,6 +686,7 @@ const AddWine = () => {
                   <Label className="text-foreground">Storage Locations *</Label>
                   <Button type="button" variant="outline" size="sm" onClick={() => setStorageLocations([...storageLocations, {
                   location: "",
+                  rack: "",
                   quantity: "1"
                 }])} className="text-xs transition-all">
                     + Add Location
@@ -713,7 +718,12 @@ const AddWine = () => {
                     const newLocations = [...storageLocations];
                     newLocations[index].location = e.target.value;
                     setStorageLocations(newLocations);
-                  }} placeholder="e.g., Rack A3" className={savedLocations.length > 0 ? "mt-2" : ""} required />}
+                  }} placeholder="e.g., EuroCave" className={savedLocations.length > 0 ? "mt-2" : ""} required />}
+                      <Input id={`rack_${index}`} aria-label="Rack or shelf" value={storage.rack} onChange={e => {
+                    const newLocations = [...storageLocations];
+                    newLocations[index] = { ...newLocations[index], rack: e.target.value };
+                    setStorageLocations(newLocations);
+                  }} placeholder="Rack / shelf (optional), e.g., Shelf 3" className="mt-2" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor={`quantity_${index}`} className="text-foreground text-sm">Qty</Label>
