@@ -1,3 +1,4 @@
+import { sameLocation, sameRack } from "@/lib/rackLabel";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -373,7 +374,7 @@ const AddWine = () => {
         // Merge locations: add quantities for same location+rack, append new ones
         const mergedLocations = [...existingLocations];
         newLocations.forEach(newLoc => {
-          const existingIndex = mergedLocations.findIndex(loc => loc.location === newLoc.location && (loc.rack || "") === (newLoc.rack || ""));
+          const existingIndex = mergedLocations.findIndex(loc => sameLocation(loc.location, newLoc.location) && sameRack(loc.rack, newLoc.rack));
           if (existingIndex >= 0) {
             mergedLocations[existingIndex].quantity += newLoc.quantity;
           } else {
