@@ -5,7 +5,7 @@ import { callGateway } from "./wine-ai.functions";
 import { MODELS } from "./ai-models";
 import { SOMMELIER_VOICES, DEFAULT_VOICE } from "./sommelier-voices";
 import { DEFAULT_PREFS, EXPERT_SOURCES, type ExpertSourceId } from "./sommelier-prefs";
-import { expertRules } from "./sommelier-expertise";
+import { expertRules, shouldResearch } from "./sommelier-expertise";
 
 type Json = Record<string, unknown>;
 
@@ -111,7 +111,7 @@ export const askCellarSommelier = createServerFn({ method: "POST" })
     const cellar: Cellar = await loadCellar(context.supabase as unknown as Supa);
     const year = new Date().getUTCFullYear();
     const prefs = data.prefs ?? DEFAULT;
-    const useSearch = prefs.research === "auto" || (prefs.research !== "off" && !!data.research);
+    const useSearch = shouldResearch(prefs, data.research);
     const prompt = `${expertRules(year, prefs)}
 - "speech": 1 to 4 short sentences meant to be read aloud (no lists, no markdown, no ids).
 - When you recommend nothing, "picks" must be [].
