@@ -298,16 +298,16 @@ export default function CellarSommelier() {
             >
               <button
                 type="button"
-                onClick={() => void toggleVoice()}
+                onClick={toggleVoice}
                 aria-label={voice === "off" ? "Parler au sommelier" : "Terminer la conversation"}
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${voice === "live" ? `bg-primary text-primary-foreground ${speaking ? "" : "animate-pulse"}` : "bg-secondary text-primary"}`}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${voice !== "off" ? `bg-primary text-primary-foreground ${voice === "listening" ? "animate-pulse" : ""}` : "bg-secondary text-primary"}`}
               >
-                {voice === "connecting" ? <Loader2 className="h-5 w-5 animate-spin" /> : voice === "live" ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                {voice === "thinking" ? <Loader2 className="h-5 w-5 animate-spin" /> : voice !== "off" ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
               </button>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={voice === "live" ? (speaking ? "Le sommelier parle…" : "Je vous écoute…") : "Un vin léger, un rouge puissant…"}
+                placeholder={voice === "speaking" ? "Le sommelier parle…" : voice === "listening" ? "Je vous écoute…" : voice === "thinking" ? "Le sommelier réfléchit…" : "Un vin léger, un rouge puissant…"}
                 className="h-11 min-w-0 flex-1 rounded-full border border-primary/30 bg-background px-4 text-[15px] text-foreground outline-none focus:border-primary"
               />
               <button
