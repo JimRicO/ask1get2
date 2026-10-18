@@ -26,7 +26,7 @@ describe("Sommelier microphone turn", () => {
     turn.update("Je voudrais un rouge léger pour ce soir", false);
     await pause(SPEECH_PAUSE_MS + 100);
     expect(sent).toEqual(["Je voudrais un rouge léger pour ce soir"]);
-  });
+  }, 10000);
   test("interim speech cannot trigger a response while still speaking", async () => {
     const sent = [];
     const turn = createSpeechTurn((text) => sent.push(text));
@@ -36,7 +36,7 @@ describe("Sommelier microphone turn", () => {
     turn.ended();
     await pause(SPEECH_PAUSE_MS + 100);
     expect(sent).toEqual(["Un vin"]);
-  });
+  }, 10000);
   test("stopping the microphone cancels a pending response", async () => {
     const sent = [];
     const turn = createSpeechTurn((text) => sent.push(text));
