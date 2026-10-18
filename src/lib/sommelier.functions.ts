@@ -184,32 +184,45 @@ export const SOMMELIER_LIVE_MODEL = "gemini-3.8-live";
    caller's own in-stock cellar. */
 const voiceIds = SOMMELIER_VOICES.map((v) => v.id) as [string, ...string[]];
 
+async function synthesize(text: string, voice: string): Promise<string> {
+  const key = process.env["GOOGLE_API_KEY"];
+  if (!key) throw new Error("La clé Google n'est pas configurée.");
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+    method: "POST",
+    headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gemini-3.8-flash-tts",
+      input: [{ type: "user_input", content: [{ type: "text", text }] }],
+      response_format: { type: "audio", mime_type: "audio/wav" },
+      generation_config: { speech_config: [{ voice }] },
+    }),
+  });
+  if (!res.ok) {
+    console.error("TTS error", res.status, await res.text());
+    throw new Error("Voix indisponible.");
+  }
+  const json = (await res.json()) as { steps?: { content?: { data?: string }[] }[] };
+  const audio = json.steps?.flatMap((s) => s.content ?? []).find((c) => c?.data)?.data;
+  if (!audio) throw new Error("Voix indisponible.");
+  return audio;
+}
+
 /* Short spoken sample of a voice, for the Profile picker. Returns a WAV as base64. */
 export const previewSommelierVoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ voice: z.enum(voiceIds) }).parse(d))
-  .handler(async ({ data }) => {
-    const key = process.env["GOOGLE_API_KEY"];
-    if (!key) throw new Error("La clé Google n'est pas configurée.");
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-      method: "POST",
-      headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gemini-3.8-flash-tts",
-        input: [{ type: "user_input", content: [{ type: "text", text: "Bonsoir. Je suis votre sommelier. Que souhaitez-vous boire ce soir ?" }] }],
-        response_format: { type: "audio", mime_type: "audio/wav" },
-        generation_config: { speech_config: [{ voice: data.voice }] },
-      }),
-    });
-    if (!res.ok) {
-      console.error("TTS preview error", res.status, await res.text());
-      throw new Error("Aperçu indisponible.");
-    }
-    const json = (await res.json()) as { steps?: { content?: { data?: string }[] }[] };
-    const audio = json.steps?.flatMap((s) => s.content ?? []).find((c) => c?.data)?.data;
-    if (!audio) throw new Error("Aperçu indisponible.");
-    return { audio };
-  });
+  .handler(async ({ data }) => ({
+    audio: await synthesize("Bonsoir. Je suis votre sommelier. Que souhaitez-vous boire ce soir ?", data.voice),
+  }));
+
+/* Reads a sommelier answer aloud. The answer itself comes from askCellarSommelier,
+   so voice and text share the same deliberate reasoning. */
+export const speakSommelier = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ text: z.string().trim().min(1).max(1500), voice: z.enum(voiceIds).optional() }).parse(d),
+  )
+  .handler(async ({ data }) => ({ audio: await synthesize(data.text, data.voice ?? DEFAULT_VOICE) }));
 
 export const startSommelierVoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
