@@ -246,8 +246,9 @@ export const startSommelierVoice = createServerFn({ method: "POST" })
 
 Voice conversation rules:
 - You are speaking out loud. Keep each answer to 1 to 4 short spoken sentences. No lists, no ids read aloud.
-- Whenever you recommend bottles, ALSO call the show_wines tool with their exact ids (main pick first) so they appear on screen. Never call it for an unclear request.
-- Open with one short greeting and ask what they feel like drinking, in French unless the owner speaks another language.
+- Whenever you recommend CELLAR bottles, call the show_wines tool exactly once per answer with their exact ids (main pick first), then speak your answer once. After the tool result, do not restate or repeat what you said. Never call it for buying advice or an unclear request.
+- Never say filler like "laissez-moi vérifier", "je consulte", "je cherche", "un instant". Answer immediately.
+- Open with one very short, natural greeting (a few words), in French unless the owner speaks another language.
 
 CELLAR (${cellar.length} references in stock):
 ${JSON.stringify(cellar)}`;
@@ -256,7 +257,7 @@ ${JSON.stringify(cellar)}`;
       model: `models/${SOMMELIER_LIVE_MODEL}`,
       generationConfig: {
         responseModalities: ["AUDIO"],
-        thinkingConfig: { thinkingLevel: "medium" },
+        thinkingConfig: { thinkingLevel: "minimal" },
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: data.voice ?? DEFAULT_VOICE } } },
       },
       systemInstruction: { parts: [{ text: instructions }] },

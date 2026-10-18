@@ -70,9 +70,18 @@ export default function CellarSommelier() {
 
   function attachPicks(picks: Pick[]) {
     setTurns((prev) => {
-      const last = prev[prev.length - 1];
-      if (last?.role === "assistant" && liveTurnRef.current.assistant) {
-        return [...prev.slice(0, -1), { ...last, picks }];
+      // Attach to the latest assistant turn of the current exchange; never duplicate cards.
+      let idx = -1;
+      for (let i = prev.length - 1; i >= 0; i--) {
+        if (prev[i].role === "user") break;
+        if (prev[i].role === "assistant") { idx = i; break; }
+      }
+      if (idx >= 0) {
+        const t = prev[idx];
+        if (t.picks?.map((p) => p.id).join() === picks.map((p) => p.id).join()) return prev;
+        const next = [...prev];
+        next[idx] = { ...t, picks };
+        return next;
       }
       liveTurnRef.current.assistant = true;
       return [...prev, { role: "assistant", content: "", picks }];
@@ -95,7 +104,7 @@ export default function CellarSommelier() {
       onUserText: (t) => appendLive("user", t),
       onModelText: (t) => appendLive("assistant", t),
       onTurnComplete: () => {
-        liveTurnRef.current = { user: false, assistant: false };
+        liveTurnRef.current.user = false;
       },
       onSpeaking: setSpeaking,
       onClose: (reason) => {
