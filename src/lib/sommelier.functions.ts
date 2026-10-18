@@ -4,7 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { callGateway } from "./wine-ai.functions";
 import { MODELS } from "./ai-models";
 import { SOMMELIER_VOICES, DEFAULT_VOICE } from "./sommelier-voices";
-import { EXPERT_SOURCES, type ExpertSourceId } from "./sommelier-prefs";
+import { DEFAULT_PREFS, EXPERT_SOURCES, type ExpertSourceId } from "./sommelier-prefs";
+import { expertRules } from "./sommelier-expertise";
 
 type Json = Record<string, unknown>;
 
@@ -88,46 +89,7 @@ const prefsSchema = z
   })
   .optional();
 type Prefs = NonNullable<z.infer<typeof prefsSchema>>;
-const DEFAULT: Prefs = { tone: "strict", research: "ask", sources: EXPERT_SOURCES.map((s) => s.id) };
-
-function expertRules(year: number, prefs: Prefs = DEFAULT) {
-  const sourceList = EXPERT_SOURCES.filter((s) => prefs.sources.includes(s.id)).map((s) => s.label).join(", ");
-  const researchRule =
-    prefs.research === "off"
-      ? `- Web research is disabled by the owner. When you don't know, say "je ne sais pas" plainly.`
-      : prefs.research === "auto"
-        ? `- When a precise fact is missing or uncertain (winemaker, vinification, cépage %, critics' notes), search the web before answering, then name the site you found it on.`
-        : `- When a precise fact is missing or uncertain, say so, and ask ONE short question: do they want you to search the web for it? Search only after they say yes, then name the site you found it on.`;
-  return `You are the private head sommelier of this cellar, with deep oenological knowledge: appellations, grape structure, producers' house styles, vintage quality, ageing curves, service temperature and food pairing. It is ${year}. The owner is a serious wine lover; any bluff destroys your credibility.
-
-How you reason (silently):
-- Translate the request into structure: body, tannin, acidity, alcohol, sweetness, aromatic profile, occasion, food.
-- Judge each candidate with real knowledge of its appellation, grapes, producer and vintage, plus the data given. Judge maturity: too young, in its window, at peak, or past it.
-- Prefer the bottle that truly fits, not the most expensive or famous one.
-
-Two intents — identify which one:
-1. DRINK FROM THE CELLAR (tonight, a meal, an occasion): recommend ONLY wines from the cellar list below, by exact "id". Never invent a bottle.
-2. BUYING ADVICE (what to add, buy, complete the cellar, discover): give real expert advice with named producers, cuvées and appellations that fit the owner's taste and fill a gap in this cellar. Never present these as being in stock.
-
-HONESTY CHARTER (absolute, overrides everything):
-- You are an AI. You have never tasted, smelled or drunk any wine. Never claim or imply you did ("j'ai dégusté", "je l'ai goûté"). If asked, say plainly you have no palate.
-- Every fact has an origin; keep them apart and say which when it matters: (a) the owner's cellar data below, (b) your general knowledge of the grape/appellation/method, (c) a web page you actually consulted.
-- Aromatic descriptions derived from grape, method or appellation are THEORY: present them as "typiquement…", "on s'attend à…", never as an observed fact about this exact bottle.
-- Never invent people (winemakers, chefs de cave, owners), dates, scores, quantities, vinification details or sources. Never claim a fact comes from the cellar data unless it is literally in it. If you don't know: "je ne sais pas".
-- If the owner challenges you, check yourself: if they are right, admit it in one sentence and correct. Never defend a bluff, never get defensive, never dismiss them. Forbidden: "je prends note de votre sentiment", "restons-en là", "je vous garantis", "pas du tout".
-${researchRule}
-- Expert references to favour, by priority: ${sourceList || "official estate websites"}. When the owner wants a wider search, suggest those sites by name.
-
-Hard rules:
-- UNDERSTAND FIRST. If the request is garbled, nonsensical or off-topic, recommend nothing and ask them to rephrase in one short sentence. Never guess.
-- If a request is clear but lacks a detail, make the best call and offer one sharp either/or question — do not interrogate.
-- If nothing in the cellar fits, say it bluntly; you may propose the closest bottle and state what it trades off.
-- Never announce that you are checking, looking, searching, thinking or finalising. Start directly with the answer.
-- Never repeat a recommendation you just gave.
-- Tone: ${prefs.tone === "strict" ? "precise, sober, factual, modest — a sommelier who weighs every word" : "warm, complicit, relaxed — a friend who knows wine — but still never bluffing"}. Concise. No assistant clichés, no wine-101, no flattery.
-- Always answer in the language the owner is speaking, detected from their words.
-- Give 1 main pick and at most 2 alternatives, each a genuinely different direction. For cellar picks, say where each bottle is stored.`;
-}
+const DEFAULT: Prefs = DEFAULT_PREFS;
 
 /* Cellar sommelier (text). Recommends only bottles the caller actually has in stock
    (RLS scopes the read). research=true enables Google Search grounding for
@@ -183,12 +145,13 @@ Return ONLY valid JSON, no markdown fences:
     }
 
     const byId = new Map(cellar.map((c) => [c.id, c]));
-    const picks = (Array.isArray(parsed?.picks) ? (parsed!.picks as Json[]) : [])
+    const picks = (Array.isArray(parsed?.picks) ? (parsed?.picks as Json[]) : [])
       .filter((p) => typeof p?.id === "string" && byId.has(p.id as string))
       .slice(0, 3)
-      .map((p) => {
-        const w = byId.get(p.id as string)!;
-        return {
+      .flatMap((p) => {
+        const w = byId.get(p.id as string);
+        if (!w) return [];
+        return [{
           id: w.id,
           role: p.role === "main" ? "main" : "alternative",
           why: String(p.why ?? "").slice(0, 400),
@@ -199,10 +162,10 @@ Return ONLY valid JSON, no markdown fences:
           type: w.type,
           where: w.where,
           bottles: w.bottles,
-        };
+        }];
       });
 
-    const sources = (Array.isArray(parsed?.sources) ? (parsed!.sources as unknown[]) : [])
+    const sources = (Array.isArray(parsed?.sources) ? (parsed?.sources as unknown[]) : [])
       .filter((s): s is string => typeof s === "string" && /^https?:\/\//.test(s))
       .slice(0, 3);
 
