@@ -274,7 +274,6 @@ export default function CellarSommelier() {
               style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
               onSubmit={(e) => {
                 e.preventDefault();
-                conversationRef.current = false;
                 void send(input);
               }}
             >
