@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { callGateway } from "./wine-ai.functions";
 import { MODELS } from "./ai-models";
+import { SOMMELIER_VOICES, DEFAULT_VOICE } from "./sommelier-voices";
 
 type Json = Record<string, unknown>;
 
@@ -183,9 +184,39 @@ export const SOMMELIER_LIVE_MODEL = "gemini-3.8-live-extended-thinking";
 /* Voice sommelier: mints a single-use Gemini Live token server-side (the Google
    key never reaches the browser) and returns the session setup built from the
    caller's own in-stock cellar. */
+const voiceIds = SOMMELIER_VOICES.map((v) => v.id) as [string, ...string[]];
+
+/* Short spoken sample of a voice, for the Profile picker. Returns a WAV as base64. */
+export const previewSommelierVoice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ voice: z.enum(voiceIds) }).parse(d))
+  .handler(async ({ data }) => {
+    const key = process.env["GOOGLE_API_KEY"];
+    if (!key) throw new Error("La clé Google n'est pas configurée.");
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gemini-3.8-flash-tts",
+        input: [{ type: "user_input", content: [{ type: "text", text: "Bonsoir. Je suis votre sommelier. Que souhaitez-vous boire ce soir ?" }] }],
+        response_format: { type: "audio", mime_type: "audio/wav" },
+        generation_config: { speech_config: [{ voice: data.voice }] },
+      }),
+    });
+    if (!res.ok) {
+      console.error("TTS preview error", res.status, await res.text());
+      throw new Error("Aperçu indisponible.");
+    }
+    const json = (await res.json()) as { steps?: { content?: { data?: string }[] }[] };
+    const audio = json.steps?.flatMap((s) => s.content ?? []).find((c) => c?.data)?.data;
+    if (!audio) throw new Error("Aperçu indisponible.");
+    return { audio };
+  });
+
 export const startSommelierVoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: unknown) => z.object({ voice: z.enum(voiceIds).optional() }).parse(d ?? {}))
+  .handler(async ({ context, data }) => {
     const key = process.env["GOOGLE_API_KEY"];
     if (!key) throw new Error("La clé Google n'est pas configurée.");
     const cellar = await loadCellar(context.supabase as unknown as Supa);
@@ -221,6 +252,7 @@ ${JSON.stringify(cellar)}`;
       generationConfig: {
         responseModalities: ["AUDIO"],
         thinkingConfig: { thinkingLevel: "medium" },
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: data.voice ?? DEFAULT_VOICE } } },
       },
       systemInstruction: { parts: [{ text: instructions }] },
       tools: [

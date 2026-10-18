@@ -9,6 +9,7 @@ import { Session } from "@supabase/supabase-js";
 import wineVirtueLogoAsset from "@/assets/wine-virtue-seal.png.asset.json";
 const wineVirtueLogo = wineVirtueLogoAsset.url;
 import { Link } from "@tanstack/react-router";
+import SommelierVoicePicker from "@/components/SommelierVoicePicker";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -169,6 +170,7 @@ But on what? Wine, poetry, or virtue, as you wish."
                 </button>
               </div>
             </div>
+            <SommelierVoicePicker />
           </div>
         </div>
       </div>
