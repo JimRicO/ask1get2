@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Mic, MicOff, Send, X, Globe, Loader2 } from "lucide-react";
 import { useNavigate } from "@/lib/router-compat";
 import { askCellarSommelier, startSommelierVoice } from "@/lib/sommelier.functions";
+import { getSommelierVoice } from "@/lib/sommelier-voices";
 import { GeminiLiveSession } from "@/lib/gemini-live-client";
 import profileIcon from "@/assets/nav-profile-v2.png.asset.json";
 
@@ -108,7 +109,7 @@ export default function CellarSommelier() {
     sessionRef.current = session;
     try {
       session.prepare(); // must run inside the tap, before any await
-      const { token, setup, wines } = await startVoice();
+      const { token, setup, wines } = await startVoice({ data: { voice: getSommelierVoice() } });
       const byId = new Map(wines.map((w) => [w.id, w]));
       session["ev"].onToolCall = (name, args) => {
         if (name !== "show_wines") return { error: "unknown tool" };
