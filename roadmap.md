@@ -2,3 +2,5 @@
 - [x] Normalize all four uploaded views from camera metadata
 - [x] Display all wine views vertically without cropping
 - [x] Verify typecheck, build, and upload previews
+- [ ] Strengthen shared text/voice sommelier reasoning without invented bottle-specific expertise
+- [ ] Verify an authenticated cellar conversation and report voice verification limits
