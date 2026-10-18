@@ -4,6 +4,7 @@ import { Mic, MicOff, Send, X, Globe, Loader2 } from "lucide-react";
 import { useNavigate } from "@/lib/router-compat";
 import { askCellarSommelier, startSommelierVoice } from "@/lib/sommelier.functions";
 import { getSommelierVoice } from "@/lib/sommelier-voices";
+import { getSommelierPrefs } from "@/lib/sommelier-prefs";
 import { GeminiLiveSession } from "@/lib/gemini-live-client";
 import profileIcon from "@/assets/nav-profile-v2.png.asset.json";
 
@@ -118,7 +119,7 @@ export default function CellarSommelier() {
     sessionRef.current = session;
     try {
       session.prepare(); // must run inside the tap, before any await
-      const { token, setup, wines } = await startVoice({ data: { voice: getSommelierVoice() } });
+      const { token, setup, wines } = await startVoice({ data: { voice: getSommelierVoice(), prefs: getSommelierPrefs() } });
       const byId = new Map(wines.map((w) => [w.id, w]));
       session["ev"].onToolCall = (name, args) => {
         if (name !== "show_wines") return { error: "unknown tool" };
@@ -145,11 +146,15 @@ export default function CellarSommelier() {
     if (!q || busy) return;
     setError(null);
     setInput("");
+    const prefs = getSommelierPrefs();
+    // In "ask" mode, a short yes after the sommelier offered to search triggers the search.
+    const lastA = [...turns].reverse().find((t) => t.role === "assistant")?.content ?? "";
+    const accepted = prefs.research === "ask" && /recherche|search|chercher/i.test(lastA) && /^(oui|yes|ok|vas-y|go|d'accord|volontiers|cherche)/i.test(q);
     const history = turns.filter((t) => t.content).map((t) => ({ role: t.role, content: t.content })).slice(-12);
     setTurns((prev) => [...prev, { role: "user", content: q }]);
     setBusy(true);
     try {
-      const res = await ask({ data: { history, question: q, research } });
+      const res = await ask({ data: { history, question: q, research: research || accepted, prefs } });
       setTurns((prev) => [
         ...prev,
         { role: "assistant", content: res.speech, picks: res.picks, question: res.question, sources: res.sources },

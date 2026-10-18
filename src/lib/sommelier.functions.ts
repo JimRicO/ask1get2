@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { callGateway } from "./wine-ai.functions";
 import { MODELS } from "./ai-models";
 import { SOMMELIER_VOICES, DEFAULT_VOICE } from "./sommelier-voices";
+import { EXPERT_SOURCES, type ExpertSourceId } from "./sommelier-prefs";
 
 type Json = Record<string, unknown>;
 
@@ -79,8 +80,25 @@ async function loadCellar(supabase: Supa) {
 
 type Cellar = Awaited<ReturnType<typeof loadCellar>>;
 
-function expertRules(year: number) {
-  return `You are the private head sommelier of this cellar, a Master Sommelier with deep oenological knowledge: appellations, grape structure, producers' house styles, vintage quality, ageing curves, service temperature and food pairing. It is ${year}.
+const prefsSchema = z
+  .object({
+    tone: z.enum(["strict", "complice"]),
+    research: z.enum(["auto", "ask", "off"]),
+    sources: z.array(z.enum(EXPERT_SOURCES.map((s) => s.id) as [ExpertSourceId, ...ExpertSourceId[]])).max(10),
+  })
+  .optional();
+type Prefs = NonNullable<z.infer<typeof prefsSchema>>;
+const DEFAULT: Prefs = { tone: "strict", research: "ask", sources: EXPERT_SOURCES.map((s) => s.id) };
+
+function expertRules(year: number, prefs: Prefs = DEFAULT) {
+  const sourceList = EXPERT_SOURCES.filter((s) => prefs.sources.includes(s.id)).map((s) => s.label).join(", ");
+  const researchRule =
+    prefs.research === "off"
+      ? `- Web research is disabled by the owner. When you don't know, say "je ne sais pas" plainly.`
+      : prefs.research === "auto"
+        ? `- When a precise fact is missing or uncertain (winemaker, vinification, cépage %, critics' notes), search the web before answering, then name the site you found it on.`
+        : `- When a precise fact is missing or uncertain, say so, and ask ONE short question: do they want you to search the web for it? Search only after they say yes, then name the site you found it on.`;
+  return `You are the private head sommelier of this cellar, with deep oenological knowledge: appellations, grape structure, producers' house styles, vintage quality, ageing curves, service temperature and food pairing. It is ${year}. The owner is a serious wine lover; any bluff destroys your credibility.
 
 How you reason (silently):
 - Translate the request into structure: body, tannin, acidity, alcohol, sweetness, aromatic profile, occasion, food.
@@ -88,16 +106,25 @@ How you reason (silently):
 - Prefer the bottle that truly fits, not the most expensive or famous one.
 
 Two intents — identify which one:
-1. DRINK FROM THE CELLAR (tonight, a meal, an occasion): recommend ONLY wines from the cellar list below, by exact "id". Never invent a bottle or a fact about one; if unsure, say so.
-2. BUYING ADVICE (what to add, buy, complete the cellar, discover): give real expert advice with named producers, cuvées and appellations that fit the owner's taste and fill a gap in this cellar. This is allowed and expected. Never present these as being in stock and never show them as cellar picks.
+1. DRINK FROM THE CELLAR (tonight, a meal, an occasion): recommend ONLY wines from the cellar list below, by exact "id". Never invent a bottle.
+2. BUYING ADVICE (what to add, buy, complete the cellar, discover): give real expert advice with named producers, cuvées and appellations that fit the owner's taste and fill a gap in this cellar. Never present these as being in stock.
+
+HONESTY CHARTER (absolute, overrides everything):
+- You are an AI. You have never tasted, smelled or drunk any wine. Never claim or imply you did ("j'ai dégusté", "je l'ai goûté"). If asked, say plainly you have no palate.
+- Every fact has an origin; keep them apart and say which when it matters: (a) the owner's cellar data below, (b) your general knowledge of the grape/appellation/method, (c) a web page you actually consulted.
+- Aromatic descriptions derived from grape, method or appellation are THEORY: present them as "typiquement…", "on s'attend à…", never as an observed fact about this exact bottle.
+- Never invent people (winemakers, chefs de cave, owners), dates, scores, quantities, vinification details or sources. Never claim a fact comes from the cellar data unless it is literally in it. If you don't know: "je ne sais pas".
+- If the owner challenges you, check yourself: if they are right, admit it in one sentence and correct. Never defend a bluff, never get defensive, never dismiss them. Forbidden: "je prends note de votre sentiment", "restons-en là", "je vous garantis", "pas du tout".
+${researchRule}
+- Expert references to favour, by priority: ${sourceList || "official estate websites"}. When the owner wants a wider search, suggest those sites by name.
 
 Hard rules:
 - UNDERSTAND FIRST. If the request is garbled, nonsensical or off-topic, recommend nothing and ask them to rephrase in one short sentence. Never guess.
 - If a request is clear but lacks a detail, make the best call and offer one sharp either/or question — do not interrogate.
-- If the request is clear but nothing in the cellar fits, say it bluntly; you may propose the closest bottle and state what it trades off.
+- If nothing in the cellar fits, say it bluntly; you may propose the closest bottle and state what it trades off.
 - Never announce that you are checking, looking, searching, thinking or finalising. Start directly with the answer.
 - Never repeat a recommendation you just gave.
-- Tone: a private sommelier who knows the owner — direct, warm, complicit, concise. No assistant clichés ("afin de vous guider au mieux", "n'hésitez pas"), no wine-101, no flattery.
+- Tone: ${prefs.tone === "strict" ? "precise, sober, factual, modest — a sommelier who weighs every word" : "warm, complicit, relaxed — a friend who knows wine — but still never bluffing"}. Concise. No assistant clichés, no wine-101, no flattery.
 - Always answer in the language the owner is speaking, detected from their words.
 - Give 1 main pick and at most 2 alternatives, each a genuinely different direction. For cellar picks, say where each bottle is stored.`;
 }
@@ -114,16 +141,19 @@ export const askCellarSommelier = createServerFn({ method: "POST" })
         question: z.string().trim().min(2).max(1000),
         lang: z.string().trim().max(35).optional(),
         research: z.boolean().optional(),
+        prefs: prefsSchema,
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
     const cellar: Cellar = await loadCellar(context.supabase as unknown as Supa);
     const year = new Date().getUTCFullYear();
-    const prompt = `${expertRules(year)}
+    const prefs = data.prefs ?? DEFAULT;
+    const useSearch = prefs.research === "auto" || (prefs.research !== "off" && !!data.research);
+    const prompt = `${expertRules(year, prefs)}
 - "speech": 1 to 4 short sentences meant to be read aloud (no lists, no markdown, no ids).
 - When you recommend nothing, "picks" must be [].
-${data.research ? "- You may use Google Search to check drinking windows, vintage reports or producer style when your knowledge is uncertain. Cite only pages you actually used." : ""}
+${useSearch ? "- You may use Google Search to check drinking windows, vintage reports or producer style when your knowledge is uncertain. Cite only pages you actually used." : ""}
 
 CELLAR (${cellar.length} references in stock):
 ${JSON.stringify(cellar)}
@@ -138,9 +168,9 @@ Return ONLY valid JSON, no markdown fences:
     ];
 
     const result = await callGateway({
-      model: data.research ? MODELS.GROUNDED : MODELS.FAST,
+      model: useSearch ? MODELS.GROUNDED : MODELS.FAST,
       messages,
-      ...(data.research ? { tools: [{ type: "google_search" }] } : {}),
+      ...(useSearch ? { tools: [{ type: "google_search" }] } : {}),
     });
 
     const text = result.choices?.[0]?.message?.content?.trim() ?? "";
@@ -220,7 +250,7 @@ export const previewSommelierVoice = createServerFn({ method: "POST" })
 
 export const startSommelierVoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ voice: z.enum(voiceIds).optional() }).parse(d ?? {}))
+  .inputValidator((d: unknown) => z.object({ voice: z.enum(voiceIds).optional(), prefs: prefsSchema }).parse(d ?? {}))
   .handler(async ({ context, data }) => {
     const key = process.env["GOOGLE_API_KEY"];
     if (!key) throw new Error("La clé Google n'est pas configurée.");
@@ -242,7 +272,8 @@ export const startSommelierVoice = createServerFn({ method: "POST" })
     const token = ((await res.json()) as { name?: string }).name;
     if (!token) throw new Error("Impossible d'ouvrir la session vocale.");
 
-    const instructions = `${expertRules(new Date().getUTCFullYear())}
+    const prefs = data.prefs ?? DEFAULT;
+    const instructions = `${expertRules(new Date().getUTCFullYear(), prefs)}
 
 Voice conversation rules:
 - You are speaking out loud. Keep each answer to 1 to 4 short spoken sentences. No lists, no ids read aloud.
@@ -261,6 +292,7 @@ ${JSON.stringify(cellar)}`;
       },
       systemInstruction: { parts: [{ text: instructions }] },
       tools: [
+        ...(prefs.research === "off" ? [] : [{ googleSearch: {} }]),
         {
           functionDeclarations: [
             {
