@@ -177,3 +177,88 @@ Return ONLY valid JSON, no markdown fences:
       sources,
     };
   });
+
+export const SOMMELIER_LIVE_MODEL = "gemini-3.8-live-extended-thinking";
+
+/* Voice sommelier: mints a single-use Gemini Live token server-side (the Google
+   key never reaches the browser) and returns the session setup built from the
+   caller's own in-stock cellar. */
+export const startSommelierVoice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const key = process.env["GOOGLE_API_KEY"];
+    if (!key) throw new Error("La clé Google n'est pas configurée.");
+    const cellar = await loadCellar(context.supabase as unknown as Supa);
+    const now = Date.now();
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/auth_tokens", {
+      method: "POST",
+      headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uses: 1,
+        expireTime: new Date(now + 30 * 60_000).toISOString(),
+        newSessionExpireTime: new Date(now + 60_000).toISOString(),
+      }),
+    });
+    if (!res.ok) {
+      console.error("Gemini token error", res.status, await res.text());
+      throw new Error("Impossible d'ouvrir la session vocale.");
+    }
+    const token = ((await res.json()) as { name?: string }).name;
+    if (!token) throw new Error("Impossible d'ouvrir la session vocale.");
+
+    const instructions = `${expertRules(new Date().getUTCFullYear())}
+
+Voice conversation rules:
+- You are speaking out loud. Keep each answer to 1 to 4 short spoken sentences. No lists, no ids read aloud.
+- Whenever you recommend bottles, ALSO call the show_wines tool with their exact ids (main pick first) so they appear on screen. Never call it for an unclear request.
+- Open with one short greeting and ask what they feel like drinking, in French unless the owner speaks another language.
+
+CELLAR (${cellar.length} references in stock):
+${JSON.stringify(cellar)}`;
+
+    const setup = {
+      model: `models/${SOMMELIER_LIVE_MODEL}`,
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        thinkingConfig: { thinkingLevel: "medium" },
+      },
+      systemInstruction: { parts: [{ text: instructions }] },
+      tools: [
+        {
+          functionDeclarations: [
+            {
+              name: "show_wines",
+              description: "Display the recommended cellar bottles on the owner's screen.",
+              behavior: "NON_BLOCKING",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  picks: {
+                    type: "ARRAY",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        id: { type: "STRING", description: "Exact cellar wine id" },
+                        why: { type: "STRING", description: "Max 30 words" },
+                        serve: { type: "STRING", description: "Temperature / decanting, short" },
+                      },
+                      required: ["id", "why"],
+                    },
+                  },
+                },
+                required: ["picks"],
+              },
+            },
+          ],
+        },
+      ],
+      inputAudioTranscription: {},
+      outputAudioTranscription: {},
+    };
+
+    return {
+      token,
+      setup,
+      wines: cellar.map((c) => ({ id: c.id, name: c.name, producer: c.producer, vintage: c.vintage, where: c.where })),
+    };
+  });
