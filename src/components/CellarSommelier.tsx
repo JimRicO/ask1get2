@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mic, MicOff, Send, X, Globe, Loader2 } from "lucide-react";
 import { useNavigate } from "@/lib/router-compat";
-import { askCellarSommelier, startSommelierVoice } from "@/lib/sommelier.functions";
+import { askCellarSommelier, speakSommelier } from "@/lib/sommelier.functions";
 import { getSommelierVoice } from "@/lib/sommelier-voices";
 import { getSommelierPrefs } from "@/lib/sommelier-prefs";
-import { GeminiLiveSession } from "@/lib/gemini-live-client";
 import profileIcon from "@/assets/nav-profile-v2.png.asset.json";
 
 type Pick = {
