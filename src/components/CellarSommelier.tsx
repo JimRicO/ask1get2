@@ -5,7 +5,7 @@ import { useNavigate } from "@/lib/router-compat";
 import { askCellarSommelier, speakSommelier } from "@/lib/sommelier.functions";
 import { getSommelierVoice } from "@/lib/sommelier-voices";
 import { getSommelierPrefs } from "@/lib/sommelier-prefs";
-import { createSpeechTurn } from "@/lib/sommelier-speech-turn";
+import { createSpeechTranscript, createSpeechTurn } from "@/lib/sommelier-speech-turn";
 import profileIcon from "@/assets/nav-profile-v2.png.asset.json";
 
 type Pick = {
@@ -55,7 +55,7 @@ export default function CellarSommelier() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const turnsRef = useRef<Turn[]>([]);
   const speechTurnRef = useRef<ReturnType<typeof createSpeechTurn> | null>(null);
-  const transcriptRef = useRef("");
+  const transcriptRef = useRef(createSpeechTranscript());
   const busyRef = useRef(false);
   turnsRef.current = turns;
 
@@ -82,7 +82,7 @@ export default function CellarSommelier() {
   function stopCapture() {
     speechTurnRef.current?.cancel();
     speechTurnRef.current = null;
-    transcriptRef.current = "";
+    transcriptRef.current.reset();
     const rec = recRef.current;
     recRef.current = null;
     if (rec) {
@@ -110,17 +110,10 @@ export default function CellarSommelier() {
         void send(q, true);
       });
     }
-    const prefix = transcriptRef.current;
+    transcriptRef.current.startSession();
     rec.onspeechstart = () => speechTurnRef.current?.speechStarted();
     rec.onresult = (e: any) => {
-      const parts: string[] = [];
-      let hasInterim = false;
-      for (let i = 0; i < e.results.length; i++) {
-        parts.push(e.results[i][0].transcript);
-        if (!e.results[i].isFinal) hasInterim = true;
-      }
-      const text = [prefix, ...parts].filter(Boolean).join(" ");
-      transcriptRef.current = text;
+      const { text, hasInterim } = transcriptRef.current.update(e.results, e.resultIndex ?? 0);
       setInput(text);
       speechTurnRef.current?.update(text, hasInterim);
     };
