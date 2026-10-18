@@ -5,6 +5,7 @@ import { useNavigate } from "@/lib/router-compat";
 import { askCellarSommelier, speakSommelier } from "@/lib/sommelier.functions";
 import { getSommelierVoice } from "@/lib/sommelier-voices";
 import { getSommelierPrefs } from "@/lib/sommelier-prefs";
+import { createSpeechTurn } from "@/lib/sommelier-speech-turn";
 import profileIcon from "@/assets/nav-profile-v2.png.asset.json";
 
 type Pick = {
@@ -33,7 +34,7 @@ function getRecognizer(): any | null {
   const r = new C();
   r.lang = "fr-FR";
   r.interimResults = true;
-  r.continuous = false;
+  r.continuous = true;
   return r;
 }
 
@@ -53,6 +54,9 @@ export default function CellarSommelier() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const turnsRef = useRef<Turn[]>([]);
+  const speechTurnRef = useRef<ReturnType<typeof createSpeechTurn> | null>(null);
+  const transcriptRef = useRef("");
+  const busyRef = useRef(false);
   turnsRef.current = turns;
 
   useEffect(() => {
@@ -67,8 +71,7 @@ export default function CellarSommelier() {
 
   function stopVoice() {
     voiceOnRef.current = false;
-    try { recRef.current?.abort(); } catch { /* already stopped */ }
-    recRef.current = null;
+    stopCapture();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = "";
@@ -76,8 +79,23 @@ export default function CellarSommelier() {
     setVoice("off");
   }
 
+  function stopCapture() {
+    speechTurnRef.current?.cancel();
+    speechTurnRef.current = null;
+    transcriptRef.current = "";
+    const rec = recRef.current;
+    recRef.current = null;
+    if (rec) {
+      rec.onend = null;
+      rec.onresult = null;
+      rec.onspeechstart = null;
+      rec.onerror = null;
+      try { rec.abort(); } catch { /* already stopped */ }
+    }
+  }
+
   function listen() {
-    if (!voiceOnRef.current) return;
+    if (!voiceOnRef.current || recRef.current || busyRef.current) return;
     const rec = getRecognizer();
     if (!rec) {
       stopVoice();
@@ -85,31 +103,47 @@ export default function CellarSommelier() {
       return;
     }
     recRef.current = rec;
-    let finalText = "";
+    if (!speechTurnRef.current) {
+      speechTurnRef.current = createSpeechTurn((q) => {
+        if (!voiceOnRef.current) return;
+        stopCapture();
+        void send(q, true);
+      });
+    }
+    const prefix = transcriptRef.current;
+    rec.onspeechstart = () => speechTurnRef.current?.speechStarted();
     rec.onresult = (e: any) => {
-      let interim = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) finalText += t;
-        else interim += t;
+      const parts: string[] = [];
+      let hasInterim = false;
+      for (let i = 0; i < e.results.length; i++) {
+        parts.push(e.results[i][0].transcript);
+        if (!e.results[i].isFinal) hasInterim = true;
       }
-      setInput(finalText || interim);
+      const text = [prefix, ...parts].filter(Boolean).join(" ");
+      transcriptRef.current = text;
+      setInput(text);
+      speechTurnRef.current?.update(text, hasInterim);
     };
     rec.onerror = (e: any) => {
-      if (e.error === "not-allowed") {
+      if (e.error === "not-allowed" || e.error === "audio-capture" || e.error === "service-not-allowed") {
         stopVoice();
         setError("Micro refusé. Autorisez le micro dans le navigateur.");
+      } else if (e.error !== "no-speech" && e.error !== "aborted") {
+        stopVoice();
+        setError("L’écoute a été interrompue. Réactivez le micro ou envoyez le texte conservé.");
       }
     };
     rec.onend = () => {
       recRef.current = null;
       if (!voiceOnRef.current) return;
-      const q = finalText.trim();
-      if (q) void send(q, true);
-      else listen(); // silence: keep listening
+      speechTurnRef.current?.ended();
+      listen(); // A browser endpoint is not the end of the user's sentence.
     };
     setVoice("listening");
-    rec.start();
+    try { rec.start(); } catch {
+      stopVoice();
+      setError("Impossible d’activer le micro. Réessayez ou écrivez votre question.");
+    }
   }
 
   async function playAnswer(text: string) {
@@ -143,7 +177,9 @@ export default function CellarSommelier() {
 
   async function send(question: string, spoken = false) {
     const q = question.trim();
-    if (!q || busy) return;
+    if (!q || busyRef.current) return;
+    busyRef.current = true;
+    if (voiceOnRef.current) stopCapture();
     setError(null);
     setInput("");
     const prefs = getSommelierPrefs();
@@ -166,6 +202,7 @@ export default function CellarSommelier() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Le sommelier est indisponible.");
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
     if (spoken) void playAnswer(answer);
@@ -293,7 +330,7 @@ export default function CellarSommelier() {
               style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}
               onSubmit={(e) => {
                 e.preventDefault();
-                void send(input);
+                void send(input, voiceOnRef.current);
               }}
             >
               <button
