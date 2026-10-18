@@ -24,24 +24,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
-      { title: "CellarKey - AI Wine Cellar Management" },
-      {
-        name: "description",
-        content:
-          "Manage your wine collection with AI-powered label recognition. Track, rate, and organize your wines with CellarKey.",
-      },
-      { name: "author", content: "CellarKey" },
       { name: "theme-color", content: "#722F37" },
-      { property: "og:title", content: "CellarKey - AI Wine Cellar Management" },
-      {
-        property: "og:description",
-        content: "Manage your wine collection with AI-powered label recognition",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://lovable.dev/opengraph-image-p98pqg.png" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@lovable_dev" },
-      { name: "twitter:image", content: "https://lovable.dev/opengraph-image-p98pqg.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

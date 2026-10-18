@@ -7,7 +7,7 @@ describe("Profile research preferences", () => {
     expect(shouldResearch({ ...DEFAULT_PREFS, research: "off" }, true)).toBe(false);
   });
   test("Me demander d'abord requires consent", () => {
-    const prefs = { ...DEFAULT_PREFS, research: "ask" as const };
+    const prefs = { ...DEFAULT_PREFS, research: "ask" };
     expect(shouldResearch(prefs)).toBe(false);
     expect(shouldResearch(prefs, true)).toBe(true);
   });
