@@ -1,52 +1,48 @@
-import { afterEach, describe, expect, jest, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { createSpeechTurn, SPEECH_PAUSE_MS } from "./sommelier-speech-turn";
 
-afterEach(() => jest.useRealTimers());
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe("Sommelier microphone turn", () => {
-  test("a browser session ending does not send immediately", () => {
-    jest.useFakeTimers();
+  test("a browser session ending does not send immediately", async () => {
     const sent = [];
     const turn = createSpeechTurn((text) => sent.push(text));
     turn.update("Je voudrais", false);
     turn.ended();
-    jest.advanceTimersByTime(SPEECH_PAUSE_MS - 1);
+    await pause(100);
     expect(sent).toEqual([]);
-    jest.advanceTimersByTime(1);
+    await pause(SPEECH_PAUSE_MS);
     expect(sent).toEqual(["Je voudrais"]);
   });
-  test("continued speech preserves the whole sentence across recognition sessions", () => {
-    jest.useFakeTimers();
+  test("continued speech preserves the whole sentence across recognition sessions", async () => {
     const sent = [];
     const turn = createSpeechTurn((text) => sent.push(text));
     turn.update("Je voudrais", false);
     turn.ended();
-    jest.advanceTimersByTime(1000);
+    await pause(100);
     turn.speechStarted();
-    jest.advanceTimersByTime(3000);
+    await pause(SPEECH_PAUSE_MS + 100);
     expect(sent).toEqual([]);
     turn.update("Je voudrais un rouge léger pour ce soir", false);
-    jest.advanceTimersByTime(SPEECH_PAUSE_MS);
+    await pause(SPEECH_PAUSE_MS + 100);
     expect(sent).toEqual(["Je voudrais un rouge léger pour ce soir"]);
   });
-  test("interim speech cannot trigger a response while still speaking", () => {
-    jest.useFakeTimers();
+  test("interim speech cannot trigger a response while still speaking", async () => {
     const sent = [];
     const turn = createSpeechTurn((text) => sent.push(text));
     turn.update("Un vin", true);
-    jest.advanceTimersByTime(5000);
+    await pause(SPEECH_PAUSE_MS + 100);
     expect(sent).toEqual([]);
     turn.ended();
-    jest.advanceTimersByTime(SPEECH_PAUSE_MS);
+    await pause(SPEECH_PAUSE_MS + 100);
     expect(sent).toEqual(["Un vin"]);
   });
-  test("stopping the microphone cancels a pending response", () => {
-    jest.useFakeTimers();
+  test("stopping the microphone cancels a pending response", async () => {
     const sent = [];
     const turn = createSpeechTurn((text) => sent.push(text));
     turn.update("Un blanc", false);
     turn.cancel();
-    jest.advanceTimersByTime(SPEECH_PAUSE_MS);
+    await pause(SPEECH_PAUSE_MS + 100);
     expect(sent).toEqual([]);
   });
 });
