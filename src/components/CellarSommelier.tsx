@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mic, MicOff, Send, X, Globe, Loader2 } from "lucide-react";
 import { useNavigate } from "@/lib/router-compat";
-import { askCellarSommelier, startSommelierVoice } from "@/lib/sommelier.functions";
+import { askCellarSommelier, speakSommelier } from "@/lib/sommelier.functions";
 import { getSommelierVoice } from "@/lib/sommelier-voices";
 import { getSommelierPrefs } from "@/lib/sommelier-prefs";
-import { GeminiLiveSession } from "@/lib/gemini-live-client";
 import profileIcon from "@/assets/nav-profile-v2.png.asset.json";
 
 type Pick = {
@@ -26,21 +25,35 @@ type Turn = {
   sources?: string[];
 };
 
+/* Browser speech recognition (Chrome, Safari). Typed input remains the fallback. */
+function getRecognizer(): any | null {
+  if (typeof window === "undefined") return null;
+  const C = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+  if (!C) return null;
+  const r = new C();
+  r.lang = "fr-FR";
+  r.interimResults = true;
+  r.continuous = false;
+  return r;
+}
+
 export default function CellarSommelier() {
   const ask = useServerFn(askCellarSommelier);
-  const startVoice = useServerFn(startSommelierVoice);
+  const speak = useServerFn(speakSommelier);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [voice, setVoice] = useState<"off" | "connecting" | "live">("off");
-  const [speaking, setSpeaking] = useState(false);
+  const [voice, setVoice] = useState<"off" | "listening" | "thinking" | "speaking">("off");
   const [research, setResearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const sessionRef = useRef<GeminiLiveSession | null>(null);
-  const liveTurnRef = useRef<{ user: boolean; assistant: boolean }>({ user: false, assistant: false });
+  const voiceOnRef = useRef(false);
+  const recRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const turnsRef = useRef<Turn[]>([]);
+  turnsRef.current = turns;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -50,111 +63,102 @@ export default function CellarSommelier() {
     if (!open) stopVoice();
   }, [open]);
 
-  useEffect(() => () => sessionRef.current?.stop(), []);
-
-  /* Append streamed transcript text to the open live turn of that role. */
-  function appendLive(role: "user" | "assistant", text: string) {
-    const flags = liveTurnRef.current;
-    if (role === "user" && flags.assistant) {
-      flags.assistant = false;
-    }
-    setTurns((prev) => {
-      const last = prev[prev.length - 1];
-      if (flags[role] && last?.role === role) {
-        return [...prev.slice(0, -1), { ...last, content: last.content + text }];
-      }
-      return [...prev, { role, content: text.trimStart() }];
-    });
-    flags[role] = true;
-    if (role === "assistant") flags.user = false;
-  }
-
-  function attachPicks(picks: Pick[]) {
-    setTurns((prev) => {
-      // Attach to the latest assistant turn of the current exchange; never duplicate cards.
-      let idx = -1;
-      for (let i = prev.length - 1; i >= 0; i--) {
-        if (prev[i].role === "user") break;
-        if (prev[i].role === "assistant") { idx = i; break; }
-      }
-      if (idx >= 0) {
-        const t = prev[idx];
-        if (t.picks?.map((p) => p.id).join() === picks.map((p) => p.id).join()) return prev;
-        const next = [...prev];
-        next[idx] = { ...t, picks };
-        return next;
-      }
-      liveTurnRef.current.assistant = true;
-      return [...prev, { role: "assistant", content: "", picks }];
-    });
-  }
+  useEffect(() => () => stopVoice(), []);
 
   function stopVoice() {
-    sessionRef.current?.stop();
-    sessionRef.current = null;
+    voiceOnRef.current = false;
+    try { recRef.current?.abort(); } catch { /* already stopped */ }
+    recRef.current = null;
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
     setVoice("off");
-    setSpeaking(false);
   }
 
-  async function toggleVoice() {
-    if (voice !== "off") return stopVoice();
-    setError(null);
-    setVoice("connecting");
-    const session = new GeminiLiveSession({
-      onReady: () => setVoice("live"),
-      onUserText: (t) => appendLive("user", t),
-      onModelText: (t) => appendLive("assistant", t),
-      onTurnComplete: () => {
-        liveTurnRef.current.user = false;
-      },
-      onSpeaking: setSpeaking,
-      onClose: (reason) => {
-        sessionRef.current = null;
-        setVoice("off");
-        setSpeaking(false);
-        if (reason) setError(/credit|billing|prepay/i.test(reason) ? "Crédits Google AI Studio épuisés : la voix est indisponible." : reason);
-      },
-      onToolCall: () => "ok",
-    });
-    sessionRef.current = session;
-    try {
-      session.prepare(); // must run inside the tap, before any await
-      const { token, setup, wines } = await startVoice({ data: { voice: getSommelierVoice(), prefs: getSommelierPrefs() } });
-      const byId = new Map(wines.map((w) => [w.id, w]));
-      session["ev"].onToolCall = (name, args) => {
-        if (name !== "show_wines") return { error: "unknown tool" };
-        const raw = Array.isArray(args.picks) ? (args.picks as any[]) : [];
-        const picks: Pick[] = raw
-          .filter((p) => p && byId.has(p.id))
-          .slice(0, 3)
-          .map((p, i) => {
-            const w = byId.get(p.id)!;
-            return { id: w.id, role: i === 0 ? "main" : "alternative", why: String(p.why ?? ""), serve: String(p.serve ?? ""), name: w.name, producer: w.producer, vintage: w.vintage, where: w.where };
-          });
-        if (picks.length) attachPicks(picks);
-        return picks.length ? "shown" : { error: "no valid cellar ids" };
-      };
-      await session.start(token, setup);
-    } catch (e) {
+  function listen() {
+    if (!voiceOnRef.current) return;
+    const rec = getRecognizer();
+    if (!rec) {
       stopVoice();
-      setError(e instanceof Error && e.name === "NotAllowedError" ? "Micro refusé. Autorisez le micro dans le navigateur." : e instanceof Error ? e.message : "Session vocale indisponible.");
+      setError("La reconnaissance vocale n'est pas disponible sur ce navigateur. Écrivez votre question.");
+      return;
+    }
+    recRef.current = rec;
+    let finalText = "";
+    rec.onresult = (e: any) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t;
+        else interim += t;
+      }
+      setInput(finalText || interim);
+    };
+    rec.onerror = (e: any) => {
+      if (e.error === "not-allowed") {
+        stopVoice();
+        setError("Micro refusé. Autorisez le micro dans le navigateur.");
+      }
+    };
+    rec.onend = () => {
+      recRef.current = null;
+      if (!voiceOnRef.current) return;
+      const q = finalText.trim();
+      if (q) void send(q, true);
+      else listen(); // silence: keep listening
+    };
+    setVoice("listening");
+    rec.start();
+  }
+
+  async function playAnswer(text: string) {
+    if (!voiceOnRef.current || !text.trim()) return listen();
+    try {
+      const { audio } = await speak({ data: { text: text.slice(0, 1500), voice: getSommelierVoice() } });
+      if (!voiceOnRef.current) return;
+      const el = audioRef.current ?? new Audio();
+      audioRef.current = el;
+      el.src = `data:audio/wav;base64,${audio}`;
+      setVoice("speaking");
+      el.onended = () => listen();
+      await el.play();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Voix indisponible.");
+      listen();
     }
   }
 
-  async function send(question: string) {
+  function toggleVoice() {
+    if (voice !== "off") return stopVoice();
+    setError(null);
+    // Unlock audio playback inside the tap (iOS).
+    const el = audioRef.current ?? new Audio();
+    audioRef.current = el;
+    el.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+    void el.play().catch(() => {});
+    voiceOnRef.current = true;
+    listen();
+  }
+
+  async function send(question: string, spoken = false) {
     const q = question.trim();
     if (!q || busy) return;
     setError(null);
     setInput("");
     const prefs = getSommelierPrefs();
+    const current = turnsRef.current;
     // In "ask" mode, a short yes after the sommelier offered to search triggers the search.
-    const lastA = [...turns].reverse().find((t) => t.role === "assistant")?.content ?? "";
+    const lastA = [...current].reverse().find((t) => t.role === "assistant")?.content ?? "";
     const accepted = prefs.research === "ask" && /recherche|search|chercher/i.test(lastA) && /^(oui|yes|ok|vas-y|go|d'accord|volontiers|cherche)/i.test(q);
-    const history = turns.filter((t) => t.content).map((t) => ({ role: t.role, content: t.content })).slice(-12);
+    const history = current.filter((t) => t.content).map((t) => ({ role: t.role, content: t.content })).slice(-12);
     setTurns((prev) => [...prev, { role: "user", content: q }]);
     setBusy(true);
+    if (spoken) setVoice("thinking");
+    let answer = "";
     try {
       const res = await ask({ data: { history, question: q, research: research || accepted, prefs } });
+      answer = [res.speech, res.question].filter(Boolean).join(" ");
       setTurns((prev) => [
         ...prev,
         { role: "assistant", content: res.speech, picks: res.picks, question: res.question, sources: res.sources },
@@ -164,6 +168,7 @@ export default function CellarSommelier() {
     } finally {
       setBusy(false);
     }
+    if (spoken) void playAnswer(answer);
   }
 
   const suggestions = [
@@ -293,16 +298,16 @@ export default function CellarSommelier() {
             >
               <button
                 type="button"
-                onClick={() => void toggleVoice()}
+                onClick={toggleVoice}
                 aria-label={voice === "off" ? "Parler au sommelier" : "Terminer la conversation"}
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${voice === "live" ? `bg-primary text-primary-foreground ${speaking ? "" : "animate-pulse"}` : "bg-secondary text-primary"}`}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${voice !== "off" ? `bg-primary text-primary-foreground ${voice === "listening" ? "animate-pulse" : ""}` : "bg-secondary text-primary"}`}
               >
-                {voice === "connecting" ? <Loader2 className="h-5 w-5 animate-spin" /> : voice === "live" ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                {voice === "thinking" ? <Loader2 className="h-5 w-5 animate-spin" /> : voice !== "off" ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
               </button>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={voice === "live" ? (speaking ? "Le sommelier parle…" : "Je vous écoute…") : "Un vin léger, un rouge puissant…"}
+                placeholder={voice === "speaking" ? "Le sommelier parle…" : voice === "listening" ? "Je vous écoute…" : voice === "thinking" ? "Le sommelier réfléchit…" : "Un vin léger, un rouge puissant…"}
                 className="h-11 min-w-0 flex-1 rounded-full border border-primary/30 bg-background px-4 text-[15px] text-foreground outline-none focus:border-primary"
               />
               <button
