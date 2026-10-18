@@ -12,6 +12,7 @@ import { Session } from "@supabase/supabase-js";
 import { CaveStickyHeader, Eyebrow, Plate } from "@/components/CaveChrome";
 import { revealDelay } from "@/lib/cave-motion";
 import { formatRack } from "@/lib/rackLabel";
+import CellarSommelier from "@/components/CellarSommelier";
 
 interface WineData {
   id: string;
@@ -856,6 +857,7 @@ const Cellar = () => {
           <img src={cellarSeal.url} alt="Wine & Virtue" className="h-auto w-[240px] rounded-full opacity-95 shadow-[0_18px_30px_-10px_rgba(0,0,0,0.95),0_4px_8px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(0,0,0,0.4)] [filter:drop-shadow(0_2px_1px_rgba(255,225,190,0.08))]" />
         </div>
       </div>
+      <CellarSommelier />
     </Layout>
   );
 };
