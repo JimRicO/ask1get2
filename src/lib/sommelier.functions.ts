@@ -257,7 +257,6 @@ ${JSON.stringify(cellar)}`;
       model: `models/${SOMMELIER_LIVE_MODEL}`,
       generationConfig: {
         responseModalities: ["AUDIO"],
-        thinkingConfig: { thinkingLevel: "minimal" },
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: data.voice ?? DEFAULT_VOICE } } },
       },
       systemInstruction: { parts: [{ text: instructions }] },
