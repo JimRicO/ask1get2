@@ -46,7 +46,57 @@ const turnSchema = z.object({
   content: z.string().max(4000),
 });
 
-/* Cellar sommelier. Recommends only bottles the caller actually has in stock
+type Supa = { from: (t: string) => any };
+
+async function loadCellar(supabase: Supa) {
+  const { data: rows, error } = await supabase
+    .from("wines")
+    .select(
+      "id, wine_name, producer, vintage_year, wine_type, country, region, appellation, grape_varietals, alcohol_content, current_stock, optimal_drinking_window, ai_tasting_notes, description, domain_description, notes, storage_location, storage_locations",
+    )
+    .gt("current_stock", 0)
+    .limit(300);
+  if (error) throw new Error(error.message);
+  return ((rows ?? []) as any[]).map((w) => ({
+    id: w.id as string,
+    name: w.wine_name as string,
+    producer: w.producer as string | null,
+    vintage: w.vintage_year as number | null,
+    type: w.wine_type as string | null,
+    origin: [w.appellation, w.region, w.country].filter(Boolean).join(", ") || null,
+    grapes: grapes(w.grape_varietals),
+    abv: w.alcohol_content,
+    bottles: w.current_stock as number,
+    drinking_window: w.optimal_drinking_window,
+    tasting: (w.ai_tasting_notes ?? "").slice(0, 400) || null,
+    description: (w.description ?? "").slice(0, 500) || null,
+    estate: (w.domain_description ?? "").slice(0, 250) || null,
+    notes: (w.notes ?? "").slice(0, 200) || null,
+    where: locations(w),
+  }));
+}
+
+type Cellar = Awaited<ReturnType<typeof loadCellar>>;
+
+function expertRules(year: number) {
+  return `You are the private head sommelier of this cellar, a Master Sommelier with deep oenological knowledge: appellations, grape structure, producers' house styles, vintage quality, ageing curves, service temperature and food pairing. It is ${year}.
+
+How you reason (silently):
+- Translate the request into structure: body, tannin, acidity, alcohol, sweetness, aromatic profile, occasion, food.
+- Judge each candidate with real knowledge of its appellation, grapes, producer and vintage, plus the data given. Judge maturity: too young, in its window, at peak, or past it.
+- Prefer the bottle that truly fits, not the most expensive or famous one.
+
+Hard rules:
+- Recommend ONLY wines from the cellar list below, by exact "id". Never invent a bottle or a fact about one; if unsure, say so.
+- UNDERSTAND FIRST. If the request is unclear, garbled, nonsensical, off-topic, or you are not confident what the owner wants, recommend NOTHING. Say plainly you did not understand and ask them to rephrase. Never guess an interpretation, never "assume" what they meant, never offer a fallback bottle to an unclear request.
+- If the request is clear but nothing in the cellar fits, say it bluntly; you may then propose the closest bottle and state what it trades off.
+- If the owner names something not in the cellar, say it is not there. Do not pivot to an unrelated suggestion unless asked.
+- No filler, no wine-101, no flattery. Precise and concrete, like a knowledgeable friend.
+- Always answer in the language the owner is speaking, detected from their words.
+- Give 1 main pick and at most 2 alternatives, each a genuinely different direction. Say where each bottle is stored.`;
+}
+
+/* Cellar sommelier (text). Recommends only bottles the caller actually has in stock
    (RLS scopes the read). research=true enables Google Search grounding for
    questions about drinking windows, vintages or producers it is unsure of. */
 export const askCellarSommelier = createServerFn({ method: "POST" })
@@ -62,53 +112,12 @@ export const askCellarSommelier = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { data: rows, error } = await context.supabase
-      .from("wines")
-      .select(
-        "id, wine_name, producer, vintage_year, wine_type, country, region, appellation, grape_varietals, alcohol_content, current_stock, optimal_drinking_window, ai_tasting_notes, description, domain_description, notes, storage_location, storage_locations",
-      )
-      .gt("current_stock", 0)
-      .limit(300);
-    if (error) throw new Error(error.message);
-
-    const cellar = (rows ?? []).map((w) => ({
-      id: w.id,
-      name: w.wine_name,
-      producer: w.producer,
-      vintage: w.vintage_year,
-      type: w.wine_type,
-      origin: [w.appellation, w.region, w.country].filter(Boolean).join(", ") || null,
-      grapes: grapes(w.grape_varietals),
-      abv: w.alcohol_content,
-      bottles: w.current_stock,
-      drinking_window: w.optimal_drinking_window,
-      tasting: (w.ai_tasting_notes ?? "").slice(0, 400) || null,
-      description: (w.description ?? "").slice(0, 500) || null,
-      estate: (w.domain_description ?? "").slice(0, 250) || null,
-      notes: (w.notes ?? "").slice(0, 200) || null,
-      where: locations(w),
-    }));
-
+    const cellar: Cellar = await loadCellar(context.supabase as unknown as Supa);
     const year = new Date().getUTCFullYear();
-    const prompt = `You are the private head sommelier of this cellar, a Master Sommelier with deep oenological knowledge: appellations, grape structure, producers' house styles, vintage quality, ageing curves, service temperature and food pairing.
-
-Your job: answer the owner's request and recommend bottles FROM THIS CELLAR ONLY (JSON below). It is ${year}.
-
-How you reason (silently):
-- Translate the request into structure: body, tannin, acidity, alcohol, sweetness, aromatic profile, occasion, food.
-- Judge each candidate with real knowledge of its appellation, grapes, producer and vintage, plus the data given. Judge maturity: too young, in its window, at peak, or past it.
-- Prefer the bottle that truly fits, not the most expensive or famous one.
-
-Hard rules:
-- Never recommend a wine that is not in the cellar list. Use its exact "id".
-- Never invent facts about a bottle. If you are unsure, say so briefly.
-- If nothing in the cellar fits, say it bluntly and give the closest fallback with what it trades off.
-- No filler, no generic wine-101 talk, no flattery. Be precise and concrete, like speaking to a knowledgeable friend.
-- If the request is ambiguous, recommend anyway and ask ONE short question to refine.
-- "speech": 1 to 4 short sentences meant to be read aloud (no lists, no markdown, no ids). Name the wine naturally and say where it is stored.
-- Give 1 main pick and at most 2 alternatives, each a genuinely different direction.
+    const prompt = `${expertRules(year)}
+- "speech": 1 to 4 short sentences meant to be read aloud (no lists, no markdown, no ids).
+- When you recommend nothing, "picks" must be [].
 ${data.research ? "- You may use Google Search to check drinking windows, vintage reports or producer style when your knowledge is uncertain. Cite only pages you actually used." : ""}
-${data.lang ? `- Answer in the language with BCP 47 code "${data.lang}" unless the user writes in another language; then follow the user.` : "- Answer in the user's language."}
 
 CELLAR (${cellar.length} references in stock):
 ${JSON.stringify(cellar)}
@@ -166,5 +175,90 @@ Return ONLY valid JSON, no markdown fences:
       question: typeof parsed?.question === "string" ? parsed.question : "",
       picks,
       sources,
+    };
+  });
+
+export const SOMMELIER_LIVE_MODEL = "gemini-3.8-live-extended-thinking";
+
+/* Voice sommelier: mints a single-use Gemini Live token server-side (the Google
+   key never reaches the browser) and returns the session setup built from the
+   caller's own in-stock cellar. */
+export const startSommelierVoice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const key = process.env["GOOGLE_API_KEY"];
+    if (!key) throw new Error("La clé Google n'est pas configurée.");
+    const cellar = await loadCellar(context.supabase as unknown as Supa);
+    const now = Date.now();
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/auth_tokens", {
+      method: "POST",
+      headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uses: 1,
+        expireTime: new Date(now + 30 * 60_000).toISOString(),
+        newSessionExpireTime: new Date(now + 60_000).toISOString(),
+      }),
+    });
+    if (!res.ok) {
+      console.error("Gemini token error", res.status, await res.text());
+      throw new Error("Impossible d'ouvrir la session vocale.");
+    }
+    const token = ((await res.json()) as { name?: string }).name;
+    if (!token) throw new Error("Impossible d'ouvrir la session vocale.");
+
+    const instructions = `${expertRules(new Date().getUTCFullYear())}
+
+Voice conversation rules:
+- You are speaking out loud. Keep each answer to 1 to 4 short spoken sentences. No lists, no ids read aloud.
+- Whenever you recommend bottles, ALSO call the show_wines tool with their exact ids (main pick first) so they appear on screen. Never call it for an unclear request.
+- Open with one short greeting and ask what they feel like drinking, in French unless the owner speaks another language.
+
+CELLAR (${cellar.length} references in stock):
+${JSON.stringify(cellar)}`;
+
+    const setup = {
+      model: `models/${SOMMELIER_LIVE_MODEL}`,
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        thinkingConfig: { thinkingLevel: "medium" },
+      },
+      systemInstruction: { parts: [{ text: instructions }] },
+      tools: [
+        {
+          functionDeclarations: [
+            {
+              name: "show_wines",
+              description: "Display the recommended cellar bottles on the owner's screen.",
+              behavior: "NON_BLOCKING",
+              parameters: {
+                type: "OBJECT",
+                properties: {
+                  picks: {
+                    type: "ARRAY",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        id: { type: "STRING", description: "Exact cellar wine id" },
+                        why: { type: "STRING", description: "Max 30 words" },
+                        serve: { type: "STRING", description: "Temperature / decanting, short" },
+                      },
+                      required: ["id", "why"],
+                    },
+                  },
+                },
+                required: ["picks"],
+              },
+            },
+          ],
+        },
+      ],
+      inputAudioTranscription: {},
+      outputAudioTranscription: {},
+    };
+
+    return {
+      token,
+      setup,
+      wines: cellar.map((c) => ({ id: c.id, name: c.name, producer: c.producer, vintage: c.vintage, where: c.where })),
     };
   });
