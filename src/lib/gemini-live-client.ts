@@ -48,14 +48,21 @@ export class GeminiLiveSession {
 
   constructor(private ev: LiveEvents) {}
 
-  async start(token: string, setup: unknown) {
-    // Audio contexts must be created inside the user's tap.
+  /** Call synchronously inside the user's tap (iOS unlocks audio only there). */
+  prepare() {
     this.outCtx = new AudioContext({ sampleRate: 24000 });
     this.micCtx = new AudioContext();
-    await Promise.all([this.outCtx.resume(), this.micCtx.resume()]);
-    this.stream = await navigator.mediaDevices.getUserMedia({
+    void this.outCtx.resume();
+    void this.micCtx.resume();
+    this.micP = navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
+  }
+  private micP: Promise<MediaStream> | null = null;
+
+  async start(token: string, setup: unknown) {
+    if (!this.micP) this.prepare();
+    this.stream = await this.micP!;
 
     const ws = new WebSocket(`${WS_URL}?access_token=${encodeURIComponent(token)}`);
     this.ws = ws;

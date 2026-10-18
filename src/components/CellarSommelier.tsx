@@ -107,9 +107,8 @@ export default function CellarSommelier() {
     });
     sessionRef.current = session;
     try {
-      // Mic/audio must start inside the tap; token fetch runs in parallel.
-      const tokenP = startVoice();
-      const { token, setup, wines } = await tokenP;
+      session.prepare(); // must run inside the tap, before any await
+      const { token, setup, wines } = await startVoice();
       const byId = new Map(wines.map((w) => [w.id, w]));
       session["ev"].onToolCall = (name, args) => {
         if (name !== "show_wines") return { error: "unknown tool" };
