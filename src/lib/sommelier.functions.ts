@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { callGateway } from "./wine-ai.functions";
 import { MODELS } from "./ai-models";
 import { SOMMELIER_VOICES, DEFAULT_VOICE } from "./sommelier-voices";
+import { EXPERT_SOURCES, type ExpertSourceId } from "./sommelier-prefs";
 
 type Json = Record<string, unknown>;
 
@@ -140,16 +141,19 @@ export const askCellarSommelier = createServerFn({ method: "POST" })
         question: z.string().trim().min(2).max(1000),
         lang: z.string().trim().max(35).optional(),
         research: z.boolean().optional(),
+        prefs: prefsSchema,
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
     const cellar: Cellar = await loadCellar(context.supabase as unknown as Supa);
     const year = new Date().getUTCFullYear();
-    const prompt = `${expertRules(year)}
+    const prefs = data.prefs ?? DEFAULT;
+    const useSearch = prefs.research === "auto" || (prefs.research !== "off" && !!data.research);
+    const prompt = `${expertRules(year, prefs)}
 - "speech": 1 to 4 short sentences meant to be read aloud (no lists, no markdown, no ids).
 - When you recommend nothing, "picks" must be [].
-${data.research ? "- You may use Google Search to check drinking windows, vintage reports or producer style when your knowledge is uncertain. Cite only pages you actually used." : ""}
+${useSearch ? "- You may use Google Search to check drinking windows, vintage reports or producer style when your knowledge is uncertain. Cite only pages you actually used." : ""}
 
 CELLAR (${cellar.length} references in stock):
 ${JSON.stringify(cellar)}
@@ -164,9 +168,9 @@ Return ONLY valid JSON, no markdown fences:
     ];
 
     const result = await callGateway({
-      model: data.research ? MODELS.GROUNDED : MODELS.FAST,
+      model: useSearch ? MODELS.GROUNDED : MODELS.FAST,
       messages,
-      ...(data.research ? { tools: [{ type: "google_search" }] } : {}),
+      ...(useSearch ? { tools: [{ type: "google_search" }] } : {}),
     });
 
     const text = result.choices?.[0]?.message?.content?.trim() ?? "";
@@ -246,7 +250,7 @@ export const previewSommelierVoice = createServerFn({ method: "POST" })
 
 export const startSommelierVoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ voice: z.enum(voiceIds).optional() }).parse(d ?? {}))
+  .inputValidator((d: unknown) => z.object({ voice: z.enum(voiceIds).optional(), prefs: prefsSchema }).parse(d ?? {}))
   .handler(async ({ context, data }) => {
     const key = process.env["GOOGLE_API_KEY"];
     if (!key) throw new Error("La clé Google n'est pas configurée.");
@@ -268,7 +272,8 @@ export const startSommelierVoice = createServerFn({ method: "POST" })
     const token = ((await res.json()) as { name?: string }).name;
     if (!token) throw new Error("Impossible d'ouvrir la session vocale.");
 
-    const instructions = `${expertRules(new Date().getUTCFullYear())}
+    const prefs = data.prefs ?? DEFAULT;
+    const instructions = `${expertRules(new Date().getUTCFullYear(), prefs)}
 
 Voice conversation rules:
 - You are speaking out loud. Keep each answer to 1 to 4 short spoken sentences. No lists, no ids read aloud.
@@ -287,6 +292,7 @@ ${JSON.stringify(cellar)}`;
       },
       systemInstruction: { parts: [{ text: instructions }] },
       tools: [
+        ...(prefs.research === "off" ? [] : [{ googleSearch: {} }]),
         {
           functionDeclarations: [
             {
