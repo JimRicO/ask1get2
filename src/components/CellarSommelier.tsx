@@ -6,6 +6,7 @@ import { askCellarSommelier, speakSommelier } from "@/lib/sommelier.functions";
 import { getSommelierVoice } from "@/lib/sommelier-voices";
 import { getSommelierPrefs } from "@/lib/sommelier-prefs";
 import { createSpeechTranscript, createSpeechTurn } from "@/lib/sommelier-speech-turn";
+import { supabase } from "@/integrations/supabase/client";
 import profileIcon from "@/assets/nav-profile-v2.png.asset.json";
 
 type Pick = {
@@ -58,6 +59,21 @@ export default function CellarSommelier() {
   const transcriptRef = useRef(createSpeechTranscript());
   const busyRef = useRef(false);
   turnsRef.current = turns;
+  const convoIdRef = useRef<string | null>(null);
+
+  // Persist each conversation so it can be consulted later.
+  useEffect(() => {
+    if (turns.length === 0 || busy) return;
+    const payload = JSON.parse(JSON.stringify(turns));
+    (async () => {
+      if (convoIdRef.current) {
+        await supabase.from("sommelier_conversations").update({ turns: payload }).eq("id", convoIdRef.current);
+      } else {
+        const { data } = await supabase.from("sommelier_conversations").insert({ turns: payload }).select("id").single();
+        if (data) convoIdRef.current = data.id;
+      }
+    })().catch(() => {});
+  }, [turns, busy]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -214,8 +230,7 @@ export default function CellarSommelier() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Demander au sommelier"
-        className="fixed right-4 z-40 flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/70 bg-card shadow-[0_10px_24px_-6px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,220,180,0.25)] transition-transform active:scale-95"
-        style={{ bottom: "calc(100px + env(safe-area-inset-bottom))" }}
+        className="sommelier-float fixed left-0 top-0 z-40 flex h-16 w-16 items-center justify-center rounded-full border-2 border-primary/70 bg-card shadow-[0_10px_24px_-6px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,220,180,0.25)]"
       >
         <img src={profileIcon.url} alt="" className="h-10 w-10 object-contain" />
       </button>

@@ -89,8 +89,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sommelier_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          turns: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          turns?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          turns?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasting_notes: {
         Row: {
+          audio_path: string | null
           created_at: string | null
           food_pairing: string | null
           id: string
@@ -98,10 +123,12 @@ export type Database = {
           occasion: string | null
           rating: number | null
           tasting_date: string | null
+          transcript: string | null
           user_id: string
           wine_id: string
         }
         Insert: {
+          audio_path?: string | null
           created_at?: string | null
           food_pairing?: string | null
           id?: string
@@ -109,10 +136,12 @@ export type Database = {
           occasion?: string | null
           rating?: number | null
           tasting_date?: string | null
+          transcript?: string | null
           user_id: string
           wine_id: string
         }
         Update: {
+          audio_path?: string | null
           created_at?: string | null
           food_pairing?: string | null
           id?: string
@@ -120,6 +149,7 @@ export type Database = {
           occasion?: string | null
           rating?: number | null
           tasting_date?: string | null
+          transcript?: string | null
           user_id?: string
           wine_id?: string
         }

@@ -616,3 +616,25 @@
   margin-top: 6px;
   & em { font-style: italic; color: #F4A871; }
 }
+
+/* Sommelier badge: slow, permanent drift across the viewport (above the bottom rail). */
+@keyframes sommelier-drift {
+  0%   { transform: translate(calc(100vw - 84px), calc(100vh - 200px)); }
+  20%  { transform: translate(18vw, 62vh); }
+  40%  { transform: translate(8vw, 22vh); }
+  60%  { transform: translate(58vw, 12vh); }
+  80%  { transform: translate(calc(100vw - 96px), 42vh); }
+  100% { transform: translate(calc(100vw - 84px), calc(100vh - 200px)); }
+}
+@keyframes sommelier-bob {
+  0%, 100% { scale: 1; }
+  50% { scale: 1.06; }
+}
+.sommelier-float {
+  animation: sommelier-drift 70s ease-in-out infinite, sommelier-bob 4s ease-in-out infinite;
+  will-change: transform;
+}
+.sommelier-float:active { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .sommelier-float { animation: sommelier-bob 4s ease-in-out infinite; transform: translate(calc(100vw - 84px), calc(100vh - 200px)); }
+}
