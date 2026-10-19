@@ -274,6 +274,8 @@ const WineDetail = () => {
       setConsumeDialogOpen(false);
       setRating(5);
       setNotes("");
+      setNoteAudio(null);
+      setNoteTranscript("");
       setOccasion("");
       setFoodPairing("");
       fetchWine();
