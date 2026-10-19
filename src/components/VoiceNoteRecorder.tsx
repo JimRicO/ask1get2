@@ -114,3 +114,18 @@ export default function VoiceNoteRecorder({
     </div>
   );
 }
+
+/* Plays a stored tasting-note recording from the private bucket. */
+export function StoredNoteAudio({ path }: { path: string }) {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    import("@/integrations/supabase/client").then(({ supabase }) =>
+      supabase.storage.from("tasting-audio").createSignedUrl(path, 3600).then(({ data }) => {
+        if (live && data?.signedUrl) setSrc(data.signedUrl);
+      }),
+    );
+    return () => { live = false; };
+  }, [path]);
+  return src ? <audio controls src={src} className="mt-2 w-full" /> : null;
+}

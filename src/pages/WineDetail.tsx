@@ -1,5 +1,6 @@
 import { formatRack, sameLocation, sameRack } from "@/lib/rackLabel";
 import { BinIcon } from "@/components/BinIcon";
+import VoiceNoteRecorder, { StoredNoteAudio } from "@/components/VoiceNoteRecorder";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +65,8 @@ interface TastingNote {
   notes: string | null;
   occasion: string | null;
   food_pairing: string | null;
+  audio_path?: string | null;
+  transcript?: string | null;
 }
 const WineDetail = () => {
   const {
@@ -83,6 +86,8 @@ const WineDetail = () => {
   const [newStock, setNewStock] = useState(0);
   const [rating, setRating] = useState(5);
   const [notes, setNotes] = useState("");
+  const [noteAudio, setNoteAudio] = useState<Blob | null>(null);
+  const [noteTranscript, setNoteTranscript] = useState("");
   const [occasion, setOccasion] = useState("");
   const [foodPairing, setFoodPairing] = useState("");
   const [processingBackground, setProcessingBackground] = useState(false);
@@ -226,16 +231,27 @@ const WineDetail = () => {
   const handleConsume = async () => {
     if (!wine) return;
     try {
+      const userId = (await supabase.auth.getUser()).data.user?.id ?? "";
+      let audioPath: string | null = null;
+      if (noteAudio) {
+        const ext = noteAudio.type.includes("mp4") ? "m4a" : "webm";
+        const path = `${userId}/${wine.id}_${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("tasting-audio").upload(path, noteAudio, { contentType: noteAudio.type });
+        if (upErr) throw upErr;
+        audioPath = path;
+      }
       // Add tasting note
       const {
         error: noteError
       } = await supabase.from("tasting_notes").insert({
         wine_id: wine.id,
-        user_id: (await supabase.auth.getUser()).data.user?.id ?? "",
+        user_id: userId,
         rating,
         notes: notes || null,
         occasion: occasion || null,
-        food_pairing: foodPairing || null
+        food_pairing: foodPairing || null,
+        audio_path: audioPath,
+        transcript: noteTranscript || null
       });
       if (noteError) throw noteError;
 
@@ -917,6 +933,10 @@ const WineDetail = () => {
                       </span>
                     </div>
                     {note.notes && <p className="mt-2 max-w-[70ch] text-[15px] leading-[1.6] text-foreground">{note.notes}</p>}
+                    {note.transcript && note.transcript !== note.notes && (
+                      <p className="mt-2 max-w-[70ch] text-[13px] italic leading-[1.5] text-muted-foreground">« {note.transcript} »</p>
+                    )}
+                    {note.audio_path && <StoredNoteAudio path={note.audio_path} />}
                     {(note.occasion || note.food_pairing) && (
                       <p className="mt-2 font-mono text-[10px] tracking-[0.05em] text-muted-foreground">
                         {[note.occasion, note.food_pairing].filter(Boolean).join(" · ")}
@@ -969,6 +989,7 @@ const WineDetail = () => {
 
               <div className="mt-6">
                 <Eyebrow>Tasting notes</Eyebrow>
+                <VoiceNoteRecorder onAudio={setNoteAudio} onTranscript={t => { setNoteTranscript(t); setNotes(t); }} />
                 <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe the flavors, aromas..." className="mt-2 bg-background" />
               </div>
               <div className="mt-5">
