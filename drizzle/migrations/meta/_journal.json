@@ -22,6 +22,13 @@
       "when": 1792125407531,
       "tag": "0002_domain_sources",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792372316709,
+      "tag": "0003_tasting_audio_and_sommelier_history",
+      "breakpoints": true
     }
   ]
 }

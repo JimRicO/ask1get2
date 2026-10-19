@@ -4,3 +4,6 @@
 - [x] Verify typecheck, build, and upload previews
 - [x] Strengthen shared text/voice sommelier reasoning with explicit evidence and uncertainty rules
 - [x] Verify an authenticated cellar conversation; voice not exercised and model compliance remains imperfect
+- [ ] Voice recording for tasting notes (keep audio + transcript)
+- [ ] Store sommelier conversations
+- [ ] Floating, slowly drifting sommelier badge
