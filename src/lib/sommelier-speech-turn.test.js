@@ -86,3 +86,22 @@ describe("Sommelier microphone turn", () => {
     expect(sent).toEqual([]);
   });
 });
+import { createSpeechTranscript as cst } from "./sommelier-speech-turn.ts";
+import { test as t2, expect as e2 } from "bun:test";
+const r = (s, f = false) => ({ 0: { transcript: s }, isFinal: f });
+t2("Android cumulative hypotheses at new indices collapse to one sentence", () => {
+  const tr = cst(); tr.startSession();
+  const frags = ["non", "non tu", "non tu en", "non tu en penses", "non tu en penses quoi du Cap Nord"];
+  const res = frags.map((f) => r(f, true));
+  e2(tr.update(res, 0).text).toBe("non tu en penses quoi du Cap Nord");
+});
+t2("results beyond resultIndex are read without crashing", () => {
+  const tr = cst(); tr.startSession();
+  e2(tr.update([r("bonjour", true), r("un vin")], 1).text).toBe("bonjour un vin");
+});
+t2("restart overlapping the previous tail is not duplicated", () => {
+  const tr = cst(); tr.startSession();
+  tr.update([r("je voudrais un rouge", true)], 0);
+  tr.startSession();
+  e2(tr.update([r("rouge léger pour ce soir")], 0).text).toBe("je voudrais un rouge léger pour ce soir");
+});

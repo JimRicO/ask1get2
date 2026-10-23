@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, Square, RotateCcw } from "lucide-react";
+import { createSpeechTranscript } from "@/lib/sommelier-speech-turn";
 
 /* Records the spoken tasting note (audio kept) while the browser transcribes it live. */
 export default function VoiceNoteRecorder({
@@ -16,7 +17,7 @@ export default function VoiceNoteRecorder({
   const mediaRef = useRef<MediaRecorder | null>(null);
   const recRef = useRef<any>(null);
   const timerRef = useRef<number | null>(null);
-  const finalRef = useRef("");
+  const transcriptRef = useRef(createSpeechTranscript());
 
   useEffect(() => () => stop(), []);
   useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
@@ -39,26 +40,20 @@ export default function VoiceNoteRecorder({
       mediaRef.current = mr;
 
       const C = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
-      finalRef.current = "";
+      transcriptRef.current.reset();
+      transcriptRef.current.startSession();
       if (C) {
         const rec = new C();
         rec.lang = navigator.language || "fr-FR";
         rec.continuous = true;
         rec.interimResults = true;
         rec.onresult = (e: any) => {
-          let finals = "";
-          let interim = "";
-          for (let i = 0; i < e.results.length; i++) {
-            const t = e.results[i][0].transcript;
-            if (e.results[i].isFinal) finals += t + " ";
-            else interim += t;
-          }
-          onTranscript((finalRef.current + finals + interim).trim());
-          if (!interim) finalRef.current = finalRef.current; // keep
+          onTranscript(transcriptRef.current.update(e.results, e.resultIndex ?? 0).text);
         };
         rec.onend = () => {
           // Browsers end sessions on pauses; restart while still recording.
           if (mediaRef.current?.state === "recording") {
+            transcriptRef.current.startSession();
             try { rec.start(); } catch { /* ignore */ }
           }
         };
