@@ -15,6 +15,7 @@ import { CaveStickyHeader, Eyebrow, Plate } from "@/components/CaveChrome";
 import { revealDelay } from "@/lib/cave-motion";
 import { formatRack, sameRack } from "@/lib/rackLabel";
 import CellarSommelier from "@/components/CellarSommelier";
+import { LocationEditor } from "@/components/LocationEditor";
 
 interface WineData {
   id: string;
@@ -158,6 +159,7 @@ const Cellar = () => {
   const [openGroup, setOpenGroup] = useState<string | null>("type");
   // A preview without leaving the list. Opening the bottle page stays primary.
   const [openRow, setOpenRow] = useState<string | null>(null);
+  const [editingLoc, setEditingLoc] = useState<WineData | null>(null);
   const [pendingArchive, setPendingArchive] = useState<{
     wine: WineData;
     locations: NonNullable<WineData["storage_locations"]>;
@@ -841,9 +843,19 @@ const Cellar = () => {
                                   })
                                   .join(" · ")
                               : wine.storage_location;
-                            return text ? (
-                              <p className="mt-1 font-mono text-[10px] tracking-[0.05em] text-wine-champagne/80">{text}</p>
-                            ) : null;
+                            return (
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                aria-label="Edit location"
+                                onClick={(e) => { e.stopPropagation(); setEditingLoc(wine); }}
+                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); setEditingLoc(wine); } }}
+                                className="mt-1 inline-flex items-center gap-1 rounded-sm font-mono text-[10px] tracking-[0.05em] text-wine-champagne/80 underline decoration-dotted underline-offset-2 hover:text-primary"
+                              >
+                                <Pencil aria-hidden="true" className="h-2.5 w-2.5" />
+                                {text || "+ Add location"}
+                              </span>
+                            );
                           })()}
                         </div>
 
@@ -926,6 +938,20 @@ const Cellar = () => {
         </div>
       </div>
       <CellarSommelier />
+      <LocationEditor
+        open={editingLoc !== null}
+        wineName={editingLoc?.wine_name ?? ""}
+        initial={(editingLoc?.storage_locations ?? []).filter((l) => l.location?.trim()).length
+          ? (editingLoc?.storage_locations ?? []).filter((l) => l.location?.trim())
+          : editingLoc?.storage_location ? [{ location: editingLoc.storage_location, quantity: Math.max(1, editingLoc.current_stock ?? 1) }] : []}
+        fallbackQty={editingLoc?.current_stock ?? 1}
+        knownLocations={Array.from(new Set(wines.flatMap((w) => [...(w.storage_locations ?? []).map((l) => l.location?.trim()), w.storage_location?.trim()]).filter((l): l is string => !!l)))}
+        onClose={() => setEditingLoc(null)}
+        onSave={(locs) => {
+          const w = editingLoc; setEditingLoc(null);
+          if (w) void saveStock(w, locs.reduce((n, l) => n + l.quantity, 0), locs);
+        }}
+      />
       <AlertDialog open={pendingArchive !== null} onOpenChange={(open) => { if (!open) setPendingArchive(null); }}>
         <AlertDialogContent className="w-[calc(100%-2rem)] max-w-md rounded-md border-primary/40 bg-popover text-popover-foreground">
           <AlertDialogHeader className="text-left">
