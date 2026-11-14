@@ -10,6 +10,7 @@ import { removeWineBackground, describeWine } from "@/lib/wine-ai.functions";
 import Layout from "@/components/Layout";
 import { CaveStickyHeader, CaveSheet, Eyebrow, Plate } from "@/components/CaveChrome";
 import { Button } from "@/components/ui/button";
+import { QuantityField } from "@/components/QuantityField";
 import { ArrowLeft, Wine, MapPin, Calendar, Percent, DollarSign, Edit, Plus, Sparkles, Upload, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -1022,7 +1023,7 @@ const WineDetail = () => {
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <Label className="text-foreground">Number of Bottles</Label>
-                  <Input type="number" min="0" value={newStock} onChange={e => setNewStock(parseInt(e.target.value) || 0)} className="bg-card border-border text-foreground" />
+                  <QuantityField value={newStock} min={0} onChange={setNewStock} />
                 </div>
                 <Button onClick={handleUpdateStock} className="w-full bg-primary hover:opacity-90">
                   Update Stock
@@ -1515,13 +1516,7 @@ const WineDetail = () => {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground">Quantity</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={newLocation.quantity}
-                    onChange={e => setNewLocation({ ...newLocation, quantity: parseInt(e.target.value) || 1 })}
-                    className="bg-card border-border text-foreground"
-                  />
+                  <QuantityField value={newLocation.quantity} onChange={n => setNewLocation(prev => ({ ...prev, quantity: n }))} />
                 </div>
                 <div className="flex gap-2">
                   <Button 
