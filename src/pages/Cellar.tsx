@@ -1,3 +1,4 @@
+import React from "react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@/lib/router-compat";
@@ -11,7 +12,7 @@ import { normalizeGrape } from "@/lib/normalizeGrape";
 import { Session } from "@supabase/supabase-js";
 import { CaveStickyHeader, Eyebrow, Plate } from "@/components/CaveChrome";
 import { revealDelay } from "@/lib/cave-motion";
-import { formatRack } from "@/lib/rackLabel";
+import { formatRack, sameRack } from "@/lib/rackLabel";
 import CellarSommelier from "@/components/CellarSommelier";
 
 interface WineData {
@@ -72,7 +73,9 @@ const FilterGroup = ({
   open,
   onToggle,
   total,
+  nested,
 }: {
+  nested?: React.ReactNode;
   label: string;
   value: string;
   total: { ref: number; btls: number };
@@ -106,8 +109,8 @@ const FilterGroup = ({
             (o) => {
               const selected = value === o.value;
               return (
+                <React.Fragment key={o.value}>
                 <button
-                  key={o.value}
                   type="button"
                   onClick={() => onPick(o.value)}
                   className={`grid w-full grid-cols-[1fr_2rem_2rem] items-baseline gap-2 border-t border-muted py-2 text-left transition-[color,padding] duration-[320ms] ease-[var(--ease-cave)] ${
@@ -118,6 +121,8 @@ const FilterGroup = ({
                   <span className="text-right font-mono text-[11px] tabular-nums text-muted-foreground">{o.count.ref}</span>
                   <span className="text-right font-mono text-[11px] tabular-nums text-muted-foreground">{o.count.btls}</span>
                 </button>
+                {selected && o.value !== "all" && nested}
+                </React.Fragment>
               );
             },
           )}
@@ -146,6 +151,7 @@ const Cellar = () => {
   const [filterGrape, setFilterGrape] = useState<string>("all");
   const [filterCountry, setFilterCountry] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
+  const [filterRack, setFilterRack] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [showArchive, setShowArchive] = useState<boolean>(false);
   const [openGroup, setOpenGroup] = useState<string | null>("type");
@@ -258,7 +264,7 @@ const Cellar = () => {
     const locs = [...(wine.storage_locations ?? [])];
     let next: number;
     if (locs.length > 0) {
-      let i = filterLocation !== "all" ? locs.findIndex((l) => l.location === filterLocation) : -1;
+      let i = filterLocation !== "all" ? locs.findIndex((l) => l.location === filterLocation && (filterRack === "all" || sameRack(l.rack, filterRack))) : -1;
       if (i < 0) i = delta < 0 ? locs.findIndex((l) => l.quantity > 0) : 0;
       if (i < 0) return;
       locs[i] = { ...locs[i], quantity: Math.max(0, locs[i].quantity + delta) };
@@ -290,6 +296,7 @@ const Cellar = () => {
     setFilterGrape("all");
     setFilterCountry("all");
     setFilterLocation("all");
+    setFilterRack("all");
   };
 
   const filteredWines = wines
@@ -327,13 +334,20 @@ const Cellar = () => {
         wine.storage_location === filterLocation ||
         (wine.storage_locations &&
           wine.storage_locations.some((loc) => loc.location === filterLocation));
+      const matchesRack =
+        filterLocation === "all" ||
+        filterRack === "all" ||
+        !!wine.storage_locations?.some(
+          (loc) => loc.location === filterLocation && sameRack(loc.rack, filterRack),
+        );
       return (
         matchesSearch &&
         matchesType &&
         matchesYear &&
         matchesGrape &&
         matchesCountry &&
-        matchesLocation
+        matchesLocation &&
+        matchesRack
       );
     })
     .sort((a, b) => {
@@ -598,7 +612,45 @@ const Cellar = () => {
                 value={filterLocation}
                 open={openGroup === "location"}
                 onToggle={() => setOpenGroup(openGroup === "location" ? null : "location")}
-                onPick={setFilterLocation}
+                onPick={(v) => { setFilterLocation(v); setFilterRack("all"); }}
+                nested={(() => {
+                  const racks = new Map<string, { label: string; ref: number; btls: number }>();
+                  for (const w of wines) {
+                    if ((w.current_stock === 0) !== showArchive) continue;
+                    const seen = new Set<string>();
+                    for (const loc of w.storage_locations ?? []) {
+                      if (loc.location !== filterLocation || !loc.rack?.trim()) continue;
+                      const k = loc.rack.trim().toLowerCase();
+                      const e = racks.get(k) ?? { label: loc.rack.trim(), ref: 0, btls: 0 };
+                      if (!seen.has(k)) { e.ref++; seen.add(k); }
+                      e.btls += Number(loc.quantity) || 0;
+                      racks.set(k, e);
+                    }
+                  }
+                  if (racks.size === 0) return null;
+                  const items = [{ value: "all", label: "All racks" }, ...[...racks.values()]
+                    .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }))
+                    .map((e) => ({ value: e.label, label: formatRack(e.label), ref: e.ref, btls: e.btls }))];
+                  return (
+                    <div className="mb-1 ml-3 border-l border-muted pl-3">
+                      {items.map((it) => {
+                        const sel = it.value === "all" ? filterRack === "all" : sameRack(filterRack, it.value);
+                        return (
+                          <button
+                            key={it.value}
+                            type="button"
+                            onClick={() => setFilterRack(it.value)}
+                            className={`grid w-full grid-cols-[1fr_2rem_2rem] items-baseline gap-2 py-1.5 text-left transition-colors duration-[320ms] ${sel ? "text-primary" : "text-wine-champagne hover:text-foreground"}`}
+                          >
+                            <span className="min-w-0 break-words text-[12px] leading-tight">{it.label}</span>
+                            <span className="text-right font-mono text-[10px] tabular-nums text-muted-foreground">{"ref" in it ? it.ref : ""}</span>
+                            <span className="text-right font-mono text-[10px] tabular-nums text-muted-foreground">{"btls" in it ? it.btls : ""}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
                 options={uniqueLocations.map((l) => ({
                   value: l,
                   label: l,
