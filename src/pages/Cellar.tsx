@@ -299,7 +299,7 @@ const Cellar = () => {
   };
 
   const hasFilters =
-    searchQuery !== "" ||
+    searchQuery.trim() !== "" ||
     [filterType, filterYear, filterGrape, filterCountry, filterLocation].some((f) => f !== "all");
   const clearFilters = () => {
     setSearchQuery("");
@@ -316,20 +316,24 @@ const Cellar = () => {
       const isArchived = wine.current_stock === 0;
       if (showArchive !== isArchived) return false;
 
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch =
-        searchQuery === "" ||
-        wine.wine_name.toLowerCase().includes(searchLower) ||
-        wine.producer?.toLowerCase().includes(searchLower) ||
-        wine.vintage_year?.toString().includes(searchQuery) ||
-        wine.country?.toLowerCase().includes(searchLower) ||
-        wine.wine_type?.toLowerCase().includes(searchLower) ||
-        wine.region?.toLowerCase().includes(searchLower) ||
-        wine.appellation?.toLowerCase().includes(searchLower) ||
-        wine.storage_location?.toLowerCase().includes(searchLower) ||
-        (wine.storage_locations &&
-          wine.storage_locations.some((loc) => loc.location.toLowerCase().includes(searchLower) || (loc.rack ?? "").toLowerCase().includes(searchLower))) ||
-        grapeNames(wine.grape_varietals).some((g) => g.toLowerCase().includes(searchLower));
+      const fold = (v: unknown) =>
+        String(v ?? "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+      const tokens = fold(searchQuery).split(/\s+/).filter(Boolean);
+      const haystack = fold(
+        [
+          wine.wine_name,
+          wine.producer,
+          wine.vintage_year,
+          wine.country,
+          wine.wine_type,
+          wine.region,
+          wine.appellation,
+          wine.storage_location,
+          ...(wine.storage_locations ?? []).flatMap((loc) => [loc.location, loc.rack]),
+          ...grapeNames(wine.grape_varietals),
+        ].join(" "),
+      );
+      const matchesSearch = tokens.every((t) => haystack.includes(t));
 
       const matchesType = filterType === "all" || wine.wine_type === filterType;
       const matchesYear = filterYear === "all" || wine.vintage_year?.toString() === filterYear;
