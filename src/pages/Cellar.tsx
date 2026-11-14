@@ -6,6 +6,7 @@ import Layout from "@/components/Layout";
 import { Wine, Plus, Minus, Search, Pencil, Check, X } from "lucide-react";
 import cellarSeal from "@/assets/wine-virtue-seal.png.asset.json";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrape } from "@/lib/normalizeGrape";
@@ -157,6 +158,10 @@ const Cellar = () => {
   const [openGroup, setOpenGroup] = useState<string | null>("type");
   // A preview without leaving the list. Opening the bottle page stays primary.
   const [openRow, setOpenRow] = useState<string | null>(null);
+  const [pendingArchive, setPendingArchive] = useState<{
+    wine: WineData;
+    locations: NonNullable<WineData["storage_locations"]>;
+  } | null>(null);
 
   // Editable subtitle states
   const [cellarSubtitle, setCellarSubtitle] = useState<string>(
@@ -273,7 +278,14 @@ const Cellar = () => {
       next = Math.max(0, wine.current_stock + delta);
     }
     if (next === wine.current_stock) return;
-    if (next === 0 && !confirm("Last bottle — move this wine to the archive?")) return;
+    if (next === 0) {
+      setPendingArchive({ wine, locations: locs });
+      return;
+    }
+    await saveStock(wine, next, locs);
+  };
+
+  const saveStock = async (wine: WineData, next: number, locs: NonNullable<WineData["storage_locations"]>) => {
     const prev = wines;
     setWines((ws) => ws.map((w) => (w.id === wine.id ? { ...w, current_stock: next, storage_locations: locs } : w)));
     const { error } = await supabase
@@ -910,6 +922,24 @@ const Cellar = () => {
         </div>
       </div>
       <CellarSommelier />
+      <AlertDialog open={pendingArchive !== null} onOpenChange={(open) => { if (!open) setPendingArchive(null); }}>
+        <AlertDialogContent className="w-[calc(100%-2rem)] max-w-md rounded-md border-primary/40 bg-popover text-popover-foreground">
+          <AlertDialogHeader className="text-left">
+            <Wine aria-hidden="true" className="mb-2 h-7 w-7 text-primary" />
+            <AlertDialogTitle className="font-serif text-2xl font-medium italic text-primary">The last bottle</AlertDialogTitle>
+            <AlertDialogDescription className="break-words text-base leading-relaxed text-foreground">
+              Move <span className="font-serif italic text-primary">{pendingArchive?.wine.wine_name}</span> to the archive? Your wine details and tasting notes will stay in your collection.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:space-x-0">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (!pendingArchive) return;
+              void saveStock(pendingArchive.wine, 0, pendingArchive.locations);
+            }}>Move to archive</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
