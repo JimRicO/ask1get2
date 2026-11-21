@@ -1,4 +1,5 @@
 /** Bake a photo's embedded camera/EXIF orientation into its pixels. */
+import { fitPhoto } from "./image-size";
 
 const isBrowser = () =>
   typeof window !== "undefined" &&
@@ -7,7 +8,7 @@ const isBrowser = () =>
 
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
   return new Promise((resolve) =>
-    canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.92),
+    canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9),
   );
 }
 
@@ -15,9 +16,12 @@ function drawBitmap(bitmap: ImageBitmap): HTMLCanvasElement | null {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  ctx.drawImage(bitmap, 0, 0);
+  const size = fitPhoto(bitmap.width, bitmap.height);
+  canvas.width = size.width;
+  canvas.height = size.height;
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, size.width, size.height);
+  ctx.drawImage(bitmap, 0, 0, size.width, size.height);
   return canvas;
 }
 

@@ -23,6 +23,8 @@ import { validateWineData } from "@/lib/wineValidation";
 import { normalizeCountry } from "@/lib/normalizeCountry";
 import { normalizeGrapeList } from "@/lib/normalizeGrape";
 import { normalizeImageOrientation } from "@/lib/normalizeImageOrientation";
+import { readCellarSnapshot, cacheWine } from "@/lib/offline-cellar";
+import { useOnline } from "@/hooks/use-online";
 
 /* The four views a bottle has. Fixed order, so the plate can report "3 of 4"
    and name the one that has no photo yet. */
@@ -81,6 +83,7 @@ const WineDetail = () => {
   const [wine, setWine] = useState<WineData | null>(null);
   const [tastingNotes, setTastingNotes] = useState<TastingNote[]>([]);
   const [loading, setLoading] = useState(true);
+  const online = useOnline();
   const [consumeDialogOpen, setConsumeDialogOpen] = useState(false);
   const [editStockDialogOpen, setEditStockDialogOpen] = useState(false);
   const [editWineDialogOpen, setEditWineDialogOpen] = useState(false);
@@ -148,9 +151,10 @@ const WineDetail = () => {
       fetchTastingNotes();
       fetchLocations();
     }
-  }, [id]);
+  }, [id, online]);
 
   const fetchLocations = async () => {
+    if (!navigator.onLine) return;
     try {
       const session = await supabase.auth.getSession();
       if (!session.data.session) return;
@@ -176,11 +180,18 @@ const WineDetail = () => {
   };
   const fetchWine = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from("wines").select("*").eq("id", id ?? "").single();
-      if (error) throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { navigate("/auth"); return; }
+      const snapshot = await readCellarSnapshot(session.user.id);
+      const saved = snapshot?.wines.find((w) => w.id === id);
+      let data = saved;
+      if (navigator.onLine) {
+        const result = await supabase.from("wines").select("*").eq("id", id ?? "").single();
+        if (result.error && !saved) throw result.error;
+        data = result.data ?? saved;
+        if (result.data) await cacheWine(session.user.id, result.data);
+      }
+      if (!data) throw new Error("No saved bottle details on this device");
       
       // Transform storage_locations from Json to proper type
       const wineData = {
@@ -216,6 +227,7 @@ const WineDetail = () => {
     }
   };
   const fetchTastingNotes = async () => {
+    if (!navigator.onLine) return;
     try {
       const {
         data,
@@ -230,6 +242,7 @@ const WineDetail = () => {
     }
   };
   const handleConsume = async () => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!wine) return;
     try {
       const userId = (await supabase.auth.getUser()).data.user?.id ?? "";
@@ -286,6 +299,7 @@ const WineDetail = () => {
     }
   };
   const handleDelete = async () => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!wine || !confirm("Are you sure you want to delete this wine?")) return;
     try {
       const {
@@ -300,6 +314,7 @@ const WineDetail = () => {
   };
   
   const handleSaveLocation = async () => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!wine || !newLocation.location.trim()) {
       toast.error("Please enter a location");
       return;
@@ -362,6 +377,7 @@ const WineDetail = () => {
   };
 
   const handleDeleteLocation = async (index: number) => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!wine || !confirm("Remove this storage location?")) return;
 
     try {
@@ -389,6 +405,7 @@ const WineDetail = () => {
   };
   
   const handleUpdateStock = async () => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!wine) return;
     
     try {
@@ -412,6 +429,7 @@ const WineDetail = () => {
     }
   };
   const handleUpdateWine = async () => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!wine) return;
     
     // Validate input data before processing
@@ -429,10 +447,11 @@ const WineDetail = () => {
       let updatedImages = { ...wine.images };
       if (Object.keys(newImages).length > 0) {
         for (const [type, file] of Object.entries(newImages)) {
-          const fileName = `${session.data.session?.user.id}/${type}_${Date.now()}.${file.name.split('.').pop()}`;
+          const upload = await normalizeImageOrientation(file);
+          const fileName = `${session.data.session?.user.id}/${type}_${Date.now()}.${upload.name.split('.').pop()}`;
           const { error: uploadError } = await supabase.storage
             .from('wine-images')
-            .upload(fileName, file);
+            .upload(fileName, upload);
           
           if (uploadError) {
             console.error(`Upload error for ${type}:`, uploadError);
@@ -485,6 +504,7 @@ const WineDetail = () => {
     }
   };
   const handleRewriteDescription = async () => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!wine) return;
     setRewritingDescription(true);
     try {
@@ -514,6 +534,7 @@ const WineDetail = () => {
     }
   };
   const handleResearchDomain = async () => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!wine) return;
     setResearchingDomain(true);
     try {
@@ -535,6 +556,7 @@ const WineDetail = () => {
     }
   };
   const handleRemoveBackground = async () => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     const frontUrl = wine?.images?.front;
     if (!wine || !frontUrl) {
       toast.error("Add a front-label image first");
@@ -556,10 +578,11 @@ const WineDetail = () => {
 
       const ownerId = session.data.session?.user.id;
       if (!ownerId) throw new Error("Not signed in");
-      const fileName = `${ownerId}/front_cleaned_${Date.now()}.png`;
+      const upload = await normalizeImageOrientation(new File([blob], "front.png", { type: blob.type }));
+      const fileName = `${ownerId}/front_cleaned_${Date.now()}.${upload.name.split('.').pop()}`;
       const { error: uploadError } = await supabase.storage
         .from('wine-images')
-        .upload(fileName, blob, { contentType: "image/png" });
+        .upload(fileName, upload, { contentType: upload.type });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage
         .from('wine-images')
@@ -593,6 +616,7 @@ const WineDetail = () => {
   };
 
   const handleUpdateTastingNote = async () => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!editingTastingNoteId) return;
     try {
       const { error } = await supabase
@@ -617,6 +641,7 @@ const WineDetail = () => {
   };
 
   const handleDeleteTastingNote = async (noteId: string) => {
+    if (!navigator.onLine) { toast.error("Connect to save changes."); return; }
     if (!confirm("Are you sure you want to delete this tasting note?")) return;
     try {
       const { error } = await supabase
@@ -634,6 +659,7 @@ const WineDetail = () => {
   };
   if (loading || !wine) {
     return <Layout>
+      {!online && <div role="status" className="border-y border-primary/30 bg-background px-4 py-2 text-center text-sm text-primary">Offline · saved bottle · read only</div>}
         <div className="flex items-center justify-center min-h-screen">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
         </div>
@@ -672,6 +698,7 @@ const WineDetail = () => {
   ].filter((r): r is { label: string; value: string } => Boolean(r.value));
 
   return <Layout>
+      {!online && <div role="status" className="border-y border-primary/30 bg-background px-4 py-2 text-center text-sm text-primary">Offline · saved bottle · read only</div>}
       <div className="min-h-screen">
         <CaveStickyHeader title={wine.wine_name} status={`${wine.current_stock} in stock`} />
 

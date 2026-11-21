@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mic, MicOff, Send, X, Globe, Loader2 } from "lucide-react";
 import { useNavigate } from "@/lib/router-compat";
-import { askCellarSommelier, speakSommelier } from "@/lib/sommelier.functions";
+import { speakSommelier } from "@/lib/sommelier.functions";
+import { askSommelierStream } from "@/lib/sommelier-stream";
+import { Button } from "@/components/ui/button";
 import { getSommelierVoice } from "@/lib/sommelier-voices";
 import { getSommelierPrefs } from "@/lib/sommelier-prefs";
 import { createSpeechTranscript, createSpeechTurn } from "@/lib/sommelier-speech-turn";
@@ -40,7 +42,6 @@ function getRecognizer(): any | null {
 }
 
 export default function CellarSommelier() {
-  const ask = useServerFn(askCellarSommelier);
   const speak = useServerFn(speakSommelier);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -51,6 +52,7 @@ export default function CellarSommelier() {
   const [research, setResearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const voiceOnRef = useRef(false);
+  const voiceGenerationRef = useRef(0);
   const recRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -58,6 +60,8 @@ export default function CellarSommelier() {
   const speechTurnRef = useRef<ReturnType<typeof createSpeechTurn> | null>(null);
   const transcriptRef = useRef(createSpeechTranscript());
   const busyRef = useRef(false);
+  const pendingRef = useRef<AbortController | null>(null);
+  const [progress, setProgress] = useState("cellar");
   turnsRef.current = turns;
   const convoIdRef = useRef<string | null>(null);
 
@@ -83,9 +87,10 @@ export default function CellarSommelier() {
     if (!open) stopVoice();
   }, [open]);
 
-  useEffect(() => () => stopVoice(), []);
+  useEffect(() => () => { stopVoice(); pendingRef.current?.abort(); }, []);
 
   function stopVoice() {
+    voiceGenerationRef.current++;
     voiceOnRef.current = false;
     stopCapture();
     if (audioRef.current) {
@@ -129,6 +134,7 @@ export default function CellarSommelier() {
     transcriptRef.current.startSession();
     rec.onspeechstart = () => speechTurnRef.current?.speechStarted();
     rec.onresult = (e: any) => {
+      if (recRef.current !== rec || !voiceOnRef.current) return;
       const { text, hasInterim } = transcriptRef.current.update(e.results, e.resultIndex ?? 0);
       setInput(text);
       speechTurnRef.current?.update(text, hasInterim);
@@ -143,6 +149,7 @@ export default function CellarSommelier() {
       }
     };
     rec.onend = () => {
+      if (recRef.current !== rec) return;
       recRef.current = null;
       if (!voiceOnRef.current) return;
       speechTurnRef.current?.ended();
@@ -155,11 +162,12 @@ export default function CellarSommelier() {
     }
   }
 
-  async function playAnswer(text: string) {
+  async function playAnswer(text: string, generation: number) {
+    if (generation !== voiceGenerationRef.current) return;
     if (!voiceOnRef.current || !text.trim()) return listen();
     try {
       const { audio } = await speak({ data: { text: text.slice(0, 1500), voice: getSommelierVoice() } });
-      if (!voiceOnRef.current) return;
+      if (!voiceOnRef.current || generation !== voiceGenerationRef.current) return;
       const el = audioRef.current ?? new Audio();
       audioRef.current = el;
       el.src = `data:audio/wav;base64,${audio}`;
@@ -167,6 +175,7 @@ export default function CellarSommelier() {
       el.onended = () => listen();
       await el.play();
     } catch (e) {
+      if (generation !== voiceGenerationRef.current) return;
       setError(e instanceof Error ? e.message : "Voix indisponible.");
       listen();
     }
@@ -185,6 +194,7 @@ export default function CellarSommelier() {
   }
 
   async function send(question: string, spoken = false) {
+    const voiceGeneration = voiceGenerationRef.current;
     const q = question.trim();
     if (!q || busyRef.current) return;
     busyRef.current = true;
@@ -199,22 +209,26 @@ export default function CellarSommelier() {
     const history = current.filter((t) => t.content).map((t) => ({ role: t.role, content: t.content })).slice(-12);
     setTurns((prev) => [...prev, { role: "user", content: q }]);
     setBusy(true);
+    const pending = new AbortController();
+    pendingRef.current = pending;
+    setProgress("cellar");
     if (spoken) setVoice("thinking");
     let answer = "";
     try {
-      const res = await ask({ data: { history, question: q, research: research || accepted, prefs } });
+      const res = await askSommelierStream({ history, question: q, research: research || accepted, prefs }, pending.signal, setProgress);
       answer = [res.speech, res.question].filter(Boolean).join(" ");
       setTurns((prev) => [
         ...prev,
         { role: "assistant", content: res.speech, picks: res.picks, question: res.question, sources: res.sources },
       ]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Le sommelier est indisponible.");
+      if (!pending.signal.aborted) setError(e instanceof Error ? e.message : "Le sommelier est indisponible.");
     } finally {
+      pendingRef.current = null;
       busyRef.current = false;
       setBusy(false);
     }
-    if (spoken) void playAnswer(answer);
+    if (spoken) void playAnswer(answer, voiceGeneration);
   }
 
   const suggestions = [
@@ -327,7 +341,8 @@ export default function CellarSommelier() {
 
               {busy && (
                 <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" /> {research ? "Le sommelier vérifie…" : "Le sommelier réfléchit…"}
+                  <Loader2 className="h-4 w-4 animate-spin" /> {progress === "cellar" ? "Lecture de votre cave…" : research ? "Le sommelier vérifie…" : "Le sommelier réfléchit…"}
+                  <Button type="button" variant="ghost" size="icon" aria-label="Annuler la réponse" onClick={() => pendingRef.current?.abort()}><X className="h-4 w-4" /></Button>
                 </div>
               )}
               {error && <div className="text-[13px] text-destructive">{error}</div>}

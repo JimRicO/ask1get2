@@ -19,6 +19,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RestaurantRouteImport } from './routes/restaurant'
 import { Route as UploadLogoRouteImport } from './routes/upload-logo'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as ApiSommelierRouteImport } from './routes/api/sommelier'
 import { Route as WineIdRouteImport } from './routes/wine/$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const WishlistRoute = WishlistRouteImport.update({
   path: '/wishlist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSommelierRoute = ApiSommelierRouteImport.update({
+  id: '/api/sommelier',
+  path: '/api/sommelier',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WineIdRoute = WineIdRouteImport.update({
   id: '/wine/$id',
   path: '/wine/$id',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/restaurant': typeof RestaurantRoute
   '/upload-logo': typeof UploadLogoRoute
   '/wishlist': typeof WishlistRoute
+  '/api/sommelier': typeof ApiSommelierRoute
   '/wine/$id': typeof WineIdRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/restaurant': typeof RestaurantRoute
   '/upload-logo': typeof UploadLogoRoute
   '/wishlist': typeof WishlistRoute
+  '/api/sommelier': typeof ApiSommelierRoute
   '/wine/$id': typeof WineIdRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/restaurant': typeof RestaurantRoute
   '/upload-logo': typeof UploadLogoRoute
   '/wishlist': typeof WishlistRoute
+  '/api/sommelier': typeof ApiSommelierRoute
   '/wine/$id': typeof WineIdRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/restaurant'
     | '/upload-logo'
     | '/wishlist'
+    | '/api/sommelier'
     | '/wine/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/restaurant'
     | '/upload-logo'
     | '/wishlist'
+    | '/api/sommelier'
     | '/wine/$id'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/restaurant'
     | '/upload-logo'
     | '/wishlist'
+    | '/api/sommelier'
     | '/wine/$id'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   RestaurantRoute: typeof RestaurantRoute
   UploadLogoRoute: typeof UploadLogoRoute
   WishlistRoute: typeof WishlistRoute
+  ApiSommelierRoute: typeof ApiSommelierRoute
   WineIdRoute: typeof WineIdRoute
 }
 
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/sommelier': {
+      id: '/api/sommelier'
+      path: '/api/sommelier'
+      fullPath: '/api/sommelier'
+      preLoaderRoute: typeof ApiSommelierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wine/$id': {
       id: '/wine/$id'
       path: '/wine/$id'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   RestaurantRoute: RestaurantRoute,
   UploadLogoRoute: UploadLogoRoute,
   WishlistRoute: WishlistRoute,
+  ApiSommelierRoute: ApiSommelierRoute,
   WineIdRoute: WineIdRoute,
 }
 export const routeTree = rootRouteImport

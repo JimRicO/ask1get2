@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, Square, RotateCcw } from "lucide-react";
 import { createSpeechTranscript } from "@/lib/sommelier-speech-turn";
+import { createCaptureLease } from "@/lib/capture-lease";
 
 /* Records the spoken tasting note (audio kept) while the browser transcribes it live. */
 export default function VoiceNoteRecorder({
@@ -11,6 +12,7 @@ export default function VoiceNoteRecorder({
   onTranscript: (text: string) => void;
 }) {
   const [recording, setRecording] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -18,20 +20,32 @@ export default function VoiceNoteRecorder({
   const recRef = useRef<any>(null);
   const timerRef = useRef<number | null>(null);
   const transcriptRef = useRef(createSpeechTranscript());
+  const leaseRef = useRef(createCaptureLease());
+  const mountedRef = useRef(true);
+  const startingRef = useRef(false);
 
-  useEffect(() => () => stop(), []);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; stop(); };
+  }, []);
   useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
 
   async function start() {
+    if (startingRef.current || mediaRef.current) return;
+    startingRef.current = true;
+    setStarting(true);
+    const ticket = leaseRef.current.begin();
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!leaseRef.current.accept(ticket, stream)) return;
       const type = ["audio/webm", "audio/mp4"].find((t) => MediaRecorder.isTypeSupported?.(t));
       const mr = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
       const chunks: BlobPart[] = [];
       mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
       mr.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
+        if (!mountedRef.current) return;
         const blob = new Blob(chunks, { type: mr.mimeType || "audio/webm" });
         setUrl(URL.createObjectURL(blob));
         onAudio(blob);
@@ -64,7 +78,11 @@ export default function VoiceNoteRecorder({
       timerRef.current = window.setInterval(() => setSeconds((s) => s + 1), 1000);
       setRecording(true);
     } catch {
-      setError("Micro refusé ou indisponible.");
+      stop();
+      if (mountedRef.current) setError("Micro refusé ou indisponible.");
+    } finally {
+      startingRef.current = false;
+      if (mountedRef.current) setStarting(false);
     }
   }
 
@@ -73,10 +91,11 @@ export default function VoiceNoteRecorder({
     timerRef.current = null;
     const rec = recRef.current;
     recRef.current = null;
-    if (rec) { rec.onend = null; try { rec.stop(); } catch { /* ignore */ } }
+    if (rec) { rec.onend = null; rec.onresult = null; try { rec.abort(); } catch { /* ignore */ } }
     if (mediaRef.current?.state === "recording") mediaRef.current.stop();
     mediaRef.current = null;
-    setRecording(false);
+    leaseRef.current.release();
+    if (mountedRef.current) { setRecording(false); setStarting(false); }
   }
 
   function reset() {
@@ -89,14 +108,14 @@ export default function VoiceNoteRecorder({
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={recording ? stop : start}
-          aria-label={recording ? "Arrêter l'enregistrement" : "Enregistrer une note vocale"}
+          onClick={recording || starting ? stop : start}
+          aria-label={recording || starting ? "Arrêter l'enregistrement" : "Enregistrer une note vocale"}
           className={`flex h-11 w-11 items-center justify-center rounded-full ${recording ? "animate-pulse bg-primary text-primary-foreground" : "bg-secondary text-primary"}`}
         >
-          {recording ? <Square className="h-4 w-4" /> : <Mic className="h-5 w-5" />}
+          {recording || starting ? <Square className="h-4 w-4" /> : <Mic className="h-5 w-5" />}
         </button>
         <span className="font-mono text-[11px] tracking-[0.05em] text-muted-foreground">
-          {recording ? `Enregistrement… ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` : url ? "Note vocale prête" : "Dictez votre note"}
+          {starting ? "Activation du micro…" : recording ? `Enregistrement… ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` : url ? "Note vocale prête" : "Dictez votre note"}
         </span>
         {url && !recording && (
           <button type="button" onClick={reset} aria-label="Supprimer l'enregistrement" className="ml-auto text-muted-foreground">

@@ -5,6 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { callGateway } from "./wine-ai.functions";
 import { MODELS } from "./ai-models";
 import { matchesCountry, countryName } from "./countryMatch";
+import { LIST_COLOURS, restaurantEntriesSchema } from "./restaurant-list";
 
 const MAX_WINES = 300;
 const MAX_WISHLIST = 60;
@@ -52,8 +53,6 @@ function isGroundingRedirect(value: string): boolean {
   }
 }
 
-const MAX_LIST_ENTRIES = 200;
-const LIST_COLOURS = ["red", "white", "rose", "sparkling", "sweet", "fortified", "unknown"] as const;
 type ListColour = (typeof LIST_COLOURS)[number];
 
 export type WineListEntry = {
@@ -589,7 +588,6 @@ Return ONLY valid JSON, no markdown fences:
     // pass two cannot be handed a reference to a wine that was never on the list.
     const entries: WineListEntry[] = (Array.isArray(parsed?.entries) ? parsed!.entries : [])
       .filter((e: Record<string, unknown>) => typeof e?.name === "string" && e.name.trim())
-      .slice(0, MAX_LIST_ENTRIES)
       .map((e: Record<string, unknown>, i: number) => {
         // Vintages come back as 2019 or "2019" depending on the page.
         const rawVintage =
@@ -634,25 +632,12 @@ Return ONLY valid JSON, no markdown fences:
 /* No cellar access: this feature has nothing to do with what the user owns.  */
 /* ------------------------------------------------------------------------ */
 
-const listEntrySchema = z.object({
-  id: z.string().min(1).max(16),
-  name: z.string().min(1).max(200),
-  producer: z.string().max(200).nullable(),
-  vintage: z.number().nullable(),
-  region: z.string().max(200).nullable(),
-  // The same union extractWineList normalises to, so an entry survives the
-  // round trip from extraction into the pairing call with its type intact.
-  colour: z.enum(LIST_COLOURS),
-  price: z.string().max(80).nullable(),
-  byTheGlass: z.boolean(),
-});
-
 export const pairFromList = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
-        entries: z.array(listEntrySchema).min(1).max(MAX_LIST_ENTRIES),
+        entries: restaurantEntriesSchema,
         dishes: z.string().trim().min(3).max(600),
         lang: z.string().trim().max(35).optional(),
       })
@@ -794,7 +779,7 @@ export const pairAlternatives = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z
       .object({
-        entries: z.array(listEntrySchema).min(1).max(MAX_LIST_ENTRIES),
+        entries: restaurantEntriesSchema,
         dishes: z.string().trim().min(3).max(600),
         firstId: z.string().min(1).max(16),
         firstWhy: z.string().max(400).optional(),

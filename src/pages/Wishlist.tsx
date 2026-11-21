@@ -267,12 +267,13 @@ const Wishlist = () => {
       // Upload all images
       for (const [type, file] of Object.entries(images)) {
         if (file) {
-          const fileExt = file.name.split(".").pop();
+          const upload = await normalizeImageOrientation(file);
+          const fileExt = upload.name.split(".").pop();
           const fileName = `${session.user.id}/wishlist_${type}_${Date.now()}.${fileExt}`;
           
           const { error: uploadError } = await supabase.storage
             .from("wine-images")
-            .upload(fileName, file);
+            .upload(fileName, upload);
           
           if (uploadError) throw uploadError;
 

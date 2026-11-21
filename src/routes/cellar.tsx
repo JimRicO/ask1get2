@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import Cellar from "@/pages/Cellar";
 
 export const Route = createFileRoute("/cellar")({
+  ssr: false,
   head: () => ({ meta: pageMeta("Cellar", "Your wine collection, storage locations and private sommelier.") }),
   component: Cellar,
 });

@@ -16,6 +16,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { useFrozenMotion } from "@/lib/cave-motion";
+import { OfflineCellarSetup } from "@/components/OfflineCellarSetup";
 
 import appCss from "../styles.css?url";
 
@@ -66,6 +67,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <OfflineCellarSetup />
         <Toaster />
         <Sonner />
         <Outlet />

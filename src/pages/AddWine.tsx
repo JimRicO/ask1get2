@@ -376,8 +376,10 @@ const AddWine = () => {
       }));
       for (let i = 0; i < entries.length; i++) {
         const p = prepared[i];
-        const type = entries[i][0];
-        const file = p.status === "fulfilled" ? p.value.file : entries[i][1];
+        const entry = entries[i];
+        if (!entry) continue;
+        const type = entry[0];
+        const file = await normalizeImageOrientation(p?.status === "fulfilled" ? p.value.file : entry[1]);
         const fileExt = file.name.split(".").pop();
         const fileName = `${session.user.id}/${type}_${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from("wine-images").upload(fileName, file);

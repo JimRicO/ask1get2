@@ -29,6 +29,13 @@
       "when": 1792372316709,
       "tag": "0003_tasting_audio_and_sommelier_history",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795229608145,
+      "tag": "0004_owner_query_indexes",
+      "breakpoints": true
     }
   ]
 }

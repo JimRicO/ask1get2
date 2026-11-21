@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { readGatewayText } from "./gateway-stream";
 
 const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -9,7 +10,7 @@ type GatewayMessageContent = Array<
   | { type: "image_url"; image_url: { url: string } }
 >;
 
-export async function callGateway(body: Record<string, unknown>) {
+export async function callGateway(body: Record<string, unknown>, options: { stream?: boolean; signal?: AbortSignal } = {}) {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -19,12 +20,19 @@ export async function callGateway(body: Record<string, unknown>) {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, ...(options.stream ? { stream: true } : {}) }),
+    ...(options.signal ? { signal: options.signal } : {}),
   });
 
   if (!response.ok) {
     const detail = await response.text();
     console.error("AI Gateway error:", response.status, detail);
+    let safeMessage: string | undefined;
+    try {
+      const parsed = JSON.parse(detail);
+      safeMessage = typeof parsed.message === "string" ? parsed.message : typeof parsed.error?.message === "string" ? parsed.error.message : undefined;
+    } catch { /* Non-JSON upstream errors must not expose response bodies. */ }
+    if ([401, 402, 403, 429].includes(response.status) && safeMessage) throw new Error(safeMessage);
     if (response.status === 429) {
       throw new Error("Rate limit exceeded. Please try again later.");
     }
@@ -34,6 +42,11 @@ export async function callGateway(body: Record<string, unknown>) {
     throw new Error(`AI processing failed: ${response.status}`);
   }
 
+  const runId = response.headers.get("X-Lovable-AIG-Run-ID");
+  if (runId) console.info("AI Gateway run", runId);
+  if (options.stream) {
+    return { choices: [{ message: { content: await readGatewayText(response) } }] };
+  }
   return (await response.json()) as {
     choices?: Array<{
       message?: {

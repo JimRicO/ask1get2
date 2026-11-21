@@ -16,6 +16,8 @@ import { revealDelay } from "@/lib/cave-motion";
 import { formatRack, sameRack } from "@/lib/rackLabel";
 import CellarSommelier from "@/components/CellarSommelier";
 import { LocationEditor } from "@/components/LocationEditor";
+import { readCellarSnapshot, saveCellarSnapshot, cacheWine } from "@/lib/offline-cellar";
+import { useOnline } from "@/hooks/use-online";
 
 interface WineData {
   id: string;
@@ -147,6 +149,7 @@ const Cellar = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [wines, setWines] = useState<WineData[]>([]);
   const [loading, setLoading] = useState(true);
+  const online = useOnline();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterYear, setFilterYear] = useState<string>("all");
@@ -235,7 +238,7 @@ const Cellar = () => {
       };
     }
     return undefined;
-  }, [session]);
+  }, [session?.user.id, online]);
 
   const fetchWines = async () => {
     try {
@@ -244,12 +247,27 @@ const Cellar = () => {
         setLoading(false);
         return;
       }
-      const { data, error } = await supabase
-        .from("wines")
-        .select("*", { count: "exact" })
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
+      const saved = await readCellarSnapshot(session.user.id);
+      if (saved) {
+        setWines(saved.wines.map((wine) => ({ ...wine, storage_locations: Array.isArray(wine.storage_locations) ? wine.storage_locations : [] })) as unknown as WineData[]);
+        setLoading(false);
+      }
+      if (!navigator.onLine) {
+        if (!saved) toast.error("No saved cellar on this device. Connect once to download it.");
+        return;
+      }
+      // Explicit pagination avoids the Data API's default row ceiling.
+      const rows = [];
+      for (let offset = 0; ; offset += 500) {
+        const { data: page, error } = await supabase.from("wines").select("*")
+          .eq("user_id", session.user.id).order("created_at", { ascending: false }).order("id")
+          .range(offset, offset + 499);
+        if (error) throw error;
+        rows.push(...(page ?? []));
+        if (!page || page.length < 500) break;
+      }
+      const data = rows;
+      await saveCellarSnapshot(session.user.id, data);
 
       const transformedWines = (data || []).map((wine) => ({
         ...wine,
@@ -268,6 +286,7 @@ const Cellar = () => {
 
   // Quick +/- on the card. Adjusts the filtered location if any, else the first one.
   const changeStock = async (wine: WineData, delta: number) => {
+    if (!navigator.onLine) { toast.error("Connect to update your cellar."); return; }
     const locs = [...(wine.storage_locations ?? [])];
     let next: number;
     if (locs.length > 0) {
@@ -288,15 +307,18 @@ const Cellar = () => {
   };
 
   const saveStock = async (wine: WineData, next: number, locs: NonNullable<WineData["storage_locations"]>) => {
+    if (!navigator.onLine) { toast.error("Connect to update your cellar."); return; }
     const prev = wines;
     setWines((ws) => ws.map((w) => (w.id === wine.id ? { ...w, current_stock: next, storage_locations: locs } : w)));
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("wines")
       .update({ current_stock: next, ...(locs.length > 0 ? { storage_locations: locs } : {}) })
-      .eq("id", wine.id);
+      .eq("id", wine.id).select("*").single();
     if (error) {
       setWines(prev);
       toast.error("Failed to update quantity");
+    } else if (data && session) {
+      await cacheWine(session.user.id, data);
     }
   };
 
@@ -782,6 +804,8 @@ const Cellar = () => {
                           {wine.images?.overall ? (
                             <img
                               src={wine.images.overall}
+                              loading="lazy"
+                              decoding="async"
                               alt=""
                               className="h-full w-full object-cover transition-transform duration-[900ms] ease-[var(--ease-cave)] hover:scale-105 rounded-md"
                             />
@@ -937,6 +961,7 @@ const Cellar = () => {
           <img src={cellarSeal.url} alt="Wine & Virtue" className="h-auto w-[240px] rounded-full opacity-95 shadow-[0_18px_30px_-10px_rgba(0,0,0,0.95),0_4px_8px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(0,0,0,0.4)] [filter:drop-shadow(0_2px_1px_rgba(255,225,190,0.08))]" />
         </div>
       </div>
+      {!online && <div role="status" className="fixed bottom-24 left-0 right-0 z-40 border-y border-primary/30 bg-background px-4 py-2 text-center text-sm text-primary">Offline · saved cellar · read only</div>}
       <CellarSommelier />
       <LocationEditor
         open={editingLoc !== null}

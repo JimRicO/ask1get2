@@ -1,11 +1,19 @@
 import { describe, expect, test } from "bun:test";
-import { createSpeechTranscript, createSpeechTurn, SPEECH_PAUSE_MS } from "./sommelier-speech-turn";
+import { createSpeechTranscript, createSpeechTurn, stitch, SPEECH_PAUSE_MS } from "./sommelier-speech-turn";
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const result = (text, isFinal = false) => ({ 0: { transcript: text }, isFinal });
 
 describe("Sommelier transcript assembly", () => {
+  test("short words after a pause are not dropped because their letters occur inside earlier words", () => {
+    expect(stitch("je voudrais un vin", "oui")).toBe("je voudrais un vin oui");
+    expect(stitch("une belle longueur", "long")).toBe("une belle longueur long");
+    expect(stitch("depuis hier", "puis")).toBe("depuis hier puis");
+  });
+  test("a later phrase contained inside the earlier sentence is still new speech", () => {
+    expect(stitch("je veux oui un rouge", "oui")).toBe("je veux oui un rouge oui");
+  });
   test("revised interim results replace the same index", () => {
     const transcript = createSpeechTranscript();
     transcript.startSession();

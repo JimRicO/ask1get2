@@ -7,3 +7,12 @@
 - [x] Voice recording for tasting notes (keep audio + transcript)
 - [x] Store sommelier conversations
 - [x] Floating, slowly drifting sommelier badge
+- [x] Verify existing audio storage; repair transcript prefix matching and late microphone permission cleanup
+- [x] Remove restaurant wine-list truncation and validation ceiling
+- [x] Inspect query plans and add missing owner indexes
+- [x] Compress uploaded bottle photos while preserving orientation and labels
+- [x] Improve sommelier request resilience without weakening reasoning; verify answer and follow-up
+- [x] Add account-isolated offline cellar and bottle-detail access; verify desktop/mobile read-only browsing
+- [x] Keep AI usage limits unchanged, as explicitly requested
+- [x] Run regression tests and signed-in browser checks
+- [ ] Verify real-phone microphone/transcription and audio playback — requires physical-device testing

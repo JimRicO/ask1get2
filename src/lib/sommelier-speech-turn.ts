@@ -13,8 +13,8 @@ export function stitch(base: string, next: string) {
   if (!n) return b;
   const bl = b.toLowerCase();
   const nl = n.toLowerCase();
-  if (bl === nl || bl.includes(nl)) return b;
-  if (nl.includes(bl)) return n;
+  if (bl === nl || bl.startsWith(`${nl} `)) return b;
+  if (nl.startsWith(`${bl} `)) return n;
   const bw = bl.split(" ");
   const nw = n.split(" ");
   const nwl = nl.split(" ");
